@@ -1,11 +1,5 @@
-#Keeping unencrypted key locally - but never tracking it.
-unencrypted_key.txt
-
 #Not tracking pycache - unnecessary artefact
 /**/__pycache__
 
 #Original response from registering agent - not to be tracked (contains unencrypted key)
 register_output.json
-
-#Files for testing outputs
-test.txt

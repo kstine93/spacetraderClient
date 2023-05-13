@@ -47,6 +47,13 @@ This is a huge list of information - and I would expect that most of this inform
 3. ~~For unique key, look into encrypting my key with a password so I can store it on GH and unlock it anytime~~
 4. ~~create script for decrypting and storing key locally~~
 5. Create endpoints for all commands - use [api spec](https://spacetraders.stoplight.io/docs/spacetraders/11f2735b75b02-space-traders-api) to find these and prioritize.
+    1. Let's start with code needed to complete a contract:
+        * Contracts:
+            1. List available contracts
+            2. Accept contract
+            3. List contract terms
+        * Navigation:
+            1. 
 
 After that's done, I should move more into other commands.
 

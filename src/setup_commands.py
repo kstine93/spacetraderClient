@@ -52,16 +52,16 @@ def save_agent_metadata_locally(new_agent_response:dict
         config.write(configfile)
 
 
-#----------
-def decrypt_and_store_api_key_locally(local_cfg_filepath:str = "./account_info.cfg"
-                                      ,local_key_filepath:str = "./unencrypted_key.txt") -> None:
+# #----------
+# def decrypt_and_store_api_key_locally(local_cfg_filepath:str = "./account_info.cfg"
+#                                       ,local_key_filepath:str = "./unencrypted_key.txt") -> None:
     
-    '''Purpose: Decrypt API key and store it locally in a non-tracked file so that we can use it for gaming'''
-    config = configparser.ConfigParser()
-    config.read(local_cfg_filepath)
+#     '''Purpose: Decrypt API key and store it locally in a non-tracked file so that we can use it for gaming'''
+#     config = configparser.ConfigParser()
+#     config.read(local_cfg_filepath)
 
-    encrypted_key = config['ACCOUNT_CREDENTIALS']['key_encrypted']
-    decrypted_key_bytes = decrypt_api_key(encrypted_key)
-    decrypted_key = decrypted_key_bytes.decode() #converting to string
-    with open(local_key_filepath, 'w') as file:
-        file.write(decrypted_key)
+#     encrypted_key = config['ACCOUNT_CREDENTIALS']['key_encrypted']
+#     decrypted_key_bytes = decrypt_api_key(encrypted_key)
+#     decrypted_key = decrypted_key_bytes.decode() #converting to string
+#     with open(local_key_filepath, 'w') as file:
+#         file.write(decrypted_key)
