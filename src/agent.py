@@ -7,7 +7,7 @@ import configparser
 from .utilities.basic_utilities import *
 
 from .base import SpaceTraderConnection
-
+import json
 
 #==========
 class Agent(SpaceTraderConnection):
@@ -31,10 +31,45 @@ class Agent(SpaceTraderConnection):
     NEXT STEPS:
     1. Let's manually set up a few files and the code here to write them, then we can transform this logic into a class.
     """
+    #----------
+    cache_path: str = "gameData/agents/"
 
     #----------
     def __init__(self):
         SpaceTraderConnection.__init__(self)
+
+    #----------
+    def attempt_cache_retrieval(func):
+        """
+        Intended to be used prior to API calls which gather information about the world.
+        This decorator function searches for a relevant file in a file path. If it finds it, it skips the
+        API call. If it does NOT find the data, it calls the API, fills in the missing data, and then returns the data.
+        """
+
+        # TODO: Make this function nicer:
+        # 1. Decide where to put this code - in a higher-level class?
+        # 2. Look if I need more versions of this (e.g., for appending rather than overwriting files) 
+        def wrapper(self, **kwargs):
+            path = self.cache_path
+            prefix = self.cache_file_prefix
+
+            try:
+                with open(path + prefix + ".json", "r") as file:
+                    return json.loads(file.read())
+
+            except:
+                data = func(self, **kwargs)
+                with open(path + self.cache_file_prefix + ".json", "w") as file:
+                    file.write(json.dumps(data,indent=3))
+                return data
+            
+        return wrapper    
+
+    #----------
+    @attempt_cache_retrieval
+    def get_agent_details(self) -> dict:
+        url = self.base_url + "/my/agent"
+        return self.stc_http_request(method="GET",url=url)
 
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> dict:
