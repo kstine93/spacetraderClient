@@ -3,3 +3,6 @@
 
 #Original response from registering agent - not to be tracked (contains unencrypted key)
 register_output.json
+
+#Scratchpad-like file just for me doing some informal testing.
+testing.ipynb
