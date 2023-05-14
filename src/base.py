@@ -21,6 +21,7 @@ from urllib3 import PoolManager
 from .utilities.basic_utilities import prompt_user_password
 from .utilities.crypt_utilities import password_decrypt
 from configparser import ConfigParser
+import json
 
 
 #==========
@@ -30,18 +31,38 @@ class HttpConnection:
     """
     conn:PoolManager | None = None
     
-
+    #----------
     def __init__(self):
         self.conn = PoolManager()
 
-    def post_req():
-        pass
+    #----------
+    def http_post(self, url:str, body:dict, **kwargs):
+        """Simple wrapper of POST request"""
+        return self.conn.request(
+            method="POST"
+            ,url=url
+            ,body=json.dumps(body)
+            ,**kwargs
+        )
 
-    def get_req():
-        pass
+    #----------
+    def http_get(self, url:str, **kwargs):
+        """Simple wrapper of GET request"""
+        return self.conn.request(
+            method="GET"
+            ,url=url
+            ,**kwargs
+        )
 
-    def patch_req():
-        pass
+    #----------
+    def http_patch(self, url:str, body:dict, **kwargs):
+        """Simple wrapper of PATCH request"""
+        return self.conn.request(
+            method="PATCH"
+            ,url=url
+            ,body=json.dumps(body)
+            ,**kwargs
+        )
 
 #==========
 class SpaceTraderConnection(HttpConnection):
@@ -55,8 +76,7 @@ class SpaceTraderConnection(HttpConnection):
     
     #----------
     def __init__(self):
-        super()
-        self.load_api_key(self.local_cfg_filepath,self.local_key_filepath)
+        HttpConnection.__init__(self)
 
     #----------
     def load_api_key(self,cfg_path:str) -> None:
@@ -68,5 +88,6 @@ class SpaceTraderConnection(HttpConnection):
         password = prompt_user_password("Please enter password to decrypt your API key:")
 
         decrypted_key_bytes = password_decrypt(encrypted_key, password)
+
         self.api_key = decrypted_key_bytes.decode() #converting to string
 

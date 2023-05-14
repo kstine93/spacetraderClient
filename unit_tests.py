@@ -1,5 +1,5 @@
 from src.utilities import *
-from src.setup_commands import *
+from src.agent import *
 
 
 #----------
@@ -14,7 +14,7 @@ def test_save_agent_metadata_locally():
          }
     }
 
-    save_agent_metadata_locally(response)
+    save_agent_metadata_locally(response,local_cfg_filepath="./test_account_info.cfg")
 
 
 #----------
