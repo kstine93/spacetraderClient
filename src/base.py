@@ -17,8 +17,8 @@
 # Then, I can actually extend this class to be child classes that have more specific functions - so my functions are
 # nicely packaged in classes rather than loose.
 
-from urllib3 import PoolManager
-from .utilities.basic_utilities import prompt_user_password
+from urllib3 import PoolManager, HTTPResponse
+from .utilities.basic_utilities import *
 from .utilities.crypt_utilities import password_decrypt
 from configparser import ConfigParser
 import json
@@ -26,9 +26,8 @@ import json
 
 #==========
 class HttpConnection:
-    """
-    Generic class for making API requests
-    """
+    """Generic class for making API requests"""
+    #----------
     conn:PoolManager | None = None
     
     #----------
@@ -36,33 +35,17 @@ class HttpConnection:
         self.conn = PoolManager()
 
     #----------
-    def http_post(self, url:str, body:dict, **kwargs):
-        """Simple wrapper of POST request"""
-        return self.conn.request(
-            method="POST"
-            ,url=url
-            ,body=json.dumps(body)
-            ,**kwargs
-        )
+    def http_request(self, method:str, url:str, **kwargs) -> HTTPResponse:
 
-    #----------
-    def http_get(self, url:str, **kwargs):
-        """Simple wrapper of GET request"""
+        if 'body' in kwargs:
+            kwargs.update(dict_to_str(kwargs['body']))
+
         return self.conn.request(
-            method="GET"
+            method=method
             ,url=url
             ,**kwargs
         )
 
-    #----------
-    def http_patch(self, url:str, body:dict, **kwargs):
-        """Simple wrapper of PATCH request"""
-        return self.conn.request(
-            method="PATCH"
-            ,url=url
-            ,body=json.dumps(body)
-            ,**kwargs
-        )
 
 #==========
 class SpaceTraderConnection(HttpConnection):
@@ -70,13 +53,25 @@ class SpaceTraderConnection(HttpConnection):
     Class that enables API usage for the SpaceTrader game
     - primarily by loading and storing api and base url of endpoint
     """
+    #----------
     local_cfg_filepath:str = "./account_info.cfg"
+
     api_key: str | None = None
-    base_url:str = "https://api.spacetraders.io/v2"
+    default_header: dict = {"Accept": "application/json"}
+    base_url: str = "https://api.spacetraders.io/v2"
+
+    cache_file_prefix: str | None = None
     
     #----------
     def __init__(self):
         HttpConnection.__init__(self)
+        try:
+            self.load_api_key(self.local_cfg_filepath)
+
+            self.default_header.update({"Authorization" : "Bearer " + self.api_key})
+            self.cache_file_prefix = self.api_key[0:9] #First 10 characters used for file identification - totally arbitrary #.
+        except Exception as e:
+            raise e(f"Error in loading API key. Please check API key is present at file path {self.local_cfg_filepath}")
 
     #----------
     def load_api_key(self,cfg_path:str) -> None:
@@ -86,8 +81,34 @@ class SpaceTraderConnection(HttpConnection):
         encrypted_key = config['ACCOUNT_CREDENTIALS']['key_encrypted']
 
         password = prompt_user_password("Please enter password to decrypt your API key:")
-
         decrypted_key_bytes = password_decrypt(encrypted_key, password)
-
         self.api_key = decrypted_key_bytes.decode() #converting to string
+
+    #----------
+    def stc_http_response_checker(self, http_response:HTTPResponse) -> bool:
+        """Checks general success of the SpaceTrader API call and raises errors/warnings if a failure was found."""  
+
+        #NOTE: Expand this as needed if we want custom handling of certain errors across all SpaceTrader endpoints.
+        if http_response.status == 200:
+            return True
+        else:
+            raise Exception(f"API call returned non-200 response. Response data: {json.loads(http_response.data)}")
+
+
+    #----------
+    def stc_http_request(self, method:str, url:str, **kwargs) -> dict:
+        """Wrapper for HTTP get - implements spacetrader-specific handling of response"""
+
+        http_response = self.http_request(method=method
+                                          ,url=url
+                                          ,headers=self.default_header
+                                          ,**kwargs)
+
+        #If response is o.k., return
+        if self.stc_http_response_checker(http_response):
+            return json.loads(http_response.data)
+
+
+
+
 
