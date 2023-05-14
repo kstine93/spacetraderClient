@@ -7,13 +7,15 @@ from .crypt_utilities import *
 
 #----------
 def bytes_to_dict(bytes_obj:bytes,format:str = 'utf-8'):
-    #UNTESTED!!!
     #Returns dictionary-like in bytes format as a Python dictionary
     return json.loads(bytes_obj.decode(format))
 
+def dict_to_bytes(dict_obj:dict, format:str = 'utf-8'):
+    return dict_obj.encode(format)
+
 #----------
 def prompt_user_password(prompt:str):
-        return getpass(prompt)
+        return getpass.getpass(prompt)
 
 # #----------
 # def encrypt_api_key(input:str) -> bytes:

@@ -9,6 +9,8 @@
 import secrets
 from base64 import urlsafe_b64encode as b64e, urlsafe_b64decode as b64d
 
+from cryptography.fernet import *
+from cryptography.exceptions import InvalidKey
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -36,11 +38,15 @@ def password_encrypt(message: bytes, password: str, iterations: int = iterations
     )
 
 def password_decrypt(token: bytes, password: str) -> bytes:
-    decoded = b64d(token)
-    salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
-    iterations = int.from_bytes(iter, 'big')
-    key = _derive_key(password.encode(), salt, iterations)
-    return Fernet(key).decrypt(token)
+    try:
+        decoded = b64d(token)
+        salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
+        iterations = int.from_bytes(iter, 'big')
+        key = _derive_key(password.encode(), salt, iterations)
+        return Fernet(key).decrypt(token)
+    except (InvalidSignature, InvalidToken):
+        print("Key decryption failed. Please check the password you entered and try again.")
+
 
 
 # message = 'John Doe'
