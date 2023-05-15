@@ -5,12 +5,13 @@
 
 import configparser
 from .utilities.basic_utilities import *
+from typing import Callable
 
-from .base import SpaceTraderConnection
-import json
+from .base import SpaceTraderConnection,SpaceTraderCacheManager
+
 
 #==========
-class Agent(SpaceTraderConnection):
+class Agent(SpaceTraderConnection,SpaceTraderCacheManager):
     """
     This class is to do everything related to the agent, including:
     1. Initialize the agent (for new players)
@@ -32,41 +33,72 @@ class Agent(SpaceTraderConnection):
     1. Let's manually set up a few files and the code here to write them, then we can transform this logic into a class.
     """
     #----------
-    cache_path: str = "gameData/agents/"
+    cache_path: str = SpaceTraderCacheManager.base_cache_path + "agents/"
+    cache_file_name: str = SpaceTraderCacheManager.base_cache_file_name
+    test5 = "agent_value"
 
     #----------
     def __init__(self):
         SpaceTraderConnection.__init__(self)
+        SpaceTraderCacheManager.__init__(self)
+
+        #Transforming API key to serve as unique file name:
+        # self.cache_file_name = self.transform_file_name(self.api_key)
+        # print("p_"+self.cache_file_name)
+        # print("p_"+self.cache_path)
 
     #----------
-    def attempt_cache_retrieval(func):
-        """
-        Intended to be used prior to API calls which gather information about the world.
-        This decorator function searches for a relevant file in a file path. If it finds it, it skips the
-        API call. If it does NOT find the data, it calls the API, fills in the missing data, and then returns the data.
-        """
-
-        # TODO: Make this function nicer:
-        # 1. Decide where to put this code - in a higher-level class?
-        # 2. Look if I need more versions of this (e.g., for appending rather than overwriting files) 
-        def wrapper(self, **kwargs):
-            path = self.cache_path
-            prefix = self.cache_file_prefix
-
-            try:
-                with open(path + prefix + ".json", "r") as file:
-                    return json.loads(file.read())
-
-            except:
-                data = func(self, **kwargs)
-                with open(path + self.cache_file_prefix + ".json", "w") as file:
-                    file.write(json.dumps(data,indent=3))
-                return data
-            
-        return wrapper    
+    def read_write(self,func:Callable,file_name_path:str,**kwargs):
+        try:
+            with open(file_name_path, "r") as file:
+                return json.loads(file.read())
+        except:
+            data = func(self, **kwargs)
+            with open(file_name_path, "w") as file:
+                file.write(json.dumps(data,indent=3))
+            return data  
 
     #----------
-    @attempt_cache_retrieval
+    def agent_decorator(func: Callable):
+        def wrapper(self,**kwargs):
+            new_path = self.cache_path + self.test5 + ".json"
+            return SpaceTraderCacheManager.read_dict_cache_v2(self,new_path,func,**kwargs)
+        return wrapper
+
+    #----------
+    # CURRENT PROBLEM TO SOLVE:
+    # I have accomplished the following:
+    # - Implemented decorator function in parent class
+    # - Modified decorator function to allow for variables
+    #
+    # However, the issue is now that the variables themselves cannot change in the runtime of the code.
+    # The reason for this seems to be that Python is creating new versions of the functions before the code
+    # actually runs. So, if those variables don't exist until the class is initialized, THAT WON'T WORK.
+    # 
+    # WHAT I WANT:
+    # I want to be able to use dynamic variables to modify how the decorator function behaves, but it seems like
+    # that's not possible. I could handle this a couple of different ways:
+    # 1. It's possible to use variables initialized in the parent function - so I could read from a config in CacheManager to
+    #   set the values, but this would have the disadvantage that I could ONLY use the one file name (although this could be o.k.
+    #   - if I needed to use a function-provided filename, I could do this in another decorator method...)
+    #
+    #   - UPDATE: I can use class-initialized variables in the inner decorator function - and these DEFAULT TO THE CLASS
+    #       IN WHICH THE DECORATOR IS CALLED. This is kind of nice- but could be super confusing. I don't really want to
+    #       rely on 'self' in the inner function...
+    #   - NEXT STEP: Let's experiment with breaking apart the outer decorator wrapper and putting it elsewhere - or with keeping
+    #       this decorator function in an external function somehow.
+    #
+    # 2. I could embed file name attributes to the underlying function call - but this seems really bad. I don't want to mix values
+    #    intended for the decorator into those function calls.
+    # 
+    # ADDITIONAL TO TEST:
+    # 1. How does a decorator-with-parameters work outside of a class if the parameters are not initialized until later in the code?
+    #
+    # I think I need to go for #1. It's not as flexible as I'd like, but it's the only way I can see of using class variables
+    # in decorator parameters.
+    # -Kevin, May 15, 2023
+    #@SpaceTraderCacheManager.get_dict_cache(path=cache_path,file_name=cache_file_name)
+    @agent_decorator
     def get_agent_details(self) -> dict:
         url = self.base_url + "/my/agent"
         return self.stc_http_request(method="GET",url=url)

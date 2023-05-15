@@ -22,7 +22,130 @@ from .utilities.basic_utilities import *
 from .utilities.crypt_utilities import password_decrypt
 from configparser import ConfigParser
 import json
+from typing import Callable
 
+def get_it():
+    config = ConfigParser()
+    config.read("./account_info.cfg")
+    return config['ACCOUNT_CREDENTIALS']['callsign']
+
+#==========
+class SpaceTraderCacheManager:
+    """Generic class for loading data to/from a cache or local file system"""
+    # TODO: Make a more generic version of this class to be the parent class.
+    # NOTE: Is it possible to initialize the inner decorator function in this generic class, and then initialize
+    # the outer decorator function (which takes in the parameters) in one of the child classes?
+    # If that works, it might even be possible to initialize the outer decorator function in the class it's being used in
+    # (e.g., Agent) and thereby be able to use variables initialised in the class (file_path) and (file_name)
+    #----------
+    local_cfg_filepath:str = "./account_info.cfg"
+    base_cache_path:str = "./gameData/"
+    base_cache_file_name:str = "test3" #get_it()
+    test5 = "CM_value"
+
+    #----------
+    def __init__(self):
+        pass
+        #Putting 'Callsign' as the default name of cache files:
+        config = ConfigParser()
+        config.read(self.local_cfg_filepath)
+        self.base_cache_file_name = config['ACCOUNT_CREDENTIALS']['callsign']
+
+
+    # #----------
+    # def transform_file_name(self,input:str):
+    #     '''
+    #     Function to ensure that file names are consistent across child classes.
+    #     Currently we're using a unique key as a unique identifier of resources belonging to a specific
+    #     account (this is how SpaceTraders does it). This is accessible to all child classes, so they can
+    #     feed this to this method and get a transformed string in return that serves as a file name.
+    #     Currently, this is just the first 10 characters of the unique key.
+    #     '''
+    #     return input[0:9]
+    
+    def read_dict_cache_v2(self,file_name_path:str,func:Callable,**kwargs):
+        '''
+        This function is intended to be used as the core of a decorator function.
+        This function is looking for json data in a specified filepath and returning it if it exists.
+        If it fails to retrieve this file, it calls the passed function (which must return a dict object).
+        This dict object is then written to the given path and also returned to the caller.
+        A common function to pass in would be an API call - which gets executed if no local data is found.
+        '''
+        try:
+            with open(file_name_path, "r") as file:
+                return json.loads(file.read())
+        except:
+            data = func(self,**kwargs)
+            with open(file_name_path, "w") as file:
+                file.write(json.dumps(data,indent=3))
+            return data  
+
+
+    def decorator_v2(func: Callable):
+
+        # TODO: Make this function nicer:
+        # 1. Decide where to put this code - in a higher-level class?
+        # 2. Look if I need more versions of this (e.g., for appending rather than overwriting files) 
+        def wrapper(self, **kwargs):
+            for key in kwargs:
+                print(key)
+            # print("Y_"+self.test5)
+            # print("Y_"+self.cache_path)
+            #For this command below, I got an error that 'Agent' doesn't have this variable.
+            # Is it looking in the Agent class? If yes, it's also pulling from the parent class for local_cfg_filepath...
+            #print("X_"+self.base_cache_filename) 
+            new_path = self.cache_path + self.test5 + ".json"
+            print(new_path)
+            try:
+                with open(new_path, "r") as file:
+                    return json.loads(file.read())
+
+            except:
+                data = func(self, **kwargs)
+                with open(new_path, "w") as file:
+                    file.write(json.dumps(data,indent=3))
+                return data
+            
+        return wrapper
+
+
+    #----------
+    def get_dict_cache(path:str,file_name:str):
+        """
+        Decorator function.
+        Intended to be used prior to retrieving data from a remote source.
+        If a relevant .json file in the provided file path, it returns the data in the file as a dictionary.
+        If this operation fails, the inner function is called (which MUST return a dict object).
+        This function then saves the results of that function call as the missing JSON file and returns the value.
+        """
+        print("x_"+path)
+        print("x_"+file_name)
+        #Additional wrapping function allows us to pass parameters to decorator.
+        def decorator(func: Callable) -> dict:
+
+            # TODO: Make this function nicer:
+            # 1. Decide where to put this code - in a higher-level class?
+            # 2. Look if I need more versions of this (e.g., for appending rather than overwriting files) 
+            def wrapper(self, **kwargs):
+                print("Y_"+self.test5)
+                print("Y_"+self.local_cfg_filepath)
+                #For this command below, I got an error that 'Agent' doesn't have this variable.
+                # Is it looking in the Agent class? If yes, it's also pulling from the parent class for local_cfg_filepath...
+                #print("X_"+self.base_cache_filename) 
+                new_path = path + file_name + ".json"
+                print(new_path)
+                try:
+                    with open(new_path, "r") as file:
+                        return json.loads(file.read())
+
+                except:
+                    data = func(self, **kwargs)
+                    with open(new_path, "w") as file:
+                        file.write(json.dumps(data,indent=3))
+                    return data
+                
+            return wrapper
+        return decorator
 
 #==========
 class HttpConnection:
@@ -56,6 +179,7 @@ class SpaceTraderConnection(HttpConnection):
     #----------
     local_cfg_filepath:str = "./account_info.cfg"
 
+    test: str | None = None
     api_key: str | None = None
     default_header: dict = {"Accept": "application/json"}
     base_url: str = "https://api.spacetraders.io/v2"
@@ -67,7 +191,7 @@ class SpaceTraderConnection(HttpConnection):
         HttpConnection.__init__(self)
         try:
             self.load_api_key(self.local_cfg_filepath)
-
+            self.test = self.api_key[0:9]
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
             self.cache_file_prefix = self.api_key[0:9] #First 10 characters used for file identification - totally arbitrary #.
         except Exception as e:
