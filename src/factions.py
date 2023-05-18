@@ -15,13 +15,14 @@ class Factions(SpaceTraderConnection,CacheManager):
     def __init__(self):
         SpaceTraderConnection.__init__(self)
         CacheManager.__init__(self)
+        self.base_url = self.base_url + "/factions"
         self.cache_path = self.base_cache_path + "factions/"
         #WARNING: I am using a static name "factions" below because I don't think factions change by game
         #(so I can use factions across all of my games). I can reverse this by using `self.callsign` instead.
         self.cache_file_name = "factions"
 
     #----------
-    def cache_faction(func: Callable) -> Callable:
+    def cache_factions(func: Callable) -> Callable:
         """
         Decorator. Uses class variables in current class and passes them to wrapper function.
         This version reads the cached faction data and tries to find information about the given faction.
@@ -37,8 +38,8 @@ class Factions(SpaceTraderConnection,CacheManager):
         """
         Decorator. Uses class variables in current class and passes them to wrapper function.
         This version reads the cached faction data and tries to find information about the given faction.
-        If no cache file exists, one is created. If the file exists, but there is no data on the given faction,
-        This information is added to the file.
+        If the file exists, but there is no data on the given faction, this information is added to the file.
+        If no file exists, a warning is given but NO FILE IS CREATED.
         """
         def wrapper(self,faction,**kwargs):
             new_path = self.cache_path + self.cache_file_name + ".json"
@@ -47,17 +48,16 @@ class Factions(SpaceTraderConnection,CacheManager):
         return wrapper
 
     #----------
-    @cache_faction
+    @cache_factions
     def list_factions(self) -> dict:
-        url = self.base_url + "/factions"
-        data = self.stc_http_request(method="GET",url=url)
+        data = self.stc_http_request(method="GET",url=self.base_url)
         #Transforming nested list to dict to make data easier to reference:
         return {obj['symbol']:obj for obj in data['data']}
     
     #----------
     @update_faction
     def get_faction(self,faction:str) -> dict:
-        url = self.base_url + "/factions/" + faction
+        url = self.base_url + "/" + faction
         new_data = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with factions dict:
         return {faction:new_data['data']}

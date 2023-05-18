@@ -52,7 +52,7 @@ class CacheManager(GameConfig):
             return data  
 
     #----------
-    def update_dict_cache(self,file_name_path:str,key:str,func:Callable,**kwargs) -> dict:
+    def update_dict_cache(self,file_name_path:str,new_key:str,func:Callable,**kwargs) -> dict:
         '''
         This function is intended to be used as the core of a decorator function.
         This function is for getting a single record that MIGHT be part of a bigger dict.
@@ -60,25 +60,52 @@ class CacheManager(GameConfig):
         we call the given function (typically an API call) to find the data elsewhere.
         We then (a) update the dict with the new record and (b) return the new record.
         '''
-        # key = kwargs.pop('key')
         try:
             with open(file_name_path, "r") as file:
                 existing_data = json.loads(file.read())
             #If the data we're looking for exists in the file:
-            if key in existing_data.keys():
-                return existing_data[key]
+            if new_key in existing_data.keys():
+                return existing_data[new_key]
             #If the data is not in the file, update the file:
             else:
-                new_data = func(self,key,**kwargs)
+                new_data = func(self,new_key,**kwargs)
                 existing_data.update(new_data)
                 with open(file_name_path, "w") as file:
                     file.write(json.dumps(existing_data,indent=3))
+                return new_data
         except:
             #If file interaction failed, it's likely because no file existed. In this case,
             #we just return the data since writing to file might be an incomplete record.
             message = f"Could not update cache: {file_name_path}"
             warn(message)
-            return func(self,key,**kwargs)
+            return func(self,new_key,**kwargs)
+
+    #----------
+    def force_update_dict_cache(self,file_name_path:str,new_key:str,func:Callable,**kwargs) -> dict:
+        '''
+        This function is intended to be used as the core of a decorator function.
+        This function is for updating a record in a particular json file.
+        This function is best suited for data which might not be easy to get again - because
+        it forces an update, even if a matching record is found.
+        However, this process fails if there is no file available - so THIS FUNCTION REQUIRES
+        THAT THE FILE ALREADY EXISTS.
+        '''
+        try:
+            with open(file_name_path, "r") as file:
+                existing_data = json.loads(file.read())
+
+            new_data = func(self,new_key,**kwargs)
+            existing_data.update(new_data)
+
+            with open(file_name_path, "w") as file:
+                file.write(json.dumps(existing_data,indent=3))
+
+            return new_data
+        except:
+            #If file interaction failed, it's likely because no file existed. In this case,
+            #we just return the data since writing to file might be an incomplete record.
+            raise Exception(f"Critical error: updating record in file {file_name_path} failed. \
+                            Data could not be force-updated: {new_data}")
 
 #==========
 class HttpConnection:
