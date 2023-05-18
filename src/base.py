@@ -10,6 +10,7 @@ from .utilities.crypt_utilities import *
 from configparser import ConfigParser
 import json
 from typing import Callable
+from warnings import warn
 
 #==========
 class GameConfig:
@@ -50,6 +51,34 @@ class CacheManager(GameConfig):
                 file.write(json.dumps(data,indent=3))
             return data  
 
+    #----------
+    def update_dict_cache(self,file_name_path:str,key:str,func:Callable,**kwargs) -> dict:
+        '''
+        This function is intended to be used as the core of a decorator function.
+        This function is for getting a single record that MIGHT be part of a bigger dict.
+        The function first looks for the record in the dict (is given key present?). If that fails,
+        we call the given function (typically an API call) to find the data elsewhere.
+        We then (a) update the dict with the new record and (b) return the new record.
+        '''
+        # key = kwargs.pop('key')
+        try:
+            with open(file_name_path, "r") as file:
+                existing_data = json.loads(file.read())
+            #If the data we're looking for exists in the file:
+            if key in existing_data.keys():
+                return existing_data[key]
+            #If the data is not in the file, update the file:
+            else:
+                new_data = func(self,key,**kwargs)
+                existing_data.update(new_data)
+                with open(file_name_path, "w") as file:
+                    file.write(json.dumps(existing_data,indent=3))
+        except:
+            #If file interaction failed, it's likely because no file existed. In this case,
+            #we just return the data since writing to file might be an incomplete record.
+            message = f"Could not update cache: {file_name_path}"
+            warn(message)
+            return func(self,key,**kwargs)
 
 #==========
 class HttpConnection:
@@ -93,10 +122,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
         #Loading in config which has basic information on player:
         self.load_account_config()
-        
         try:
             self.load_api_key()
-            print(self.callsign)
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
         except:
             raise Exception(f"Error in loading API key. Please check API key is present at file path {self.account_config_filepath}")
