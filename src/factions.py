@@ -1,9 +1,9 @@
 #==========
-from typing import Callable
-from .base import SpaceTraderConnection,CacheManager
+from typing import Callable, Iterator
+from .base import SpaceTraderConnection,DictCacheManager
 
 #==========
-class Factions(SpaceTraderConnection,CacheManager):
+class Factions(SpaceTraderConnection,DictCacheManager):
     """
     Class to query game data related to the in-game factions
     """
@@ -14,7 +14,7 @@ class Factions(SpaceTraderConnection,CacheManager):
     #----------
     def __init__(self):
         SpaceTraderConnection.__init__(self)
-        CacheManager.__init__(self)
+        DictCacheManager.__init__(self)
         self.base_url = self.base_url + "/factions"
         self.cache_path = self.base_cache_path + "factions/"
         #WARNING: I am using a static name "factions" below because I don't think factions change by game
@@ -30,7 +30,7 @@ class Factions(SpaceTraderConnection,CacheManager):
         """
         def wrapper(self,**kwargs):
             new_path = self.cache_path + self.cache_file_name + ".json"
-            return CacheManager.read_dict_cache(self,new_path,func,**kwargs)
+            return DictCacheManager.update_cache_dict_UPDATE(self,new_path,func,**kwargs)
         return wrapper
     
     #----------
@@ -44,12 +44,12 @@ class Factions(SpaceTraderConnection,CacheManager):
         def wrapper(self,faction,**kwargs):
             new_path = self.cache_path + self.cache_file_name + ".json"
             # kwargs.update({"key":faction})
-            return CacheManager.update_dict_cache(self,new_path,faction,func,**kwargs)
+            return DictCacheManager.update_cache_dict(self,new_path,faction,func,**kwargs)
         return wrapper
 
     #----------
     @cache_factions
-    def list_factions(self) -> dict:
+    def list_factions(self) -> Iterator[dict]:
         data = self.stc_http_request(method="GET",url=self.base_url)
         #Transforming nested list to dict to make data easier to reference:
         return {obj['symbol']:obj for obj in data['data']}

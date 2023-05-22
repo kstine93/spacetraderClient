@@ -11,6 +11,8 @@ from configparser import ConfigParser
 import json
 from typing import Callable
 from warnings import warn
+from os import fsdecode,listdir
+from time import sleep
 
 #==========
 class GameConfig:
@@ -26,7 +28,7 @@ class GameConfig:
 
 
 #==========
-class CacheManager(GameConfig):
+class DictCacheManager(GameConfig):
     """Generic class for loading data to/from a cache or local file system"""
 
     #----------
@@ -34,78 +36,181 @@ class CacheManager(GameConfig):
         pass
 
     #----------
-    def read_dict_cache(self,file_name_path:str,func:Callable,**kwargs) -> dict:
-        '''
-        This function is intended to be used as the core of a decorator function.
-        This function is looking for json data in a specified filepath and returning it if it exists.
-        If it fails to retrieve this file, it calls the passed function (which must return a dict object).
-        This dict object is then written to the given path and also returned to the caller.
-        A common function to pass in would be an API call - which gets executed if no local data is found.
-        '''
-        try:
-            with open(file_name_path, "r") as file:
-                return json.loads(file.read())
-        except:
-            data = func(self,**kwargs)
-            with open(file_name_path, "w") as file:
-                file.write(json.dumps(data,indent=3))
-            return data  
+    def count_keys_in_dir(self,dir_path) -> int:
+        count = 0
+        for file in listdir(dir_path):
+            file_path = f"{dir_path}/{fsdecode(file)}"
+            count += self.count_keys_in_file(file_path)
+        return count
 
     #----------
-    def update_dict_cache(self,file_name_path:str,new_key:str,func:Callable,**kwargs) -> dict:
-        '''
-        This function is intended to be used as the core of a decorator function.
-        This function is for getting a single record that MIGHT be part of a bigger dict.
-        The function first looks for the record in the dict (is given key present?). If that fails,
-        we call the given function (typically an API call) to find the data elsewhere.
-        We then (a) update the dict with the new record and (b) return the new record.
-        '''
+    def count_keys_in_file(self,file_path) -> int:
+        return sum(1 for key in self.get_keys_in_file(file_path))
+
+    #----------
+    def get_keys_in_file(self,file_path) -> int:
+        with open(file_path,"r") as file:
+            for key in json.loads(file.read()).keys():
+                yield key
+
+    # #----------
+    # def read_cache_file(self,file_name_path:str,func:Callable,**kwargs) -> dict:
+    #     '''
+    #     This function is intended to be used as the core of a decorator function.
+    #     This function is looking for json data in a specified filepath and returning it if it exists.
+    #     If it fails to retrieve this file, it calls the passed function (which must return a dict object).
+    #     This dict object is then written to the given path and also returned to the caller.
+    #     A common function to pass in would be an API call - which gets executed if no local data is found.
+    #     '''
+    #     #RETURNS ENTIRE FILE IF FOUND. OTHERWISE, WRITES FILE
+    #     #DOES NOT NEED KEY - ALL RECORDS WANTED
+    #     #>> Let's update this to just use "update_cache_dict" - there's little need for another function just for file monoliths
+    #     try:
+    #         with open(file_name_path, "r") as file:
+    #             return json.loads(file.read())
+    #     except:
+    #         data = func(self,**kwargs)
+    #         with open(file_name_path, "w") as file:
+    #             file.write(json.dumps(data,indent=3))
+    #         return data  
+
+
+    # #----------
+    # def update_cache_dict(self,file_name_path:str,new_key:str,func:Callable,**kwargs) -> dict:
+    #     '''
+    #     This function is intended to be used as the core of a decorator function.
+    #     This function is for getting a single record that MIGHT be part of a bigger dict.
+    #     The function first looks for the record in the dict (is given key present?). If that fails,
+    #     we call the given function (typically an API call) to find the data elsewhere.
+    #     We then (a) update the dict with the new record and (b) return the new record.
+    #     '''
+    #     #RETURNS ONLY RECORD INDICATED BY KEY.
+    #     #DOES NOT CREATE FILE IF NONE EXISTS
+    #     #REQUIRES KEY
+    #     try:
+    #         with open(file_name_path, "r") as file:
+    #             existing_data = json.loads(file.read())
+    #         #If the data we're looking for exists in the file:
+    #         if new_key in existing_data.keys():
+    #             return existing_data[new_key]
+    #         #If the data is not in the file, update the file:
+    #         else:
+    #             new_data = func(self,new_key,**kwargs)
+    #             existing_data.update(new_data)
+    #             with open(file_name_path, "w") as file:
+    #                 file.write(json.dumps(existing_data,indent=3))
+    #             return new_data
+    #     except:
+    #         #If file interaction failed, it's likely because no file existed. In this case,
+    #         #we just return the data since writing to file might be an incomplete record.
+    #         message = f"Could not update cache: {file_name_path}"
+    #         warn(message)
+    #         return func(self,new_key,**kwargs)
+
+    # #----------
+    # def update_cache_dict_READ(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
+    #     try:
+    #         with open(file_path, "r") as file:
+    #             existing_data = json.loads(file.read())
+    #     except:
+    #         existing_data = {}
+    #         msg = f"Warning: force update found no file at {file_path}. New file will be created."
+    #         warn(msg)
+    #     finally:
+    #         #================
+    #         #If the data is in the file, return it:
+    #         if new_key in existing_data.keys():
+    #             return existing_data[new_key]
+    #         #If the data is not in the file, update the file and then return:
+    #         new_data = func(self,new_key,**kwargs)
+    #         #================
+    #         existing_data.update(new_data)
+    #         with open(file_path, "w") as file:
+    #             file.write(json.dumps(existing_data,indent=3))
+    #         return new_data
+
+    """
+    TODO: (MAY 19): I'm trying to figure out a way to consolidate the various decorators I have here.
+    I've already been able to get rid of the basic one which reads files as a monolith by instead insisting
+    that files are always 'updated' with keys.
+    Now I have 2 other issues to solve:
+    A) how to merge the decorator which deal with updates that return the value if it's found ("_UPDATE")
+    with the decorator which doesn't return the value if it exists, but overwrites it ("_FORCE")
+        > This might be as simple as just including a 'force:bool' flag in the parameters.
+    B) how to deal with functions which just return 1 set of values (e.g., get contract) vs. functions
+    which return a lot of objects and not all at once (e.g., paginated system data)
+        > I was able to solve this issue in the SpaceTraderConnection class by using a generator - so my function
+        kept producing values when I needed it without losing state. Could I do something similar here?
+        > NOTE: my decorators currently require that the functions they decorate return just a single 'dict', but my
+        functions with pagination need to iterate somehow over a series of dicts - and keep passing them to the iterator.
+        This is why I ended up making the pure function version of 'force cache update' - because it made more sense to keep
+        This as a function call that I could feed data to, rather than a function which had to produce the values...
+    
+    STEPS:
+    1. Test to see if I can call an identity function iteratively.
+     """
+
+    #----------
+    def update_cache_dict_UPDATE(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
         try:
-            with open(file_name_path, "r") as file:
+            with open(file_path, "r") as file:
                 existing_data = json.loads(file.read())
-            #If the data we're looking for exists in the file:
+        except:
+            existing_data = {}
+            msg = f"Warning: cache update found no file at {file_path}. New file will be created."
+            warn(msg)
+        finally:
+            #================
+            #If the data is in the file, return it:
             if new_key in existing_data.keys():
                 return existing_data[new_key]
-            #If the data is not in the file, update the file:
-            else:
-                new_data = func(self,new_key,**kwargs)
-                existing_data.update(new_data)
-                with open(file_name_path, "w") as file:
-                    file.write(json.dumps(existing_data,indent=3))
-                return new_data
-        except:
-            #If file interaction failed, it's likely because no file existed. In this case,
-            #we just return the data since writing to file might be an incomplete record.
-            message = f"Could not update cache: {file_name_path}"
-            warn(message)
-            return func(self,new_key,**kwargs)
+            #If the data is not in the file, update the file and then return:
+            #================
+            new_data = func(self,new_key,**kwargs)
+            existing_data.update(new_data)
+            with open(file_path, "w") as file:
+                file.write(json.dumps(existing_data,indent=3))
+            return new_data
 
     #----------
-    def force_update_dict_cache(self,file_name_path:str,new_key:str,func:Callable,**kwargs) -> dict:
+    def update_cache_dict_FORCE(self,file_path:str,new_key:str,func:Callable,**kwargs) -> dict:
+        try:
+            with open(file_path, "r") as file:
+                existing_data = json.loads(file.read())
+        except:
+            existing_data = {}
+            msg = f"Warning: force update found no file at {file_path}. New file will be created."
+            warn(msg)
+        finally:
+            #================
+            new_data = func(self,new_key,**kwargs)
+            #================
+            existing_data.update(new_data)
+            with open(file_path, "w") as file:
+                file.write(json.dumps(existing_data,indent=3))
+            return new_data
+
+    #----------
+    def force_update_cache_dict(self,file_name_path:str,new_data:dict) -> dict:
         '''
-        This function is intended to be used as the core of a decorator function.
-        This function is for updating a record in a particular json file.
-        This function is best suited for data which might not be easy to get again - because
-        it forces an update, even if a matching record is found.
-        However, this process fails if there is no file available - so THIS FUNCTION REQUIRES
-        THAT THE FILE ALREADY EXISTS.
+        This function is NOT part of a decorator.
+        This function is for reading a json file and updating its contents with new data.
+        As opposed to some other functions in this class, this function ALWAYS saves the file
+        with the data. There is no conditional behavior if a record already exists.
+        Creates a new file if none exists.
         '''
         try:
             with open(file_name_path, "r") as file:
                 existing_data = json.loads(file.read())
-
-            new_data = func(self,new_key,**kwargs)
+        except:
+            existing_data = {}
+            msg = f"Warning: force update found no file at {file_name_path}. New file will be created."
+            warn(msg)
+        finally:
             existing_data.update(new_data)
 
             with open(file_name_path, "w") as file:
                 file.write(json.dumps(existing_data,indent=3))
-
-            return new_data
-        except:
-            #If file interaction failed, it's likely because no file existed. In this case,
-            #we just return the data since writing to file might be an incomplete record.
-            raise Exception(f"Critical error: updating record in file {file_name_path} failed. \
-                            Data could not be force-updated: {new_data}")
 
 #==========
 class HttpConnection:
@@ -121,14 +226,13 @@ class HttpConnection:
     def http_request(self, method:str, url:str, **kwargs) -> HTTPResponse:
 
         if 'body' in kwargs:
-            kwargs.update(json.dumps(kwargs['body']))
+            kwargs.update({'body':json.dumps(kwargs['body'])})
 
         return self.conn.request(
             method=method
             ,url=url
             ,**kwargs
         )
-
 
 #==========
 class SpaceTraderConnection(HttpConnection,GameConfig):
@@ -176,7 +280,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
         if http_response.status == 200:
             return True
         else:
-            raise Exception(f"API call returned non-200 response. Response data: {json.loads(http_response.data)}")
+            msg = f"API call returned non-200 response. Response data: {http_response.data.decode('utf-8')}"
+            raise Exception(msg)
 
     #----------
     def stc_http_request(self, method:str, url:str, **kwargs) -> dict:
@@ -188,6 +293,30 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
         #If response is o.k., return
         if self.stc_http_response_checker(http_response):
             return json.loads(http_response.data)
+
+    #----------
+    def stc_get_paginated_data(self,method:str,url:str,page:str=1,**kwargs) -> None:
+        '''
+        Generator function for getting paginated data from the SpaceTrader API.
+        '''
+        limit = 20
+        url = f"{url}?limit={limit}"
+        while True:
+            try:
+                new_url = url + f"&page={page}"
+                data = self.stc_http_request(method=method,url=new_url,**kwargs)
+                data_list = data['data']
+
+                if len(data_list) == 0:
+                    break
+                yield(data_list)
+                page += 1
+                #Sleeping to avoid over-drawing from API.
+                sleep(0.1)
+            except Exception as e:
+                #If system fails mid-cache, return page (shows progress):
+                print(page)
+                raise e   
 
 
 
