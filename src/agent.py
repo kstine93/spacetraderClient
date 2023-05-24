@@ -23,12 +23,13 @@ class Agent(SpaceTraderConnection,DictCacheManager):
     def cache_agent(func: Callable) -> Callable:
         """
         Decorator. Uses class variables in current class and passes them to wrapper function.
-        This version reads the cached agent data and if none is found, it calls the given function
-        (typically an API call) which provides data. This data is then cached for later use and returned.
+        This version reads the cached agent data and tries to find information about a given agent.
+        If the file exists, but there is no data on the given agent, this information is added to the file.
+        If no file exists, a file is created and the data added to it.
         """
-        def wrapper(self,**kwargs):
+        def wrapper(self,callsign:str,**kwargs):
             path = self.cache_path + self.cache_file_name + ".json"
-            return DictCacheManager.update_cache_dict_UPDATE(self,path,func,new_key=self.callsign)
+            return DictCacheManager.get_cache_dict(self,path,func,new_key=callsign,**kwargs)
         return wrapper
 
     #----------

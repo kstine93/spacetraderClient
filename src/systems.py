@@ -1,10 +1,6 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
-from time import sleep
-from os import listdir, fsdecode
-import json
-from datetime import datetime
 
 #==========
 class Systems(SpaceTraderConnection,DictCacheManager):
@@ -24,16 +20,16 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         self.cache_file_name = "systems"
 
     #----------
-    def update_systems(func: Callable) -> Callable:
+    def cache_system(func: Callable) -> Callable:
         """
         Decorator. Uses class variables in current class and passes them to wrapper function.
         This version reads the cached systems data and tries to find information about the given system.
         If the file exists, but there is no data on the given system, this information is added to the file.
-        If no file exists, a warning is given but NO FILE IS CREATED.
+        If no file exists, a file is created and the data added to it.
         """
-        def wrapper(self,system_symbol:str,**kwargs):
-            new_path = self.cache_path + self.cache_file_name + ".json"
-            return DictCacheManager.update_cache_dict(self,new_path,system_symbol,func,**kwargs)
+        def wrapper(self,system:str,**kwargs):
+            path = self.cache_path + system[0:4] + ".json"
+            return DictCacheManager.get_cache_dict(self,path,func,new_key=system,**kwargs)
         return wrapper
 
     #----------
@@ -44,29 +40,22 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         pass         
 
     #----------
-    def cache_all_systems(self,page:str=1) -> None:
+    def reload_systems_into_cache(self,page:str=1) -> None:
+        #NOTE: The speed of this is heavily constrained by API limits (<2 per second). This function (with a 100ms sleep)
+        #does 1.3 records per second. If the API limits are raised, we could try to parallelize this more.
         for system_list in self.stc_get_paginated_data("GET",self.base_url,page):
             for sys in system_list:
                 transformed_sys = {sys['symbol']:sys}
                 #Using first 4 characters of the system symbol as file name:
                 file_path = self.cache_path + sys['symbol'][0:4] + ".json"
-                self.force_update_cache_dict(file_path,transformed_sys)
-                #update_cache_dict(self,file_path:str,new_key:str,func:Callable,force:bool,**kwargs)
-                #update_cache_dict
-
-    #----------
-    def test():
-        """
-        I need to iterate with the generator.
-        for each page of results, I need to split the results and cache each value.
-        """
-        pass
+                self.update_cache_dict(transformed_sys,file_path)
 
     #----------
     def count_systems_in_cache(self) -> int:
         return self.count_keys_in_dir(self.cache_path)
 
     #----------
+    @cache_system
     def get_system(self,system:str) -> dict:
         url = self.base_url + "/" + system
         new_data = self.stc_http_request(method="GET",url=url)
