@@ -19,7 +19,7 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #Using callsign as file name so that contract files are associated with a particular account:
         self.cache_path = f"{self.base_cache_path}contracts/{self.callsign}.json"
 
-    def mold_contract_dict(response:dict) -> dict:
+    def mold_contract_dict(self,response:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
         data = response['data']['contract']
         return {data['id']:data}
@@ -33,7 +33,7 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         If no file exists, a file is created and the data added to it.
         """
         def wrapper(self,contract:str,**kwargs):
-            return DictCacheManager.get_cache_dict(self,self.cache_path,func,new_key=contract,**kwargs)
+            return self.get_cache_dict(self.cache_path,func,new_key=contract,**kwargs)
         return wrapper
 
     #---------- 
@@ -42,7 +42,11 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
             for con in contract_list:
                 transformed_con = {con['id']:con}
                 self.update_cache_dict(transformed_con,self.cache_path)
-    
+            
+    #---------- 
+    def list_all_contracts(self) -> dict:
+        return self.get_dict_from_file(self.cache_path)
+
     #----------
     @cache_contracts
     def get_contract(self,contract:str) -> dict:
@@ -60,10 +64,14 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         self.update_cache_dict(new_data,self.cache_path)
 
     #----------
-    def deliver_contract(self,contract:str) -> dict:
-        # === UNTESTED ===
+    def deliver_contract(self,contract:str,ship:str,item:str,quantity:int) -> dict:
         url = f"{self.base_url}/{contract}/deliver"
-        response = self.stc_http_request(method="POST",url=url)
+        body = {
+            'shipSymbol':ship
+            ,'tradeSymbol':item
+            ,'units':quantity
+        }
+        response = self.stc_http_request(method="POST",url=url,body=body)
         #NOTE: This method also returns a 'cargo' object which represents the type and quantity
         #of resource which was delivered. I could pass this object to my 'fleet' class to update
         #the quantity of the resource for the ship which was delivering this contract.
