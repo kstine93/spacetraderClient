@@ -7,11 +7,12 @@ This file also contains a class for registering a new agent and thereby setting 
 from urllib3 import PoolManager, HTTPResponse
 from .utilities.basic_utilities import *
 from .utilities.crypt_utilities import *
+from .custom_types import SpaceTraderResp
 from configparser import ConfigParser
 import json
 from typing import Callable
 from warnings import warn
-from os import fsdecode,listdir
+from os import fsdecode,listdir,path
 from time import sleep
 
 
@@ -38,7 +39,7 @@ class DictCacheManager(GameConfig):
 
     #----------
     def count_keys_in_dir(self,dir_path) -> int:
-        '''Counts keys across all (JSON) files in a directory'''
+        """Counts keys across all (JSON) files in a directory"""
         count = 0
         for file in listdir(dir_path):
             file_path = f"{dir_path}/{fsdecode(file)}"
@@ -47,38 +48,47 @@ class DictCacheManager(GameConfig):
 
     #----------
     def count_keys_in_file(self,file_path) -> int:
-        '''Counts keys in JSON file'''
+        """Counts keys in JSON file"""
         return sum(1 for key in self.get_keys_in_file(file_path))
 
     #----------
     def get_keys_in_file(self,file_path) -> int:
-        '''Returns keys in JSON file'''
+        """Returns keys in JSON file"""
         with open(file_path,"r") as file:
             for key in json.loads(file.read()).keys():
                 yield key
 
     #----------
     def get_dict_from_file(self,file_path:str) -> dict:
-        '''Reads and returns dict from file'''
+        """Reads and returns dict from file"""
         with open (file_path, "r") as file:
             return json.loads(file.read())
 
     #---------- 
     def write_dict_to_file(self,file_path:str,data:dict) -> None:
-        '''Writes provided dict to file'''
+        """Writes provided dict to file"""
         with open(file_path, "w") as file:
-            file.write(json.dumps(data,indent=3))        
+            file.write(json.dumps(data,indent=3))       
+
+    #----------
+    def attempt_cache_retrieval(self,file_path:str) -> dict:
+        """Attempts to get data as dictionary from file"""
+        if path.exists(file_path):
+            return self.get_dict_from_file(file_path)
+        else:
+            warn(f"no existing file at {file_path}. New file will be created.")
+            return {}       
 
     #----------
     def get_cache_dict(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
-        '''
+        """
         This function is intended to be used as the core of a decorator function.
         This function is for getting a single record that MIGHT be part of a bigger dict in the local cache.
         The function first looks for the record in the dict (is given key present?). If that fails because
         the cache file doesn't exist or the key is not present in the dict,
         we call the given function (typically an API call) to find the data elsewhere.
         We then pass the new data on to 'update_cache_dict' to update the cache.
-        '''
+        """
         try:
             #Try to open local cache and return record. If this fails, pull from API:
             existing_data = self.get_dict_from_file(file_path)
@@ -90,22 +100,14 @@ class DictCacheManager(GameConfig):
 
     #----------
     def update_cache_dict(self,data:dict,file_path:str) -> dict:
-        '''
+        """
         This function updates a local cache file with a given dictionary. If the file exists,
         we load the file data, update it with the given dictionary, and re-write it. If the file
         doesn't exist, we make a new file with the dictionary as the sole entry.
-        '''
-        try:
-            #Try to get file (but not sure it exists):
-            existing_data = self.get_dict_from_file(file_path)
-        except FileNotFoundError:
-            #If getting file failed, we replace file:
-            existing_data = {}
-            warn(f"no existing file at {file_path}. New file will be created.")
-        finally:
-            existing_data.update(data)
-            self.write_dict_to_file(file_path,existing_data)
-
+        """
+        existing_data = self.attempt_cache_retrieval(file_path)
+        existing_data.update(data)
+        self.write_dict_to_file(file_path,existing_data)
 
 #==========
 class HttpConnection:
@@ -128,7 +130,6 @@ class HttpConnection:
             ,url=url
             ,**kwargs
         )
-
 
 #==========
 class SpaceTraderConnection(HttpConnection,GameConfig):
@@ -164,20 +165,25 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
     #----------
     def load_api_key(self) -> None:
-        '''Purpose: Decrypt API key and store it locally so that we can use it for future API calls'''
+        """Purpose: Decrypt API key and store it locally so that we can use it for future API calls"""
         password = prompt_user_password("Please enter password to decrypt your API key:")
         decrypted_key_bytes = password_decrypt(self.encrypted_key, password)
         self.api_key = decrypted_key_bytes.decode() #converting to string
 
     #----------
-    def stc_http_response_checker(self, http_response:HTTPResponse) -> bool:
-        """Checks general success of the SpaceTrader API call and raises errors/warnings if a failure was found."""  
-        #NOTE: Expand this as needed if we want custom handling of certain errors across all SpaceTrader endpoints.
-        if http_response.status == 200:
-            return True
-        else:
-            msg = f"API call returned non-200 response. Response data: {http_response.data.decode('utf-8')}"
-            raise Exception(msg)
+    def repackage_http_response(self,http_response:HTTPResponse) -> SpaceTraderResp:
+        """Transforms http_response (sometimes in a complex format) to simple dictionary."""
+        packet = {
+            'http_data':json.loads(http_response.data),
+            'http_status':http_response.status
+        }
+        return packet    
+
+    #----------
+    def get_system_from_waypoint(self,waypoint:str) -> str:
+        """In Alpha version of the game, the system is the first 7 characters of the waypoint.
+        Rather than pass both values around, this derives system from waypoint"""
+        return waypoint[0:7]
 
     #----------
     def stc_http_request(self, method:str, url:str, **kwargs) -> dict:
@@ -186,26 +192,22 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                                           ,url=url
                                           ,headers=self.default_header
                                           ,**kwargs)
-        #If response is o.k., return
-        if self.stc_http_response_checker(http_response):
-            return json.loads(http_response.data)
+        
+        return self.repackage_http_response(http_response)
 
     #----------
     def stc_get_paginated_data(self,method:str,url:str,page:str=1,**kwargs) -> None:
-        '''
-        Generator function for getting paginated data from the SpaceTrader API.
-        '''
+        """Generator function for getting paginated data from the SpaceTrader API."""
         limit = 20
         url = f"{url}?limit={limit}"
         while True:
             try:
                 new_url = url + f"&page={page}"
-                data = self.stc_http_request(method=method,url=new_url,**kwargs)
-                data_list = data['data']
+                response = self.stc_http_request(method=method,url=new_url,**kwargs)
 
-                if len(data_list) == 0:
+                if len(response['http_data']['data']) == 0:
                     break
-                yield(data_list)
+                yield(response)
                 page += 1
                 #Sleeping to avoid over-drawing from API.
                 sleep(0.05)
@@ -213,7 +215,6 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                 #If system fails mid-cache, return page (shows progress for re-trying):
                 print(page)
                 raise e   
-
 
 
 #==========
