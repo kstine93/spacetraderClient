@@ -37,4 +37,4 @@ class Agent(SpaceTraderConnection,DictCacheManager):
     def get_agent_details(self,callsign:str) -> dict:
         url = self.base_url + "/my/agent"
         data = self.stc_http_request(method="GET",url=url)
-        return {callsign:data['data']}
+        return {callsign:data['http_data']['data']}

@@ -51,9 +51,10 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     @cache_contracts
     def get_contract(self,contract:str) -> dict:
         url = self.base_url + "/" + contract
-        new_data = self.stc_http_request(method="GET",url=url)
+        response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with contracts dict:
-        return {new_data['data']['id']:new_data['data']}
+        data = response['http_data']
+        return {data['data']['id']:data['data']}
 
     #----------
     def accept_contract(self,contract:str) -> dict:

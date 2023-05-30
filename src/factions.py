@@ -48,4 +48,4 @@ class Factions(SpaceTraderConnection,DictCacheManager):
         url = self.base_url + "/" + faction
         response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with factions dict:
-        return  {faction:response['data']}
+        return  {faction:response['http_data']['data']}
