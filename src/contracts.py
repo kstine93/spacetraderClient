@@ -19,9 +19,9 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #Using callsign as file name so that contract files are associated with a particular account:
         self.cache_path = f"{self.base_cache_path}contracts/{self.callsign}.json"
 
-    def mold_contract_dict(self,response:dict) -> dict:
+    def mold_contract_dict(self,http_data:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
-        data = response['data']['contract']
+        data = http_data['data']
         return {data['id']:data}
 
     #----------
@@ -33,12 +33,13 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         If no file exists, a file is created and the data added to it.
         """
         def wrapper(self,contract:str,**kwargs):
-            return self.get_cache_dict(self.cache_path,func,new_key=contract,**kwargs)
+            return DictCacheManager.get_cache_dict(self,self.cache_path,func,new_key=contract,**kwargs)
         return wrapper
 
     #---------- 
     def reload_contracts_in_cache(self,page:int=1) -> dict:
-        for contract_list in self.stc_get_paginated_data("GET",self.base_url,page):
+        for response in self.stc_get_paginated_data("GET",self.base_url,page):
+            contract_list = response['http_data']['data']
             for con in contract_list:
                 transformed_con = {con['id']:con}
                 self.update_cache_dict(transformed_con,self.cache_path)
@@ -51,16 +52,16 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     @cache_contracts
     def get_contract(self,contract:str) -> dict:
         url = self.base_url + "/" + contract
-        new_data = self.stc_http_request(method="GET",url=url)
+        response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with contracts dict:
-        return {new_data['data']['id']:new_data['data']}
+        return self.mold_contract_dict(response['http_data'])
 
     #----------
     def accept_contract(self,contract:str) -> dict:
         url = f"{self.base_url}/{contract}/accept"
         response = self.stc_http_request(method="POST",url=url)
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
+        new_data = self.mold_contract_dict(response['http_data'])
         self.update_cache_dict(new_data,self.cache_path)
 
     #----------
@@ -75,9 +76,8 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #NOTE: This method also returns a 'cargo' object which represents the type and quantity
         #of resource which was delivered. I could pass this object to my 'fleet' class to update
         #the quantity of the resource for the ship which was delivering this contract.
-
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
+        new_data = self.mold_contract_dict(response['http_data'])
         self.update_cache_dict(new_data,self.cache_path)
 
     #----------
@@ -90,5 +90,5 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #details.
 
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
+        new_data = self.mold_contract_dict(response['http_data'])
         self.update_cache_dict(new_data,self.cache_path)

@@ -19,6 +19,11 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         self.cache_path = self.base_cache_path + "systems/"
         self.cache_file_name = "systems"
 
+    def mold_systems_dict(self,http_data:dict) -> dict:
+        '''Index into response dict from API to get contract data in common format'''
+        data = http_data['data']
+        return {data['symbol']:data}
+
     #----------
     def cache_system(func: Callable) -> Callable:
         """
@@ -43,7 +48,8 @@ class Systems(SpaceTraderConnection,DictCacheManager):
     def reload_systems_into_cache(self,page:str=1) -> None:
         #NOTE: The speed of this is heavily constrained by API limits (<2 per second). This function (with a 100ms sleep)
         #does 1.3 records per second. If the API limits are raised, we could try to parallelize this more.
-        for system_list in self.stc_get_paginated_data("GET",self.base_url,page):
+        for response in self.stc_get_paginated_data("GET",self.base_url,page):
+            system_list = response['http_data']['data']
             for sys in system_list:
                 transformed_sys = {sys['symbol']:sys}
                 #Using first 4 characters of the system symbol as file name:
@@ -58,6 +64,18 @@ class Systems(SpaceTraderConnection,DictCacheManager):
     @cache_system
     def get_system(self,system:str) -> dict:
         url = self.base_url + "/" + system
-        new_data = self.stc_http_request(method="GET",url=url)
+        response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with systems dict:
-        return {new_data['data']['symbol']:new_data['data']}
+        return self.mold_systems_dict(response['http_data'])
+    
+    #----------
+    def get_market(self,waypoint:str):
+        system = self.get_system_from_waypoint(waypoint)
+        url = f"{self.base_url}/{system}/waypoints/{waypoint}/market"
+        response = self.stc_http_request(method="GET",url=url)
+        #Transforming returned data to be compatible with systems dict:
+        return self.mold_systems_dict(response['http_data'])
+    
+    #----------
+    def get_shipyard():
+        pass

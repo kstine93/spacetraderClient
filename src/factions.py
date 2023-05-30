@@ -37,15 +37,16 @@ class Factions(SpaceTraderConnection,DictCacheManager):
     #----------
     def reload_factions_into_cache(self,page:int=1) -> None:
         path = self.cache_path + self.cache_file_name + ".json"
-        for faction_list in self.stc_get_paginated_data("GET",self.base_url,page):
+        for response in self.stc_get_paginated_data("GET",self.base_url,page):
+            faction_list = response['http_data']['data']
             for faction in faction_list:
                 transformed_faction = {faction['symbol']:faction}
                 self.update_cache_dict(transformed_faction,path)
-        
+
     #----------
     @cache_factions
     def get_faction(self,faction:str) -> dict:
         url = self.base_url + "/" + faction
         response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with factions dict:
-        return  {faction:response['data']}
+        return  {faction:response['http_data']['data']}
