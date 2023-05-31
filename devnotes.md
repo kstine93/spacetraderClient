@@ -9,6 +9,36 @@ Notes on tricky problems, decisions, etc.
 ## Notes
 
 ### May 31, 2023
+
+**Next steps**
+Right now I've finished all of the endpoints and they all seem to work. My next tasks are to build out some more testing
+and then to do the harder (mentally) task of building the next layer of the interface:
+1. Build out testing:
+   1. Have a test for each endpoint
+   2. Organise your tests so that they're a bit more modular
+      1. Maybe a single testing file for 'systems', 'ships', etc? - and then a 'master' test file to run all of them sequentially (or parallely!?)
+2. Build the next layer of my interface
+
+**IDEAS on next layer of interface**
+The game is vaguely playable just from a python notebook - but I have to keep running around to find certain commands, and commenting out commands I don't want to run - which is a pain.
+Other stuff I want to figure out:
+1. Can I chain together commands in a reasonable way (e.g., SURVEY then EXTRACT then REFINE) and have higher-level functions to do this?
+2. Can I make a QUEUE of commands!? Since the cooldown is such a pain, it would be great if I could queue commands which get executed as soon as the last cooldown is over.
+   1. Something like "Jump to X system, nav to Y waypoint, survey and extract repeatedly until you get 50 units of copper, then go to Z waypoint" - that would be awesome.
+3. Can I make more granular classes (particularly for 'ships') which hold more runtime information?
+   1. Currently my program has no state - it has a database (cache) but that's it. But the ships class does have some endpoints which point towards state
+      1. System the ship is currently in
+      2. scan of waypoints
+      3. survey data for certain waypoints
+4. Can I make more of a nice interface for the player? (I like the idea of starting with some ASCII and moving to HTML from there)
+   1. Buttons instead of CLI to run commands
+   2. Some kind of heads-up display (or at least ASCII?)
+   3. Current contract info & progress & time left
+   4. Current state of ship & queue
+   5. Maybe a player-editable to-do list
+
+
+**NOTES on handling HTTP status errors:**
 I was musing below on maybe having some kind of central way to handle http error codes. However, since error codes (even ones like `400` do not necessarily signify that the API has failed, but can sometimes mean that you're just trying to do something in-game that you can't do yet)- having a central status-handler doesn't make sense to me anymore.
 
 My new strategy is to return response packets (with status and data) in their raw form - where they can be dealt with individually (or not at all).
