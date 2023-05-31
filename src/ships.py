@@ -26,133 +26,118 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         return {data['id']:data}
 
     #----------
-    def cache_ship(func: Callable) -> Callable:
-        """
-        Decorator. Uses class variables in current class and passes them to wrapper function.
-        This version reads the cached ships data and tries to find information about the existing ships.
-        If the file exists, but there is no data on the given ship, this information is added to the file.
-        If no file exists, a file is created and the data added to it.
-        """
-        def wrapper(self,ship:str,**kwargs):
-            return DictCacheManager.get_cache_dict(self,self.cache_path,func,new_key=ship,**kwargs)
-        return wrapper
-
-    #---------- 
-    def reload_all_ships_in_cache(self,page:int=1) -> None:
-        for ship_list in self.stc_get_paginated_data("GET",self.base_url,page):
-            for ship in ship_list:
-                transformed_ship = {ship['symbol']:ship}
-                self.update_cache_dict(transformed_ship,self.cache_path)
-
-    #----------
-    #@cache_ship
     def get_ship(self,ship:str) -> dict:
+        """Get detailed information about the ship, its systems, cargo, crew and modules"""
         url = self.base_url + "/" + ship
-        new_data = self.stc_http_request(method="GET",url=url)
-        #Transforming returned data to be compatible with ships dict:
-        return {new_data['data']['symbol']:new_data['data']}
+        response = self.stc_http_request(method="GET",url=url)
+        return response
 
     #--------------
     #--NAVIGATION--
     #--------------
-    def orbit_ship(self,ship:str) -> None:
+    def orbit_ship(self,ship:str) -> dict:
+        """orbit the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/orbit"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def dock_ship(self,ship:str) -> bool:
-        #NOTE: Docking can fail if the ship is not in the right location or capable of docking.
-        #Prepare for valid non-200 responses.
+    def dock_ship(self,ship:str) -> dict:
+        """dock the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/dock"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def jump_ship_to_system(self,ship:str, system:str) -> None:
+    def jump_ship_to_system(self,ship:str, system:str) -> dict:
+        """Jump instantaneously to another system. Alternative to warp."""
         url = f"{self.base_url}/{ship}/jump"
         body = {'systemSymbol':system}
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
 
     #----------
-    def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> None:
+    def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> dict:
+        """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
         body = {'waypointSymbol':waypoint}
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
 
     #----------
     def get_nav_details(self,ship:str) -> dict:
+        """Get current navigation details for a ship"""
         url = f"{self.base_url}/{ship}/nav"
-        data = self.stc_http_request(method="GET",url=url)
-        return data['data']
+        response = self.stc_http_request(method="GET",url=url)
+        return response
 
     #----------
     def warp_ship(self,ship:str,waypoint:str) -> None:
-        #NOTE: It's not entirely clear to me how this is different from Jump + nav commands.
+        """Navigate (warp) the ship to a different system without jumping"""
         url = f"{self.base_url}/{ship}/warp"
         body = {'waypointSymbol':waypoint}
-        self.stc_http_request(method="GET",url=url,body=body)
+        response = self.stc_http_request(method="GET",url=url,body=body)
+        return response
 
     #-------------
     #--SURVEYING--
     #-------------
-    def chart_current_waypoint(self,ship:str) -> bool:
-        #NOTE: returns non-200 code if waypoint is already charted. Maybe I only call this if I can't find the waypoint
-        #in the systems data? Should probably also be able to handle this valid non-200 response here.
+    def chart_current_waypoint(self,ship:str) -> dict:
+        """Add the current waypoint to the community-wide directory of waypoints, if the record doesn't already exist."""
         url = f"{self.base_url}/{ship}/chart"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def survey_current_waypoint(self,ship:str) -> list[dict]:
-        #NOTE: This is a unique endpoint in that it creates a new type of data: SURVEY data.
-        #Need to find way to attach this to waypoint data somehow.
+    def survey_current_waypoint(self,ship:str) -> dict:
+        """Get a survey of resources at your current waypoint location"""
         url = f"{self.base_url}/{ship}/survey"
-        data = self.stc_http_request(method="POST",url=url)
-        return data['data']['surveys']
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def scan_systems(self,ship:str) -> list[dict]:
-        #NOTE: This is returning an array of systems. It's not clear to me how this differs
-        #from 'list_systems'
-        #NOTE: Can fail if ship not in orbit - need to handle this valid non-200 response.
-        #This is the same case for 'waypoints' and 'ships'.
+    def scan_systems(self,ship:str) -> dict:
+        """Get information about systems close to the current system"""
         url = f"{self.base_url}/{ship}/scan/systems"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def scan_waypoints(self,ship:str) -> list[dict]:
-        #NOTE: This appears to be very similar to 'scan systems' - is it only getting info from the current system?
+    def scan_waypoints(self,ship:str) -> dict:
+        """Get detailed data on waypoints in the current system"""
         url = f"{self.base_url}/{ship}/scan/waypoints"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
     def scan_for_ships(self,ship:str) -> dict:
-        #NOTE: This is unique- appears to get information on other nearby ships
-        #NOTE: This needs a 'cooldown' between uses - so failing to cache this data is actually problematic.
-        #CACHE THIS SOMEHOW.
-        #NOTE: This returns a non-200 response by default - even when the scan works.
-        #This is the same for system and waypoint scans.
         url = f"{self.base_url}/{ship}/scan/ships"
-        data = self.stc_http_request(method="POST",url=url)
-        return data['data']['ships']
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #-------------------
     #--SHIP MANAGEMENT--
     #-------------------
-    def get_cooldown_details(self,ship:str) -> None:
-        #Will respond with valid non-200 response codes (204 means there is no cooldown)
+    def get_cooldown_details(self,ship:str) -> dict:
+        """Most ship actions invoke a cooldown period.
+        See how much more time until a ship action can be taken."""
         url = f"{self.base_url}/{ship}/cooldown"
-        data = self.stc_http_request(method="GET",url=url)
-        return data['data']
+        response = self.stc_http_request(method="GET",url=url)
+        return response
 
     #----------
     def refuel_ship(self,ship:str) -> dict:
         url = f"{self.base_url}/{ship}/refuel"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #----------
-    def set_nav_speed(self,ship:str,speed:str) -> None:
+    def set_nav_speed(self,ship:str,speed:str) -> dict:
+        """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
-        self.stc_http_request(method="PATCH",url=url,body=body)
+        response = self.stc_http_request(method="PATCH",url=url,body=body)
+        return response
 
     #----------
     def negotiate_contract(self,ship:str) -> dict:
@@ -162,55 +147,67 @@ class Ships(SpaceTraderConnection,DictCacheManager):
 
     #----------
     def extract_resources(self,ship:str,surveyDict:dict={}) -> dict:
-        #NOTE: Optional survey dict allows for targeting certain resources for extraction. See API docs.
+        """Extract resources from the current waypoint. an optional survey object allows better yields."""
         url = f"{self.base_url}/{ship}/extract"
-        self.stc_http_request(method="POST",url=url,body=surveyDict)
+        response = self.stc_http_request(method="POST",url=url,body=surveyDict)
+        return response
 
     #----------
-    def refine_material(self,ship:str,material:str) -> None:
+    def refine_material(self,ship:str,material:str) -> dict:
         url = f"{self.base_url}/{ship}/refine"
-        self.stc_http_request(method="POST",url=url)
+        response = self.stc_http_request(method="POST",url=url)
+        return response
 
     #---------
     #--CARGO--
     #---------
     def get_current_cargo(self,ship:str) -> dict:
+        """See current cargo of a ship"""
         url = f"{self.base_url}/{ship}/cargo"
-        return self.stc_http_request(method="GET",url=url)
+        response = self.stc_http_request(method="GET",url=url)
+        return response
 
     #----------
-    def transfer_cargo_to_ship(self,ship:str,item:str,quantity:int,target_ship:str) -> None:
+    def transfer_cargo_to_ship(self,ship:str,item:str,quantity:int,target_ship:str) -> dict:
+        """Move cargo in-between two ships at the same waypoint"""
         url = f"{self.base_url}/{ship}/transfer"
         body = {
             'tradeSymbol':item
             ,'units':quantity
             ,'shipSymbol':target_ship
         }
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
 
     #----------
-    def purchase_cargo(self,ship:str,item:str,quantity:int) -> None:
+    def purchase_cargo(self,ship:str,item:str,quantity:int) -> dict:
+        """buy cargo at the waypoint the ship is currently at"""
         url = f"{self.base_url}/{ship}/purchase"
         body = {
             'tradeSymbol':item
             ,'units':quantity
         }
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
 
     #----------
-    def sell_cargo(self,ship:str,item:str,quantity:int) -> None:
+    def sell_cargo(self,ship:str,item:str,quantity:int) -> dict:
+        """Sell cargo at the waypoint the ship is currently at"""
         url = f"{self.base_url}/{ship}/sell"
         body = {
             'symbol':item
             ,'units':quantity
         }
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
 
     #----------
-    def jettison_cargo(self,ship:str,item:str,quantity:int) -> None:
+    def jettison_cargo(self,ship:str,item:str,quantity:int) -> dict:
+        """Remove cargo from the storage of a ship"""
         url = f"{self.base_url}/{ship}/jettison"
         body = {
             'tradeSymbol':item
             ,'units':quantity
         }
-        self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc_http_request(method="POST",url=url,body=body)
+        return response
