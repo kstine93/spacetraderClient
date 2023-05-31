@@ -1,6 +1,7 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
+from .custom_types import SpaceTraderResp
 
 #==========
 class Systems(SpaceTraderConnection,DictCacheManager):
@@ -20,6 +21,11 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         self.cache_file_name = "systems"
 
     #----------
+    def mold_system_dict(self,response:SpaceTraderResp) -> dict:
+        data = response['http_data']['data']
+        {data['symbol']:data}
+
+    #----------
     def cache_system(func: Callable) -> Callable:
         """
         Decorator. Uses class variables in current class and passes them to wrapper function.
@@ -30,21 +36,13 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         def wrapper(self,system:str,**kwargs):
             path = self.cache_path + system[0:4] + ".json"
             return DictCacheManager.get_cache_dict(self,path,func,new_key=system,**kwargs)
-        return wrapper
-
-    #----------
-    def refresh_all_systems() -> None:
-        #optional function I could implement later- upon initialization of this class, if the 'systems' files are
-        #older than a certain limit (e.g., created date > 30 days in past) then I would refresh the files by reloading them.
-        #BUT: this assumes systems data will actually change and therefore need refreshing.
-        pass         
+        return wrapper      
 
     #----------
     def reload_systems_into_cache(self,page:str=1) -> None:
-        #NOTE: The speed of this is heavily constrained by API limits (<2 per second). This function (with a 100ms sleep)
-        #does 1.3 records per second. If the API limits are raised, we could try to parallelize this more.
+        """Updates contracts data in cache with data from the API"""
         for system_list in self.stc_get_paginated_data("GET",self.base_url,page):
-            for sys in system_list:
+            for sys in system_list['http_data']['data']:
                 transformed_sys = {sys['symbol']:sys}
                 #Using first 4 characters of the system symbol as file name:
                 file_path = self.cache_path + sys['symbol'][0:4] + ".json"
@@ -57,7 +55,32 @@ class Systems(SpaceTraderConnection,DictCacheManager):
     #----------
     @cache_system
     def get_system(self,system:str) -> dict:
+        """Returns basic overview of a given system. Decorator pulls from cached data if it exists"""
         url = self.base_url + "/" + system
-        new_data = self.stc_http_request(method="GET",url=url)
-        #Transforming returned data to be compatible with systems dict:
-        return {new_data['data']['symbol']:new_data['data']}
+        response = self.stc_http_request(method="GET",url=url)
+        data = self.mold_system_dict(response)
+        return data
+
+    #----------
+    def get_market(self,waypoint:str) -> dict:
+        """Returns information about what commodities may be bought or sold at a given market waypoint"""
+        system = self.get_system_from_waypoint(waypoint)
+        url = f"{self.base_url}/{system}/waypoints/{waypoint}/market"
+        response = self.stc_http_request(method="GET",url=url)
+        return response
+    
+    #----------
+    def get_shipyard(self,waypoint:str) -> dict:
+        """Returns information about what ships are available at a given shipyard waypoint"""
+        system = self.get_system_from_waypoint(waypoint)
+        url = f"{self.base_url}/{system}/waypoints/{waypoint}/shipyard"
+        response = self.stc_http_request(method="GET",url=url)
+        return response
+
+    #----------
+    def get_jump_gate(self,waypoint:str) -> dict:
+        """Returns information about what systems may be jumped to from a given jumpgate waypoint"""
+        system = self.get_system_from_waypoint(waypoint)
+        url = f"{self.base_url}/{system}/waypoints/{waypoint}/jump-gate"
+        response = self.stc_http_request(method="GET",url=url)
+        return response
