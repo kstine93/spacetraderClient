@@ -1,6 +1,7 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
+from .custom_types import SpaceTraderResp
 
 #==========
 class Ships(SpaceTraderConnection,DictCacheManager):
@@ -8,7 +9,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
     Class to query and edit game data related to ships.
     """
     #----------
-    cache_path: str | None = None 
+    cache_path: str | None = None
     cache_file_name: str | None = None
 
     #----------
@@ -18,12 +19,6 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         self.base_url = self.base_url + "/my/ships"
         #Using callsign as file name so that ship files are associated with a particular account:
         self.cache_path = f"{self.base_cache_path}ships/{self.callsign}.json"
-
-    #----------
-    def mold_ship_dict(response:dict) -> dict:
-        '''Index into response dict from API to get ship data in common format'''
-        data = response['data']['ship']
-        return {data['id']:data}
 
     #----------
     def get_ship(self,ship:str) -> dict:
@@ -83,7 +78,8 @@ class Ships(SpaceTraderConnection,DictCacheManager):
     #--SURVEYING--
     #-------------
     def chart_current_waypoint(self,ship:str) -> dict:
-        """Add the current waypoint to the community-wide directory of waypoints, if the record doesn't already exist."""
+        """Add the current waypoint to the community-wide directory of waypoints,
+        if the record doesn't already exist."""
         url = f"{self.base_url}/{ship}/chart"
         response = self.stc_http_request(method="POST",url=url)
         return response
@@ -141,19 +137,21 @@ class Ships(SpaceTraderConnection,DictCacheManager):
 
     #----------
     def negotiate_contract(self,ship:str) -> dict:
-        #NOTE: This appears to be an unfinished endpoint which would arguably go better in the contracts class.
+        #NOTE: This appears to be an unfinished endpoint which would arguably
+        # go better in the contracts class.
         #No need to develop this until it's clarified a bit better.
         pass
 
     #----------
-    def extract_resources(self,ship:str,surveyDict:dict={}) -> dict:
+    def extract_resources(self,ship:str,survey_dict:dict={}) -> dict:
         """Extract resources from the current waypoint. an optional survey object allows better yields."""
         url = f"{self.base_url}/{ship}/extract"
-        response = self.stc_http_request(method="POST",url=url,body=surveyDict)
+        response = self.stc_http_request(method="POST",url=url,body=survey_dict)
         return response
 
     #----------
-    def refine_material(self,ship:str,material:str) -> dict:
+    def refine_material(self,ship:str,) -> dict:
+        """Attempt to refine any raw materials on the ship"""
         url = f"{self.base_url}/{ship}/refine"
         response = self.stc_http_request(method="POST",url=url)
         return response

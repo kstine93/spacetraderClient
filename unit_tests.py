@@ -5,7 +5,7 @@ from src.factions import *
 from src.systems import *
 
 from collections import Counter
-from os import listdir,remove,fsdecode
+from os import listdir,remove,fsdecode,path
 
 '''
 How to test 'list' commands?
@@ -67,14 +67,17 @@ contract_name = "clhz8vpb5132os60d068nfihj"
 contracts_filepath = "./gameData/contracts/"
 contract_schema = ['id','factionSymbol','type','terms','accepted','fulfilled','expiration','deadlineToAccept']
 
-#Reloading local cache
+#TEST: Can get function work without cache?
 empty_directory(contracts_filepath)
 assert_equal_dict_keys(contract.get_contract(contract_name),contract_schema)
-#pulling from local cache:
+
+#TEST: Pull from local cache
 assert_equal_dict_keys(contract.get_contract(contract_name),contract_schema)
 
-#TEST_LIST_CONTRACTS() !!!
-
+#TEST: Reloading entire list of contracts
+empty_directory(contracts_filepath)
+contract.list_all_contracts()
+assert path.exists(contracts_filepath) and path.getsize(contracts_filepath) > 0
 
 #-----------
 #--SYSTEMS--
@@ -83,9 +86,17 @@ system = Systems()
 system_name = "X1-AQ83"
 systems_filepath = "./gameData/systems"
 system_schema = ['symbol','sectorSymbol','type','x','y','waypoints','factions']
+market_schema = ['symbol','imports','exports','exchange']
+market_waypoint = 'X1-VS75-64461C'
+shipyard_schema = ['symbol', 'shipTypes', 'transactions', 'ships']
+shipyard_waypoint = 'X1-TY89-82996C'
 
 #Not emptying systems directory - takes too long to re-populate.
 assert_equal_dict_keys(system.get_system(system_name),system_schema)
+
+assert_equal_dict_keys(system.get_market(market_waypoint)['http_data']['data'],market_schema)
+assert_equal_dict_keys(system.get_shipyard(shipyard_waypoint)['http_data']['data'],shipyard_schema)
+# sys.get_jump_gate("X1-VS75-93799Z")
 
 #TEST_LIST_SYSTEMS() !!!
 

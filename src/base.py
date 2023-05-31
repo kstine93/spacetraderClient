@@ -18,7 +18,8 @@ from time import sleep
 
 #==========
 class GameConfig:
-    """Very basic class for recording values used by child classes - mostly for filepaths and URLs"""
+    """Very basic class for recording values used by child classes
+    mostly for filepaths and URLs"""
     #----------
     account_config_filepath:str = "./account_info.cfg"
     base_cache_path:str = "./gameData/"
@@ -67,11 +68,11 @@ class DictCacheManager(GameConfig):
         with open (file_path, "r") as file:
             return json.loads(file.read())
 
-    #---------- 
+    #----------
     def write_dict_to_file(self,file_path:str,data:dict) -> None:
         """Writes provided dict to file"""
         with open(file_path, "w") as file:
-            file.write(json.dumps(data,indent=3))       
+            file.write(json.dumps(data,indent=3))
 
     #----------
     def attempt_cache_retrieval(self,file_path:str) -> dict:
@@ -80,15 +81,15 @@ class DictCacheManager(GameConfig):
             return self.get_dict_from_file(file_path)
         else:
             warn(f"no existing file at {file_path}. New file will be created.")
-            return {}       
+            return {}
 
     #----------
     def get_cache_dict(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
         """
         This function is intended to be used as the core of a decorator function.
-        This function is for getting a single record that MIGHT be part of a bigger dict in the local cache.
-        The function first looks for the record in the dict (is given key present?). If that fails because
-        the cache file doesn't exist or the key is not present in the dict,
+        This function is for getting a single record that MIGHT be part of a bigger dict in
+        the local cache. The function first looks for the record in the dict (is given key present?)
+        If that fails becausethe cache file doesn't exist or the key is not present in the dict,
         we call the given function (typically an API call) to find the data elsewhere.
         We then pass the new data on to 'update_cache_dict' to update the cache.
         """
@@ -98,7 +99,7 @@ class DictCacheManager(GameConfig):
         else:
             data = func(self,new_key)
             self.update_cache_dict(data,file_path)
-            return data[new_key]     
+            return data[new_key]
 
     #----------
     def update_cache_dict(self,data:dict,file_path:str) -> dict:
@@ -116,7 +117,7 @@ class HttpConnection:
     """Generic class for making API requests"""
     #----------
     conn:PoolManager | None = None
-    
+
     #----------
     def __init__(self):
         self.conn = PoolManager()
@@ -145,7 +146,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
     api_key: str | None = None
     default_header: dict = {"Accept": "application/json"}
-    
+
     #----------
     def __init__(self):
         HttpConnection.__init__(self)
@@ -155,12 +156,15 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
         try:
             self.load_api_key()
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
-        except:
-            raise Exception(f"Error in loading API key. Please check API key is present at file path {self.account_config_filepath}")
+        except Exception as e:
+            msg = f"Error in loading API key.\
+                Please check API key is present at file path {self.account_config_filepath}"
+            raise e(msg)
 
     #----------
     def load_account_config(self) -> None:
-        """Account info is stored in a local file for persistence. Loading these in (particularly encrypted key)
+        """Account info is stored in a local file for persistence.
+        Loading these in (particularly encrypted key)
         is necessary to start using this game client."""
         config = ConfigParser()
         config.read(self.account_config_filepath)
@@ -169,7 +173,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
     #----------
     def load_api_key(self) -> None:
-        """Purpose: Decrypt API key and store it locally so that we can use it for future API calls"""
+        """Purpose: Decrypt API key and store it locally so that we can use it
+        for future API calls"""
         password = prompt_user_password("Please enter password to decrypt your API key:")
         decrypted_key_bytes = password_decrypt(self.encrypted_key, password)
         self.api_key = decrypted_key_bytes.decode() #converting to string
@@ -181,7 +186,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
             'http_data':json.loads(http_response.data),
             'http_status':http_response.status
         }
-        return packet    
+        return packet
 
     #----------
     def get_system_from_waypoint(self,waypoint:str) -> str:
@@ -196,14 +201,15 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                                           ,url=url
                                           ,headers=self.default_header
                                           ,**kwargs)
-        
+
         return self.repackage_http_response(http_response)
 
     #----------
     def stc_get_paginated_data(self,method:str,url:str,page:str=1,**kwargs) -> None:
         """Generator function for getting paginated data from the SpaceTrader API."""
         #NOTE: The speed of this is heavily constrained by API limits (<2 per second).
-        # If the API limits are raised, we could remove the sleep function and try to parallelize this more.
+        # If the API limits are raised, we could remove the sleep function and try
+        # to parallelize this more.
         limit = 20
         url = f"{url}?limit={limit}"
         while True:
@@ -219,21 +225,22 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
             except Exception as e:
                 #If system fails mid-cache, return page (shows progress for re-trying):
                 print(page)
-                raise e   
+                raise e
 
 #==========
 class RegisterNewAgent(HttpConnection,GameConfig):
     """
-    This class registers a new agent. This class is a bit of an exception to the others used in the game
-    in that the methods in this class must be run first before any other game data (e.g., API key) is initialized.
-    For that reason, this class holds some repeated values and doesn't rely on the more complex classes.
+    This class registers a new agent. This class is a bit of an exception to the others used
+    in the game in that the methods in this class must be run first before any other game data
+    (e.g., API key) is initialized. For that reason, this class holds some repeated values and
+    doesn't rely on the more complex classes.
     """
 
     #----------
     def __init__(self):
         HttpConnection.__init__(self)
         GameConfig.__init__(self)
-        
+
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> dict:
         """
@@ -254,8 +261,9 @@ class RegisterNewAgent(HttpConnection,GameConfig):
     #----------
     def save_agent_metadata_locally(self, new_agent_response:dict) -> None:
         """
-        Receives dictionary response from registering a new agent. Saves account ID, callsign, and encrypted
-        API key in a local file. This local file is the basis for which player is playing the game.
+        Receives dictionary response from registering a new agent. Saves account ID, callsign,
+        and encrypted API key in a local file. This local file is the basis for which player
+        is playing the game.
         """
 
         password = prompt_user_password("Please enter a password with which to encrypt the API key")
@@ -265,7 +273,7 @@ class RegisterNewAgent(HttpConnection,GameConfig):
 
         config = ConfigParser()
 
-        credentials = config['ACCOUNT_CREDENTIALS'] = {
+        config['ACCOUNT_CREDENTIALS'] = {
             'account_id':new_agent_response['data']['agent']['accountId']
             ,'callsign':new_agent_response['data']['agent']['symbol']
             ,'key_encrypted':encrypted_key_bytes.decode()
