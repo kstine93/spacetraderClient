@@ -76,7 +76,7 @@ class DictCacheManager(GameConfig):
     #----------
     def attempt_cache_retrieval(self,file_path:str) -> dict:
         """Attempts to get data as dictionary from file"""
-        if path.exists(file_path):
+        if path.exists(file_path) and path.getsize(file_path) > 0:
             return self.get_dict_from_file(file_path)
         else:
             warn(f"no existing file at {file_path}. New file will be created.")
@@ -160,6 +160,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
     #----------
     def load_account_config(self) -> None:
+        """Account info is stored in a local file for persistence. Loading these in (particularly encrypted key)
+        is necessary to start using this game client."""
         config = ConfigParser()
         config.read(self.account_config_filepath)
         self.callsign = config['ACCOUNT_CREDENTIALS']['callsign']
@@ -200,6 +202,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
     #----------
     def stc_get_paginated_data(self,method:str,url:str,page:str=1,**kwargs) -> None:
         """Generator function for getting paginated data from the SpaceTrader API."""
+        #NOTE: The speed of this is heavily constrained by API limits (<2 per second).
+        # If the API limits are raised, we could remove the sleep function and try to parallelize this more.
         limit = 20
         url = f"{url}?limit={limit}"
         while True:

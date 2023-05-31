@@ -8,6 +8,11 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### May 31, 2023
+I was musing below on maybe having some kind of central way to handle http error codes. However, since error codes (even ones like `400` do not necessarily signify that the API has failed, but can sometimes mean that you're just trying to do something in-game that you can't do yet)- having a central status-handler doesn't make sense to me anymore.
+
+My new strategy is to return response packets (with status and data) in their raw form - where they can be dealt with individually (or not at all).
+
 ---
 
 ### May 28, 2023
@@ -29,23 +34,27 @@ Here's my to-do list:
    1. Survey_waypoint is particularly bad because it returns valuable data which needs to be recorded (should I store this as a class variable or rather as a local variable when playing the game?)
       1. ~~Need to handle non-200 response code.~~
       2. **IDEA:** It's not a big deal if I don't cache the survey data - it's volatile and changes constantly - but it *would* be nice to handle it as some sort of class variable. I've played with the idea of having a class for an individual 'ship' that can inherit from the general 'ships' class, but has some specific state-data (like survey data) that is stored as class variables. Think about this some more...
-   2. get_cooldown fails if no cooldown is there - give canned response instead to avoid error.
+   2. ~~get_cooldown fails if no cooldown is there - give canned response instead to avoid error.~~
    3. Scan_waypoints provides useful data about all waypoints in the system - data which is NOT recorded in the systems data.
       1. ~~Need to handle non-200 response code.~~
-      2. I probably need to immediately cache this in the 'systems' files I have - and then pull from that if needed - particularly since this command causes a cooldown
-         1. This means that I need to figure out a way to update a **nested record** in the cache...
-   4. Scan_systems is giving me very basic information about systems - and only a subset of them. I guess I can use this to discover systems that might not already be in the systems list?
-      1. Need to handle non-200 response code.
-      2. Again, this would be good to update the systems information with - but I'm not sure exactly what to do with these systems. Is it worth traveling to these vs. the already-listed systems?
-   5. Scan_ships is giving me information on what ships are in the system at this moment; I guess there might be some multiplayer interactions. Cannot be cached - volatile information.
-      1. Need to handle non-200 response code.
+      2. ~~I probably need to immediately cache this in the 'systems' files I have - and then pull from that if needed - particularly since this command causes a cooldown~~
+         2. This means that I need to figure out a way to update a **nested record** in the cache...
+            1. **NOTE:** I have tried 5-6 hours to try to make a graceful way to update nested data within my existing json cache system and **I GIVE UP.** Instead for 'scan waypoints' I will keep this data cached for the time that my 'ship' is in that system, but not any longer (or perhaps I'll write that scan to another cache that I can lookup later - but separate from 'systems' data)
+         3. I think this is another good reason to have another lower-level 'ship' class that has class variables where I can store this information
+   4. ~~Scan_systems is giving me very basic information about systems - and only a subset of them. I guess I can use this to discover systems that might not already be in the systems list?~~
+      1. ~~Need to handle non-200 response code.~~
+      2. ~~Again, this would be good to update the systems information with - but I'm not sure exactly what to do with these systems. Is it worth traveling to these vs. the already-listed systems?~~
+         1. this scan_systems data also includes **DISTANCE** from the current system - which suggests that like for scan_waypoints and scan_ships - I can keep these as ephemeral values cached within a class state (and maybe somehow cached if I want to pause the game), but not added to any kind of persistent record - they're too contextual.
+   5. ~~Scan_ships is giving me information on what ships are in the system at this moment; I guess there might be some multiplayer interactions. Cannot be cached - volatile information.~~
+      1. ~~Need to handle non-200 response code.~~
    6. chart_current_waypoint returns non-200 code if it has 'already been discovered'. Need to handle this.
 **2. Finish systems endpoints**
-   1. List_waypoints
-   2. Get_waypoint
-   3. get_market
-   4. get_shipyard
-   5. get_jumpgate
+   1. ~~List_waypoints~~
+      1. NOTE: This currently only returns the same depth of waypoint data as get_system. I see no reason to list this separately from the systems data if there's no additional data here. **Ignoring until this becomes more relevant.**
+   2. ~~Get_waypoint~~
+   3. ~~get_market~~
+   4. ~~get_shipyard~~
+   5. ~~get_jumpgate~~
 ---
 
 ### May 26, 2023
