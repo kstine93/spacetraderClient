@@ -10,6 +10,65 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### May 28, 2023
+**Note on non-200 error codes:**
+- All of the non-200 error codes that are NOT issues with the request or the server are still 2XX error codes (e.g., 201). I don't see a convincing reason now to bubble these error codes up to be handled individually - I will instead accept any 2XX error codes in the SpaceTraderConnection class as a fix.
+  - **UPDATE:** This is not entirely true - a `409` error indicates that a cooldown is still in effect - which is a valid response. I need to find a way to bubble up these valide responses to the function that's calling this endpoint so that I can produce a non-exception response (e.g., log "Sorry, cooldown still in effect for X seconds...")
+  - **IDEA:** What about an auto-retry that if I get a `409` response (indicating cooldown in effect, it just re-tries)
+
+**UPDATE:** I have now changed the `stc_http_request` function so that it (a) no longer raises exceptions (I actually don't see why that would be necessary) and (b) it returns the response `status` along with the data in a dictionary.
+This will now make it possible for me to handle non-200 http responses intelligently from the highest-level function (i.e., where I'm actually calling a specific endpoint).
+---
+
+### May 27, 2023
+Ok, at this point I've gotten the 'ships' class to a level where I can actually play the game a little bit - flying to the asteroid field, surveying it, extracting resources, and going back to deliver resources as part of the contract.
+However, the playing is a bit clunky still - and there's some things I haven't yet figured out.
+Here's my to-do list:
+
+**1. Change ship endpoints to be able to handle valid non-200 responses**
+   1. Survey_waypoint is particularly bad because it returns valuable data which needs to be recorded (should I store this as a class variable or rather as a local variable when playing the game?)
+      1. ~~Need to handle non-200 response code.~~
+      2. **IDEA:** It's not a big deal if I don't cache the survey data - it's volatile and changes constantly - but it *would* be nice to handle it as some sort of class variable. I've played with the idea of having a class for an individual 'ship' that can inherit from the general 'ships' class, but has some specific state-data (like survey data) that is stored as class variables. Think about this some more...
+   2. get_cooldown fails if no cooldown is there - give canned response instead to avoid error.
+   3. Scan_waypoints provides useful data about all waypoints in the system - data which is NOT recorded in the systems data.
+      1. ~~Need to handle non-200 response code.~~
+      2. I probably need to immediately cache this in the 'systems' files I have - and then pull from that if needed - particularly since this command causes a cooldown
+         1. This means that I need to figure out a way to update a **nested record** in the cache...
+   4. Scan_systems is giving me very basic information about systems - and only a subset of them. I guess I can use this to discover systems that might not already be in the systems list?
+      1. Need to handle non-200 response code.
+      2. Again, this would be good to update the systems information with - but I'm not sure exactly what to do with these systems. Is it worth traveling to these vs. the already-listed systems?
+   5. Scan_ships is giving me information on what ships are in the system at this moment; I guess there might be some multiplayer interactions. Cannot be cached - volatile information.
+      1. Need to handle non-200 response code.
+   6. chart_current_waypoint returns non-200 code if it has 'already been discovered'. Need to handle this.
+**2. Finish systems endpoints**
+   1. List_waypoints
+   2. Get_waypoint
+   3. get_market
+   4. get_shipyard
+   5. get_jumpgate
+---
+
+### May 26, 2023
+**Notes on building 'ships' class**
+1. Renamed to 'ships' class.
+2. I'm uncertain if I should really be using a cache for ships data - a lot of the commands are transforming the ship data somehow - moving the ship or buying cargo, etc. All of these create a change in the state of the ship which invalidates the current cache. I could force a reload of the cache upon doing anything that causes a change, but that feels wasteful. Maybe I just don't need a cache.
+
+---
+
+### May 24, 2023 - Next steps
+I've finished updating the base classes with new decorators for writing to the cache - and I'm pretty happy with them.
+Here's my list of next things to do:
+1. Write `FLEET` class
+   1. NOTE: There are a lot of endpoints here, so this might be fairly complex, but using the same structure as your existing classes, there shouldn't be a big problem.
+2. Start designing the game interface
+   1. NOTE: The classes I've built so far are not really usable for a CLI game - they're still pretty abstract. I think I need to start chaining these commands together to create actual things that players want to do (e.g., fly to new system and orbit star; deliver contract and then update credits and cargo cache data). I should start figuring out what these groups of commands are (by playing the game, of course) and then do the following:
+      1. Figure out if I need any more methods (or other architecture)
+      2. Figure out how I want to set up a UI (even if it's just CLI)
+3. Create startup script + build out README
+   1. I want a startup script to set up all of the game structures and the README to help orient the player and help them do what they need to.
+
+---
+
 ### May 22, 2023 - Decorators & different API calls
 The big problem I'm having now is about how to deal with different API calls with the decorators I have.
 The original decorator idea was (and is) good: don't call the API if I have a local file with the data I need already.
