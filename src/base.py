@@ -10,7 +10,7 @@ from .utilities.crypt_utilities import *
 from .custom_types import SpaceTraderResp
 from configparser import ConfigParser
 import json
-from typing import Callable
+from typing import Callable, Iterator
 from warnings import warn
 from os import fsdecode,listdir,path
 from time import sleep
@@ -38,13 +38,16 @@ class DictCacheManager(GameConfig):
         pass
 
     #----------
-    def count_keys_in_dir(self,dir_path) -> int:
-        """Counts keys across all (JSON) files in a directory"""
-        count = 0
+    def get_keys_in_dir(self,dir_path) -> Iterator[str]:
         for file in listdir(dir_path):
             file_path = f"{dir_path}/{fsdecode(file)}"
-            count += self.count_keys_in_file(file_path)
-        return count
+            for key in self.get_keys_in_file(file_path):
+                yield key
+
+    #----------
+    def count_keys_in_dir(self,dir_path) -> int:
+        """Counts keys across all (JSON) files in a directory"""
+        return sum(1 for key in self.get_keys_in_dir(dir_path))
 
     #----------
     def count_keys_in_file(self,file_path) -> int:
@@ -52,7 +55,7 @@ class DictCacheManager(GameConfig):
         return sum(1 for key in self.get_keys_in_file(file_path))
 
     #----------
-    def get_keys_in_file(self,file_path) -> int:
+    def get_keys_in_file(self,file_path) -> Iterator[str]:
         """Returns keys in JSON file"""
         with open(file_path,"r") as file:
             for key in json.loads(file.read()).keys():
@@ -89,14 +92,13 @@ class DictCacheManager(GameConfig):
         we call the given function (typically an API call) to find the data elsewhere.
         We then pass the new data on to 'update_cache_dict' to update the cache.
         """
-        try:
-            #Try to open local cache and return record. If this fails, pull from API:
-            existing_data = self.get_dict_from_file(file_path)
+        existing_data = self.attempt_cache_retrieval(file_path)
+        if new_key in existing_data.keys():
             return existing_data[new_key]
-        except (KeyError, FileNotFoundError):
+        else:
             data = func(self,new_key)
             self.update_cache_dict(data,file_path)
-            return data[new_key]
+            return data[new_key]     
 
     #----------
     def update_cache_dict(self,data:dict,file_path:str) -> dict:
@@ -204,7 +206,6 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
             try:
                 new_url = url + f"&page={page}"
                 response = self.stc_http_request(method=method,url=new_url,**kwargs)
-
                 if len(response['http_data']['data']) == 0:
                     break
                 yield(response)
@@ -215,7 +216,6 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                 #If system fails mid-cache, return page (shows progress for re-trying):
                 print(page)
                 raise e   
-
 
 #==========
 class RegisterNewAgent(HttpConnection,GameConfig):
