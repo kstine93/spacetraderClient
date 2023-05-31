@@ -21,7 +21,7 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
 
     def mold_contract_dict(self,response:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
-        data = response['data']['contract']
+        data = response['http_data']['data']
         return {data['id']:data}
 
     #----------
@@ -39,13 +39,17 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     #---------- 
     def reload_contracts_in_cache(self,page:int=1) -> dict:
         for contract_list in self.stc_get_paginated_data("GET",self.base_url,page):
-            for con in contract_list:
+            for con in contract_list["http_data"]["data"]:
                 transformed_con = {con['id']:con}
                 self.update_cache_dict(transformed_con,self.cache_path)
             
     #---------- 
     def list_all_contracts(self) -> dict:
-        return self.get_dict_from_file(self.cache_path)
+        try:
+            return self.get_dict_from_file(self.cache_path)
+        except:
+            self.reload_contracts_in_cache()
+            return self.get_dict_from_file(self.cache_path)
 
     #----------
     @cache_contracts
@@ -53,16 +57,17 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         url = self.base_url + "/" + contract
         response = self.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with contracts dict:
-        data = response['http_data']
-        return {data['data']['id']:data['data']}
+        data = self.mold_contract_dict(response)
+        return data
 
     #----------
     def accept_contract(self,contract:str) -> dict:
         url = f"{self.base_url}/{contract}/accept"
         response = self.stc_http_request(method="POST",url=url)
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
-        self.update_cache_dict(new_data,self.cache_path)
+        data = self.mold_contract_dict(response)
+        self.update_cache_dict(data,self.cache_path)
+        return data
 
     #----------
     def deliver_contract(self,contract:str,ship:str,item:str,quantity:int) -> dict:
@@ -78,8 +83,9 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #the quantity of the resource for the ship which was delivering this contract.
 
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
-        self.update_cache_dict(new_data,self.cache_path)
+        data = self.mold_contract_dict(response)
+        self.update_cache_dict(data,self.cache_path)
+        return data
 
     #----------
     def fulfill_contract(self,contract:str) -> dict:
@@ -91,5 +97,6 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         #details.
 
         #Transforming returned data to be compatible with contracts dict:
-        new_data = self.mold_contract_dict(response)
-        self.update_cache_dict(new_data,self.cache_path)
+        data = self.mold_contract_dict(response)
+        self.update_cache_dict(data,self.cache_path)
+        return data
