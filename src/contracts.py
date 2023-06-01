@@ -1,6 +1,7 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
+from .utilities.basic_utilities import get_dict_from_file
 
 #==========
 class Contracts(SpaceTraderConnection,DictCacheManager):
@@ -49,10 +50,10 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     def list_all_contracts(self) -> dict:
         """Get all contracts associated with the agent"""
         try:
-            return self.get_dict_from_file(self.cache_path)
+            return get_dict_from_file(self.cache_path)
         except FileNotFoundError:
             self.reload_contracts_in_cache()
-            return self.get_dict_from_file(self.cache_path)
+            return get_dict_from_file(self.cache_path)
 
     #----------
     @cache_contracts

@@ -1,7 +1,7 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
-from .custom_types import SpaceTraderResp
+from .utilities.custom_types import SpaceTraderResp
 
 #==========
 class Ships(SpaceTraderConnection,DictCacheManager):

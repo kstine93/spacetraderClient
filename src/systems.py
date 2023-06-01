@@ -1,7 +1,8 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
-from .custom_types import SpaceTraderResp
+from .utilities.custom_types import SpaceTraderResp
+from .utilities.basic_utilities import count_keys_in_dir
 
 #==========
 class Systems(SpaceTraderConnection,DictCacheManager):
@@ -40,7 +41,7 @@ class Systems(SpaceTraderConnection,DictCacheManager):
         return wrapper
 
     #----------
-    def reload_systems_into_cache(self,page:str=1) -> None:
+    def reload_systems_in_cache(self,page:str=1) -> None:
         """Updates systems data in cache with data from the API"""
         for system_list in self.stc_get_paginated_data("GET",self.base_url,page):
             for sys in system_list['http_data']['data']:
@@ -51,7 +52,7 @@ class Systems(SpaceTraderConnection,DictCacheManager):
 
     #----------
     def count_systems_in_cache(self) -> int:
-        return self.count_keys_in_dir(self.cache_path)
+        return count_keys_in_dir(self.cache_path)
 
     #----------
     @cache_system

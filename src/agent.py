@@ -8,7 +8,7 @@ class Agent(SpaceTraderConnection,DictCacheManager):
     Class to query and edit game data related to the 'Agent' (player information)
     """
     #----------
-    cache_path: str | None = None 
+    cache_path: str | None = None
     cache_file_name: str | None = None
 
     #----------
@@ -34,7 +34,7 @@ class Agent(SpaceTraderConnection,DictCacheManager):
 
     #----------
     @cache_agent
-    def get_agent_details(self,callsign:str) -> dict:
+    def get_agent(self,callsign:str) -> dict:
         url = self.base_url + "/my/agent"
         data = self.stc_http_request(method="GET",url=url)
         return {callsign:data['http_data']['data']}

@@ -1,6 +1,7 @@
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection,DictCacheManager
+from .utilities.basic_utilities import get_dict_from_file
 
 #==========
 class Factions(SpaceTraderConnection,DictCacheManager):
@@ -16,7 +17,7 @@ class Factions(SpaceTraderConnection,DictCacheManager):
         SpaceTraderConnection.__init__(self)
         DictCacheManager.__init__(self)
         self.base_url = self.base_url + "/factions"
-        self.cache_path = self.base_cache_path + "factions/"
+        self.cache_path = self.base_cache_path + "factions/factions.json"
         self.cache_file_name = "factions"
 
     #----------
@@ -29,18 +30,25 @@ class Factions(SpaceTraderConnection,DictCacheManager):
         If no file exists, a file is created and the data added to it.
         """
         def wrapper(self,faction:str,**kwargs):
-            path = self.cache_path + self.cache_file_name + ".json"
-            return DictCacheManager.get_cache_dict(self,path,func,new_key=faction,**kwargs)
+            return DictCacheManager.get_cache_dict(self,self.cache_path,func,new_key=faction,**kwargs)
         return wrapper
 
     #----------
-    def reload_factions_into_cache(self,page:int=1) -> None:
+    def reload_factions_in_cache(self,page:int=1) -> None:
         """Updates factions data in cache with data from the API"""
-        path = self.cache_path + self.cache_file_name + ".json"
         for faction_list in self.stc_get_paginated_data("GET",self.base_url,page):
-            for faction in faction_list:
+            for faction in faction_list["http_data"]["data"]:
                 transformed_faction = {faction['symbol']:faction}
-                self.update_cache_dict(transformed_faction,path)
+                self.update_cache_dict(transformed_faction,self.cache_path)
+
+    #----------
+    def list_all_factions(self) -> dict:
+        """Get all contracts associated with the agent"""
+        try:
+            return get_dict_from_file(self.cache_path)
+        except FileNotFoundError:
+            self.reload_factions_in_cache()
+            return get_dict_from_file(self.cache_path)
 
     #----------
     @cache_factions

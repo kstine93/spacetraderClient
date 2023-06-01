@@ -7,12 +7,10 @@ This file also contains a class for registering a new agent and thereby setting 
 from urllib3 import PoolManager, HTTPResponse
 from .utilities.basic_utilities import *
 from .utilities.crypt_utilities import *
-from .custom_types import SpaceTraderResp
+from .utilities.custom_types import SpaceTraderResp
 from configparser import ConfigParser
 import json
-from typing import Callable, Iterator
-from warnings import warn
-from os import fsdecode,listdir,path
+from typing import Callable
 from time import sleep
 
 
@@ -39,51 +37,6 @@ class DictCacheManager(GameConfig):
         pass
 
     #----------
-    def get_keys_in_dir(self,dir_path) -> Iterator[str]:
-        for file in listdir(dir_path):
-            file_path = f"{dir_path}/{fsdecode(file)}"
-            for key in self.get_keys_in_file(file_path):
-                yield key
-
-    #----------
-    def count_keys_in_dir(self,dir_path) -> int:
-        """Counts keys across all (JSON) files in a directory"""
-        return sum(1 for key in self.get_keys_in_dir(dir_path))
-
-    #----------
-    def count_keys_in_file(self,file_path) -> int:
-        """Counts keys in JSON file"""
-        return sum(1 for key in self.get_keys_in_file(file_path))
-
-    #----------
-    def get_keys_in_file(self,file_path) -> Iterator[str]:
-        """Returns keys in JSON file"""
-        with open(file_path,"r") as file:
-            for key in json.loads(file.read()).keys():
-                yield key
-
-    #----------
-    def get_dict_from_file(self,file_path:str) -> dict:
-        """Reads and returns dict from file"""
-        with open (file_path, "r") as file:
-            return json.loads(file.read())
-
-    #----------
-    def write_dict_to_file(self,file_path:str,data:dict) -> None:
-        """Writes provided dict to file"""
-        with open(file_path, "w") as file:
-            file.write(json.dumps(data,indent=3))
-
-    #----------
-    def attempt_cache_retrieval(self,file_path:str) -> dict:
-        """Attempts to get data as dictionary from file"""
-        if path.exists(file_path) and path.getsize(file_path) > 0:
-            return self.get_dict_from_file(file_path)
-        else:
-            warn(f"no existing file at {file_path}. New file will be created.")
-            return {}
-
-    #----------
     def get_cache_dict(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
         """
         This function is intended to be used as the core of a decorator function.
@@ -93,7 +46,7 @@ class DictCacheManager(GameConfig):
         we call the given function (typically an API call) to find the data elsewhere.
         We then pass the new data on to 'update_cache_dict' to update the cache.
         """
-        existing_data = self.attempt_cache_retrieval(file_path)
+        existing_data = attempt_dict_retrieval(file_path)
         if new_key in existing_data.keys():
             return existing_data[new_key]
         else:
@@ -108,9 +61,9 @@ class DictCacheManager(GameConfig):
         we load the file data, update it with the given dictionary, and re-write it. If the file
         doesn't exist, we make a new file with the dictionary as the sole entry.
         """
-        existing_data = self.attempt_cache_retrieval(file_path)
+        existing_data = attempt_dict_retrieval(file_path)
         existing_data.update(data)
-        self.write_dict_to_file(file_path,existing_data)
+        write_dict_to_file(file_path,existing_data)
 
 #==========
 class HttpConnection:
@@ -175,7 +128,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
     def load_api_key(self) -> None:
         """Purpose: Decrypt API key and store it locally so that we can use it
         for future API calls"""
-        password = prompt_user_password("Please enter password to decrypt your API key:")
+        password = get_user_password(prompt="Please enter password to decrypt your API key:"
+                                     ,password_name="SPACETRADER_PASSWORD")
         decrypted_key_bytes = password_decrypt(self.encrypted_key, password)
         self.api_key = decrypted_key_bytes.decode() #converting to string
 
@@ -266,7 +220,8 @@ class RegisterNewAgent(HttpConnection,GameConfig):
         is playing the game.
         """
 
-        password = prompt_user_password("Please enter a password with which to encrypt the API key")
+        password = get_user_password(prompt="Please enter password to decrypt your API key:"
+                                     ,password_name="SPACETRADER_PASSWORD")
         bytes_token = dict_to_bytes(new_agent_response['data']['token'])
 
         encrypted_key_bytes = password_encrypt(bytes_token,password)
