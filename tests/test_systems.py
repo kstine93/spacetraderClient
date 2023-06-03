@@ -12,17 +12,17 @@ import unittest
 class TestSystems(unittest.TestCase):
     """Unit testing for 'systems' class"""
     #----------
-    system_name = "X1-AQ83"
+    system_name = "X1-UF87"
     system_schema = ['symbol','sectorSymbol','type','x','y','waypoints','factions']
     system_filepath = "./gameData/systems/X1-A.json"
 
-    market_waypoint = 'X1-VS75-64461C'
+    market_waypoint = 'X1-HQ18-56588B'
     market_schema = ['symbol','imports','exports','exchange']
 
-    shipyard_waypoint = 'X1-TY89-82996C'
+    shipyard_waypoint = 'X1-HQ18-60817D'
     shipyard_schema = ['symbol', 'shipTypes', 'transactions', 'ships']
 
-    jump_gate_waypoint = 'X1-VS75-93799Z'
+    jump_gate_waypoint = 'X1-HQ18-58999A'
     jump_gate_schema = ['jumpRange', 'factionSymbol', 'connectedSystems']
 
 

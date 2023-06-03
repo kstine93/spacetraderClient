@@ -13,7 +13,7 @@ import unittest
 class TestContracts(unittest.TestCase):
     """Unit testing for 'contracts' class"""
     #----------
-    contract_name = "clhz8vpb5132os60d068nfihj"
+    contract_name = "cligj7vw500eis60dxqtfcfmf"
     contracts_filepath = "./gameData/contracts/"
     contract_schema = ['id','factionSymbol','type','terms','accepted','fulfilled','expiration','deadlineToAccept']
     contract = Contracts()

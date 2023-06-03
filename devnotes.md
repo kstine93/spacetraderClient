@@ -8,15 +8,25 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### June 4, 2023
+
+I've now finished a test suite based out of `unittest`. The 'test.sh' script in the main folder runs all tests.
+My next steps are:
+1. Change architecture so that classes use **instances** of each other, but do not directly inherit (composition over inheritance).
+   1. Let's start by editing this for one minor class and work out the kinks.
+2. Build the next layer of my interface (see notes from May 31)
+
+---
+
 ### May 31, 2023
 
 **Next steps**
 Right now I've finished all of the endpoints and they all seem to work. My next tasks are to build out some more testing
 and then to do the harder (mentally) task of building the next layer of the interface:
 1. Build out testing:
-   1. Have a test for each endpoint
-   2. Organise your tests so that they're a bit more modular
-      1. Maybe a single testing file for 'systems', 'ships', etc? - and then a 'master' test file to run all of them sequentially (or parallely!?)
+   1. ~~Have a test for each endpoint~~
+   2. ~~Organise your tests so that they're a bit more modular~~
+      1. ~~Maybe a single testing file for 'systems', 'ships', etc? - and then a 'master' test file to run all of them sequentially (or parallely!?)~~
 2. Build the next layer of my interface
 
 **IDEAS on next layer of interface**
