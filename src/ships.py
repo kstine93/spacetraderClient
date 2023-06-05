@@ -1,30 +1,30 @@
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,DictCacheManager
+from .base import SpaceTraderConnection,GameConfig
 from .utilities.custom_types import SpaceTraderResp
 
 #==========
-class Ships(SpaceTraderConnection,DictCacheManager):
+class Ships:
     """
     Class to query and edit game data related to ships.
     """
     #----------
+    stc = SpaceTraderConnection()
+    game_cfg = GameConfig()
     cache_path: str | None = None
     cache_file_name: str | None = None
 
     #----------
     def __init__(self):
-        SpaceTraderConnection.__init__(self)
-        DictCacheManager.__init__(self)
-        self.base_url = self.base_url + "/my/ships"
+        self.base_url = self.stc.base_url + "/my/ships"
         #Using callsign as file name so that ship files are associated with a particular account:
-        self.cache_path = f"{self.base_cache_path}ships/{self.callsign}.json"
+        self.cache_path = f"{self.game_cfg.base_cache_path}ships/{self.stc.callsign}.json"
 
     #----------
     def get_ship(self,ship:str) -> dict:
         """Get detailed information about the ship, its systems, cargo, crew and modules"""
         url = self.base_url + "/" + ship
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         return response
 
     #--------------
@@ -33,14 +33,14 @@ class Ships(SpaceTraderConnection,DictCacheManager):
     def orbit_ship(self,ship:str) -> dict:
         """orbit the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/orbit"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
     def dock_ship(self,ship:str) -> dict:
         """dock the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/dock"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
@@ -48,7 +48,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Jump instantaneously to another system. Alternative to warp."""
         url = f"{self.base_url}/{ship}/jump"
         body = {'systemSymbol':system}
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
     #----------
@@ -56,14 +56,14 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
         body = {'waypointSymbol':waypoint}
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
     #----------
     def get_nav_details(self,ship:str) -> dict:
         """Get current navigation details for a ship"""
         url = f"{self.base_url}/{ship}/nav"
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         return response
 
     #----------
@@ -71,7 +71,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Navigate (warp) the ship to a different system without jumping"""
         url = f"{self.base_url}/{ship}/warp"
         body = {'waypointSymbol':waypoint}
-        response = self.stc_http_request(method="GET",url=url,body=body)
+        response = self.stc.stc_http_request(method="GET",url=url,body=body)
         return response
 
     #-------------
@@ -81,34 +81,34 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Add the current waypoint to the community-wide directory of waypoints,
         if the record doesn't already exist."""
         url = f"{self.base_url}/{ship}/chart"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
     def survey_current_waypoint(self,ship:str) -> dict:
         """Get a survey of resources at your current waypoint location"""
         url = f"{self.base_url}/{ship}/survey"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
     def scan_systems(self,ship:str) -> dict:
         """Get information about systems close to the current system"""
         url = f"{self.base_url}/{ship}/scan/systems"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
     def scan_waypoints(self,ship:str) -> dict:
         """Get detailed data on waypoints in the current system"""
         url = f"{self.base_url}/{ship}/scan/waypoints"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
     def scan_for_ships(self,ship:str) -> dict:
         url = f"{self.base_url}/{ship}/scan/ships"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #-------------------
@@ -118,13 +118,13 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Most ship actions invoke a cooldown period.
         See how much more time until a ship action can be taken."""
         url = f"{self.base_url}/{ship}/cooldown"
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         return response
 
     #----------
     def refuel_ship(self,ship:str) -> dict:
         url = f"{self.base_url}/{ship}/refuel"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #----------
@@ -132,7 +132,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
         """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
-        response = self.stc_http_request(method="PATCH",url=url,body=body)
+        response = self.stc.stc_http_request(method="PATCH",url=url,body=body)
         return response
 
     #----------
@@ -146,14 +146,14 @@ class Ships(SpaceTraderConnection,DictCacheManager):
     def extract_resources(self,ship:str,survey_dict:dict={}) -> dict:
         """Extract resources from the current waypoint. an optional survey object allows better yields."""
         url = f"{self.base_url}/{ship}/extract"
-        response = self.stc_http_request(method="POST",url=url,body=survey_dict)
+        response = self.stc.stc_http_request(method="POST",url=url,body=survey_dict)
         return response
 
     #----------
     def refine_material(self,ship:str,) -> dict:
         """Attempt to refine any raw materials on the ship"""
         url = f"{self.base_url}/{ship}/refine"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         return response
 
     #---------
@@ -162,7 +162,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
     def get_current_cargo(self,ship:str) -> dict:
         """See current cargo of a ship"""
         url = f"{self.base_url}/{ship}/cargo"
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         return response
 
     #----------
@@ -174,7 +174,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
             ,'units':quantity
             ,'shipSymbol':target_ship
         }
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
     #----------
@@ -185,7 +185,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
             'tradeSymbol':item
             ,'units':quantity
         }
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
     #----------
@@ -196,7 +196,7 @@ class Ships(SpaceTraderConnection,DictCacheManager):
             'symbol':item
             ,'units':quantity
         }
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
     #----------
@@ -207,5 +207,5 @@ class Ships(SpaceTraderConnection,DictCacheManager):
             'tradeSymbol':item
             ,'units':quantity
         }
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response

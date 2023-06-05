@@ -10,10 +10,81 @@ Notes on tricky problems, decisions, etc.
 
 ### June 4, 2023
 
+**Notes on transferring to composition over inheritance**
+I'm running into some trouble when it comes to my decorator `get_cache_dict`  from the DictCacheManager class.
+
+Specifically, it appears that this was not as loosely coupled as I thought. When I pass in 'self' from any class
+(contracts, factions, etc.) to the `get_cache_dict`, that 'self' instance is not an instance of the DictCacheManager -
+*it's an instance of the contracts, factions, etc. class.*
+This is not what I want, because it means that these 2 classes are tightly coupled - I don't want `get_cache_dict` to have
+to know *anything* about the class that's using it.
+
+How to resolve this?
+1. Let's try to pull these functions completely out of the DictCacheManager class. They're only there for showing they belong together. If I can make them work as independent functions (maybe in utilities folder) then maybe I can figure out how to re-insert them as a class.
+2. There are Python modules (e.g.,  `functools.lru_cache`) that do in-memory caching. Could I maybe adapt these to work with file-based caching? [functools on Github](https://github.com/python/cpython/blob/8de607ab1c7605dce0efbb1a5c7148385d9176a6/Lib/functools.py#L567).
+
+I like the idea of #2 - to see if I can learn about this caching module and do something similar. If that fails, then let's do #1.
+
+---
+
+**Notes on functools.py caching:**
+The functools cache is based on a doubly-linked list, but I don't want to do that - I want persistent files.
+The implementation at the link above is mostly fiddling with the cache list, but the calling of the function is just with `(*args,**kwargs)`.
+Simple as it sounds, maybe I need to just use those ambiguous placeholders instead of the explicit values I'm using now...
+**BUT** before I do that, let's try doing #1 above and keeping these functions out of a class because **functools.py also does not use a class for these functions.**
+
+> Note: I tried to use `functools.cache` as a decorator on "get_system" and it seemed to work (at least it called the function correctly). So whatever logic it's using I should be able to replicate.
+> **UPDATE:** `functools.cache` and other versions are working based of just pushing through arguments as `*args` and `**kwargs` - so *they are working just the same as my class functions - they still are passing the class instance, just in a less explicit way*
+> This is not great. These versions are doing the same thing as my own code, but in a less explicit way. I think I should rather pass in these explicitly, if possible. Now that I know I can't avoid passing in the class instance, this is less bothersome for me (although I should type-hint it as a generic "Class" probably...)
+
+**UPDATE:**
+- I think one problem in what I'm doing is that the 'key' is needed by both the wrapper (doing cache retrieval) as well as the inner, passed function.
+These are really doing different things and shouldn't have to be inter-dependent.
+- Another issue I'm seeing is that it is very hard to split up the nested decorator + wrapper function definitions, because inner function definitions might rely on variables passed to outer functions. This makes it hard to keep some parts of the decorator structure in the classes without having to rely on explicit variable passing - which makes the caching functions less generic.
+
+**SOLUTION:**
+I've found a way to implement the cache functions as generic, while still allowing customization of the cache_path from class variables, AND allowing both the wrapper and the passed function to use the arguments for the passed function.
+It only took 5 function definitions!
+The following decorator was the key part - having enough nesting
+in this allowed me to first catch the function, then use the class variables to create the file path, and finally use the function argument ('system') as both key for the caching function and have it passed directly to the function itself (if called).
+
+I think this is as graceful as I'm going to get.
+
+```
+    def cachy2(func):
+        def inner(self,system:str):
+            path = self.cache_path + "/test.json"
+            return cache_wrapper(path,system)(func)(self,system)
+        return inner
+```
+
+**Next Steps:**
+1. Clean up this test code with better naming, type hints, key-word arguments.
+2. Switch over all classes + test
+3. Consider implementing as class again (I don't see the need at this point though)
+4. Continue my work to get rid of inheritance (favor composition)
+5. Continue my work to build new interface layer.
+
+
+---
+
+### June 3, 2023
+
 I've now finished a test suite based out of `unittest`. The 'test.sh' script in the main folder runs all tests.
 My next steps are:
 1. Change architecture so that classes use **instances** of each other, but do not directly inherit (composition over inheritance).
    1. Let's start by editing this for one minor class and work out the kinks.
+      1. Change to 'factions' appears to be a success' Changes needed:
+         1. Need to create class instances as variables:
+            1. `stc = SpaceTraderConnection()`
+            2. `dcm = DictCacheManager()`
+         2. Remove initialization of parent classes in __init__ function
+         3. Change initialization of class variables if they require values from `stc` or `dcm`
+            1. Ex: `self.base_url = self.stc.base_url + "/factions"`
+         4. `self.stc_http_request` calls need to be `self.stc.stc_http_request`
+         5. `self.update_cache_dict` calls need to be `self.dcm.update_cache_dict`
+         6. Change decorator to not refer directly to DictCacheManager:
+            1. Ex: `return self.dcm.get_cache_dict(...)`
 2. Build the next layer of my interface (see notes from May 31)
 
 ---
@@ -63,6 +134,7 @@ My new strategy is to return response packets (with status and data) in their ra
 
 **UPDATE:** I have now changed the `stc_http_request` function so that it (a) no longer raises exceptions (I actually don't see why that would be necessary) and (b) it returns the response `status` along with the data in a dictionary.
 This will now make it possible for me to handle non-200 http responses intelligently from the highest-level function (i.e., where I'm actually calling a specific endpoint).
+
 ---
 
 ### May 27, 2023
@@ -189,21 +261,21 @@ So, I just registered myself and just got a HUGE amount of information in the re
 This is a huge list of information - and I would expect that most of this information (everything except the game meta info maybe) would be queryable later.
 
 **Next Steps:**
-~~1. Look through documentation and see if I can indeed get this information elsewhere through other queries~~
-    * ~~Yes, I can get agent details via the `my/agent` endpoint~~
-    * ~~Yes, I can get contract details via `my/contracts` endpoint~~
-    * ~~Yes, I can get ship details via `my/ships` endpoint~~
+1. Look through documentation and see if I can indeed get this information elsewhere through other queries~~
+    - ~~Yes, I can get agent details via the `my/agent` endpoint~~
+    - ~~Yes, I can get contract details via `my/contracts` endpoint~~
+    - ~~Yes, I can get ship details via `my/ships` endpoint~~
 2. ~~If yes, prioritize saving only unique information (I can always query other info later)~~
-    * ~~Only unique information is **API KEY** - and I can also save **callsign"** and **account ID** - I don't think these are sensitive details~~
+    - ~~Only unique information is **API KEY** - and I can also save **callsign"** and **account ID** - I don't think these are sensitive details~~
 3. ~~For unique key, look into encrypting my key with a password so I can store it on GH and unlock it anytime~~
 4. ~~create script for decrypting and storing key locally~~
 5. Create endpoints for all commands - use [api spec](https://spacetraders.stoplight.io/docs/spacetraders/11f2735b75b02-space-traders-api) to find these and prioritize.
     1. Let's start with code needed to complete a contract:
-        * Contracts:
+        - Contracts:
             1. List available contracts
             2. Accept contract
             3. List contract terms
-        * Navigation:
+        - Navigation:
             1. List waypoints
             2. Scan waypoints
 

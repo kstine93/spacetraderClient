@@ -1,24 +1,26 @@
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,DictCacheManager
-from .utilities.basic_utilities import get_dict_from_file
+from .base import SpaceTraderConnection,GameConfig
+from .utilities.basic_utilities import attempt_dict_retrieval
+from .utilities.cache_utilities import dict_cache_wrapper, update_cache_dict
 
 #==========
-class Contracts(SpaceTraderConnection,DictCacheManager):
+class Contracts:
     """
     Class to query and edit game data related to contracts.
     """
     #----------
+    base_url:str | None = None
     cache_path: str | None = None
     cache_file_name: str | None = None
+    stc = SpaceTraderConnection()
+    game_cfg = GameConfig()
 
     #----------
     def __init__(self):
-        SpaceTraderConnection.__init__(self)
-        DictCacheManager.__init__(self)
-        self.base_url = self.base_url + "/my/contracts"
+        self.base_url = self.stc.base_url + "/my/contracts"
         #Using callsign as file name so contract files are associated with a particular account:
-        self.cache_path = f"{self.base_cache_path}contracts/{self.callsign}.json"
+        self.cache_path = f"{self.game_cfg.base_cache_path}contracts/{self.stc.callsign}.json"
 
     def mold_contract_dict(self,response:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
@@ -28,39 +30,45 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     #----------
     def cache_contracts(func: Callable) -> Callable:
         """
-        Decorator. Uses class variables in current class and passes them to wrapper function.
-        This version reads the cached contracts data and tries to find information about
-        the existing contracts. If the file exists, but there is no data on the given contract,
-        this information is added to the file. If no file exists, a file is created and
-        the data added to it.
+        Wrapper for an external, generic caching system.
+        Passes a file path created from system variables and the 'contract' argument of the
+        target function as values to the caching system to use in caching the data.
+        Target function and its needed arguments (self,contract) also passed on.
         """
-        def wrapper(self,contract:str,**kwargs):
-            return self.get_cache_dict(self.cache_path,func,new_key=contract,**kwargs)
+        def wrapper(self,contract:str):
+            path = self.cache_path
+            #Reminder: (func) and (self,faction) are being passed as args to nested functions:
+            return dict_cache_wrapper(file_path=path,key=contract)(func)(self,contract)
         return wrapper
 
     #----------
     def reload_contracts_in_cache(self,page:int=1) -> dict:
+        url = "https://api.spacetraders.io/v2/my/contracts"
         """Updates contracts data in cache with data from the API"""
-        for contract_list in self.stc_get_paginated_data("GET",self.base_url,page):
+        for contract_list in self.stc.stc_get_paginated_data("GET",url,page):
             for con in contract_list["http_data"]["data"]:
                 transformed_con = {con['id']:con}
-                self.update_cache_dict(transformed_con,self.cache_path)
+                update_cache_dict(transformed_con,self.cache_path)
 
     #----------
+    #NOTE: Testing on June 5 resulted in an API call for reload_contracts below which resulted in
+    #NO CONTRACTS - I guess my contract can technically expire (or be fulfilled) and this can
+    #result in NO contracts being loaded in - even if reload_contracts works perfectly.
+    #TODO: Make this function below prettier.
     def list_all_contracts(self) -> dict:
         """Get all contracts associated with the agent"""
-        try:
-            return get_dict_from_file(self.cache_path)
-        except FileNotFoundError:
+        data = attempt_dict_retrieval(self.cache_path)
+        if not data:
             self.reload_contracts_in_cache()
-            return get_dict_from_file(self.cache_path)
+            #If no data is returned a 2nd time, it means no data is avaiable.
+            return attempt_dict_retrieval(self.cache_path)
 
     #----------
-    @cache_contracts
+    #@cache_contracts
     def get_contract(self,contract:str) -> dict:
         """Get information about a specific contract"""
         url = self.base_url + "/" + contract
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
         return data
@@ -69,10 +77,10 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
     def accept_contract(self,contract:str) -> dict:
         """Accept an in-game contract from the list of available contracts"""
         url = f"{self.base_url}/{contract}/accept"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
-        self.update_cache_dict(data,self.cache_path)
+        update_cache_dict(data,self.cache_path)
         return data
 
     #----------
@@ -84,14 +92,14 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
             ,'tradeSymbol':item
             ,'units':quantity
         }
-        response = self.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,body=body)
         #NOTE: This method also returns a 'cargo' object which represents the type and quantity
         #of resource which was delivered. I could pass this object to my 'fleet' class to update
         #the quantity of the resource for the ship which was delivering this contract.
 
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
-        self.update_cache_dict(data,self.cache_path)
+        update_cache_dict(data,self.cache_path)
         return data
 
     #----------
@@ -99,12 +107,12 @@ class Contracts(SpaceTraderConnection,DictCacheManager):
         """Mark a contract as done and receive payment for finishing the contract"""
         # === UNTESTED ===
         url = f"{self.base_url}/{contract}/fulfill"
-        response = self.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
         #NOTE: Fulfilling the contract seems to transfer the 'award' credits to my agent's account
         #Upon receiving this response, I could instantly add the amount to my account (in 'agent')
         #details.
 
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
-        self.update_cache_dict(data,self.cache_path)
+        update_cache_dict(data,self.cache_path)
         return data

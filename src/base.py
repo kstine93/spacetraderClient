@@ -29,43 +29,6 @@ class GameConfig:
 
 
 #==========
-class DictCacheManager(GameConfig):
-    """Generic class for loading data to/from a cache or local file system"""
-
-    #----------
-    def __init__(self):
-        pass
-
-    #----------
-    def get_cache_dict(self,file_path:str,func:Callable,new_key:str,**kwargs) -> dict:
-        """
-        This function is intended to be used as the core of a decorator function.
-        This function is for getting a single record that MIGHT be part of a bigger dict in
-        the local cache. The function first looks for the record in the dict (is given key present?)
-        If that fails becausethe cache file doesn't exist or the key is not present in the dict,
-        we call the given function (typically an API call) to find the data elsewhere.
-        We then pass the new data on to 'update_cache_dict' to update the cache.
-        """
-        existing_data = attempt_dict_retrieval(file_path)
-        if new_key in existing_data.keys():
-            return existing_data[new_key]
-        else:
-            data = func(self,new_key)
-            self.update_cache_dict(data,file_path)
-            return data[new_key]
-
-    #----------
-    def update_cache_dict(self,data:dict,file_path:str) -> dict:
-        """
-        This function updates a local cache file with a given dictionary. If the file exists,
-        we load the file data, update it with the given dictionary, and re-write it. If the file
-        doesn't exist, we make a new file with the dictionary as the sole entry.
-        """
-        existing_data = attempt_dict_retrieval(file_path)
-        existing_data.update(data)
-        write_dict_to_file(file_path,existing_data)
-
-#==========
 class HttpConnection:
     """Generic class for making API requests"""
     #----------
@@ -94,6 +57,8 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
     - primarily by loading and storing api and base url of endpoint
     """
     #----------
+    http_conn = HttpConnection()
+    game_cfg = GameConfig()
     callsign:str | None = None
     encrypted_key: str | None = None
 
@@ -102,8 +67,6 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
 
     #----------
     def __init__(self):
-        HttpConnection.__init__(self)
-
         #Loading in config which has basic information on player:
         self.load_account_config()
         try:
@@ -111,7 +74,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
         except Exception as e:
             msg = f"Error in loading API key.\
-                Please check API key is present at file path {self.account_config_filepath}"
+                Please check API key is present at file path {self.game_cfg.account_config_filepath}"
             raise e(msg)
 
     #----------
@@ -120,7 +83,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
         Loading these in (particularly encrypted key)
         is necessary to start using this game client."""
         config = ConfigParser()
-        config.read(self.account_config_filepath)
+        config.read(self.game_cfg.account_config_filepath)
         self.callsign = config['ACCOUNT_CREDENTIALS']['callsign']
         self.encrypted_key = config['ACCOUNT_CREDENTIALS']['key_encrypted']
 
@@ -151,7 +114,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
     #----------
     def stc_http_request(self, method:str, url:str, **kwargs) -> dict:
         """Wrapper for HTTP get - implements spacetrader-specific handling of response"""
-        http_response = self.http_request(method=method
+        http_response = self.http_conn.http_request(method=method
                                           ,url=url
                                           ,headers=self.default_header
                                           ,**kwargs)
@@ -182,18 +145,20 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                 raise e
 
 #==========
-class RegisterNewAgent(HttpConnection,GameConfig):
+class RegisterNewAgent:
     """
     This class registers a new agent. This class is a bit of an exception to the others used
     in the game in that the methods in this class must be run first before any other game data
     (e.g., API key) is initialized. For that reason, this class holds some repeated values and
     doesn't rely on the more complex classes.
     """
+    #----------
+    http_conn = HttpConnection()
+    game_cfg = GameConfig()
 
     #----------
     def __init__(self):
-        HttpConnection.__init__(self)
-        GameConfig.__init__(self)
+        pass
 
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> dict:
@@ -206,9 +171,9 @@ class RegisterNewAgent(HttpConnection,GameConfig):
             ,'faction':faction
         }
         headers={'Content-Type': 'application/json'}
-        url = self.base_url + "/register"
+        url = self.game_cfg.base_url + "/register"
 
-        http_response = self.http_request("POST",url=url,body=body,headers=headers)
+        http_response = self.http_conn.http_request("POST",url=url,body=body,headers=headers)
         data = bytes_to_dict(http_response.data)
         self.save_agent_metadata_locally(data)
 
@@ -235,6 +200,6 @@ class RegisterNewAgent(HttpConnection,GameConfig):
         }
 
         #(Over)writing credentials to local file:
-        with open(self.account_config_filepath, 'w') as configfile:
+        with open(self.game_cfg.account_config_filepath, 'w') as configfile:
             config.write(configfile)
 

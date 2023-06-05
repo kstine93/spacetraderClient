@@ -1,45 +1,47 @@
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,DictCacheManager
+from .base import SpaceTraderConnection,GameConfig
 from .utilities.basic_utilities import get_dict_from_file
+from .utilities.cache_utilities import dict_cache_wrapper,update_cache_dict
 
 #==========
-class Factions(SpaceTraderConnection,DictCacheManager):
+class Factions():
     """
     Class to query game data related to the in-game factions
     """
     #----------
+    stc = SpaceTraderConnection()
+    game_cfg = GameConfig()
     cache_path: str | None = None
     cache_file_name: str | None = None
 
     #----------
     def __init__(self):
-        SpaceTraderConnection.__init__(self)
-        DictCacheManager.__init__(self)
-        self.base_url = self.base_url + "/factions"
-        self.cache_path = self.base_cache_path + "factions/factions.json"
+        self.base_url = self.stc.base_url + "/factions"
+        self.cache_path = self.game_cfg.base_cache_path + "factions/factions.json"
         self.cache_file_name = "factions"
 
     #----------
     def cache_factions(func: Callable) -> Callable:
         """
-        Decorator. Uses class variables in current class and passes them to wrapper function.
-        This version reads the cached faction data and tries to find information about
-        the given faction. If the file exists, but there is no data on the given faction, this
-        information is added to the file.
-        If no file exists, a file is created and the data added to it.
+        Wrapper for an external, generic caching system.
+        Passes a file path created from system variables and the 'faction' argument of the
+        target function as values to the caching system to use in caching the data.
+        Target function and its needed arguments (self,faction) also passed on.
         """
-        def wrapper(self,faction:str,**kwargs):
-            return DictCacheManager.get_cache_dict(self,self.cache_path,func,new_key=faction,**kwargs)
+        def wrapper(self,faction:str):
+            path = self.cache_path
+            #Reminder: (func) and (self,faction) are being passed as args to nested functions:
+            return dict_cache_wrapper(file_path=path,key=faction)(func)(self,faction)
         return wrapper
 
     #----------
     def reload_factions_in_cache(self,page:int=1) -> None:
         """Updates factions data in cache with data from the API"""
-        for faction_list in self.stc_get_paginated_data("GET",self.base_url,page):
+        for faction_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for faction in faction_list["http_data"]["data"]:
                 transformed_faction = {faction['symbol']:faction}
-                self.update_cache_dict(transformed_faction,self.cache_path)
+                update_cache_dict(transformed_faction,self.cache_path)
 
     #----------
     def list_all_factions(self) -> dict:
@@ -55,6 +57,6 @@ class Factions(SpaceTraderConnection,DictCacheManager):
     def get_faction(self,faction:str) -> dict:
         """Get information about a specific faction"""
         url = self.base_url + "/" + faction
-        response = self.stc_http_request(method="GET",url=url)
+        response = self.stc.stc_http_request(method="GET",url=url)
         #Transforming returned data to be compatible with factions dict:
         return  {faction:response['http_data']['data']}

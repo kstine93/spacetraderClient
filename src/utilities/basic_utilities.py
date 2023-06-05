@@ -9,14 +9,6 @@ from typing import Iterator
 from os import listdir,remove,fsdecode,getenv,environ,path
 
 #==========
-def bytes_to_dict(bytes_obj:bytes,format:str = 'utf-8') -> dict:
-    return json.loads(bytes_obj.decode(format))
-
-#==========
-def dict_to_bytes(dict_obj:dict, format:str = 'utf-8') -> bytes:
-    return dict_obj.encode(format)
-
-#==========
 def get_user_password(prompt:str,password_name:str) -> str:
     """Get user password from environment variables - or prompt and store if it
     doesn't exist yet."""
@@ -26,6 +18,16 @@ def get_user_password(prompt:str,password_name:str) -> str:
         environ[password_name] = pw
     return pw
 
+#=======================
+#= DATA TRANSFORMATION =
+#=======================
+def bytes_to_dict(bytes_obj:bytes,format:str = 'utf-8') -> dict:
+    return json.loads(bytes_obj.decode(format))
+
+#==========
+def dict_to_bytes(dict_obj:dict, format:str = 'utf-8') -> bytes:
+    return dict_obj.encode(format)
+
 #==========
 def empty_directory(dir_path:str):
     """Remove all files from a directory"""
@@ -33,7 +35,9 @@ def empty_directory(dir_path:str):
         file_path = f"{dir_path}/{fsdecode(file)}"
         remove(file_path)
 
-#==========
+#==============
+#= JSON FILES =
+#==============
 def get_keys_in_dir(dir_path) -> Iterator[str]:
     """For a directory with a list of JSON files, get all first-level keys from the files"""
     for file in listdir(dir_path):
@@ -85,3 +89,4 @@ def remove_dict_record_if_exists(file_path:str,key:str):
     if key in data.keys():
         del data[key]
         write_dict_to_file(file_path,data)
+
