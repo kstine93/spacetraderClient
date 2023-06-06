@@ -1,7 +1,8 @@
+"""
+Data and functions related for interacting with the 'ships' endpoint of the Spacetrader API
+"""
 #==========
-from typing import Callable
-from .base import SpaceTraderConnection,GameConfig
-from .utilities.custom_types import SpaceTraderResp
+from .base import SpaceTraderConnection
 
 #==========
 class Ships:
@@ -10,7 +11,6 @@ class Ships:
     """
     #----------
     stc = SpaceTraderConnection()
-    game_cfg = GameConfig()
     cache_path: str | None = None
     cache_file_name: str | None = None
 
@@ -18,7 +18,7 @@ class Ships:
     def __init__(self):
         self.base_url = self.stc.base_url + "/my/ships"
         #Using callsign as file name so that ship files are associated with a particular account:
-        self.cache_path = f"{self.game_cfg.base_cache_path}ships/{self.stc.callsign}.json"
+        self.cache_path = f"{self.stc.base_cache_path}ships/{self.stc.callsign}.json"
 
     #----------
     def get_ship(self,ship:str) -> dict:
@@ -107,6 +107,7 @@ class Ships:
 
     #----------
     def scan_for_ships(self,ship:str) -> dict:
+        """Look for ships in the current system"""
         url = f"{self.base_url}/{ship}/scan/ships"
         response = self.stc.stc_http_request(method="POST",url=url)
         return response
@@ -123,6 +124,7 @@ class Ships:
 
     #----------
     def refuel_ship(self,ship:str) -> dict:
+        """Add fuel to ship. Requires that refueling is possible in current location."""
         url = f"{self.base_url}/{ship}/refuel"
         response = self.stc.stc_http_request(method="POST",url=url)
         return response

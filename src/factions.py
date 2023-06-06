@@ -1,6 +1,9 @@
+"""
+Data and functions related for interacting with the 'factions' endpoint of the Spacetrader API
+"""
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,GameConfig
+from .base import SpaceTraderConnection
 from .utilities.basic_utilities import get_dict_from_file
 from .utilities.cache_utilities import dict_cache_wrapper,update_cache_dict
 
@@ -11,14 +14,13 @@ class Factions():
     """
     #----------
     stc = SpaceTraderConnection()
-    game_cfg = GameConfig()
     cache_path: str | None = None
     cache_file_name: str | None = None
 
     #----------
     def __init__(self):
         self.base_url = self.stc.base_url + "/factions"
-        self.cache_path = self.game_cfg.base_cache_path + "factions/factions.json"
+        self.cache_path = self.stc.base_cache_path + "factions/factions.json"
         self.cache_file_name = "factions"
 
     #----------

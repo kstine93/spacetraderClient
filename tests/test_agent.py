@@ -13,7 +13,7 @@ import unittest
 class TestAgents(unittest.TestCase):
     """Unit testing for 'agents' class"""
     #----------
-    agent_callsign = "AMBROSIUS-RITZ"
+    agent_callsign = "PERSIMMONS"
     agent_filepath = f"./gameData/agents/"
     agent_schema = ['accountId','symbol','headquarters','credits','startingFaction']
     agent = Agent()

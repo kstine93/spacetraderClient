@@ -13,7 +13,7 @@ import unittest
 class TestContracts(unittest.TestCase):
     """Unit testing for 'contracts' class"""
     #----------
-    contract_name = "cligj7vw500eis60dxqtfcfmf"
+    contract_name = "clija6w677t03s60d7ctvf8ec"
     contracts_filepath = "./gameData/contracts/"
     contract_schema = ['id','factionSymbol','type','terms','accepted','fulfilled','expiration','deadlineToAccept']
     contract = Contracts()
@@ -22,7 +22,8 @@ class TestContracts(unittest.TestCase):
     def test_get_without_cache(self):
         empty_directory(self.contracts_filepath)
         data = self.contract.get_contract(self.contract_name)
-        self.assertEqual(Counter(data.keys()), Counter(self.contract_schema))
+        record = data[self.contract_name]
+        self.assertEqual(Counter(record.keys()), Counter(self.contract_schema))
 
     def test_reload_cache(self):
         empty_directory(self.contracts_filepath)

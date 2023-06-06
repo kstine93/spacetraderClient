@@ -4,28 +4,39 @@ This file also contains a class for registering a new agent and thereby setting 
 """
 
 #==========
-from urllib3 import PoolManager, HTTPResponse
-from .utilities.basic_utilities import *
-from .utilities.crypt_utilities import *
-from .utilities.custom_types import SpaceTraderResp
-from configparser import ConfigParser
 import json
-from typing import Callable
+from configparser import ConfigParser
 from time import sleep
+from urllib3 import PoolManager, HTTPResponse
+from .utilities.basic_utilities import get_user_password,bytes_to_dict,dict_to_bytes
+from .utilities.crypt_utilities import password_encrypt,password_decrypt
+from .utilities.config_utilities import get_config,update_config_file
+from .utilities.custom_types import SpaceTraderResp
 
 
-#==========
-class GameConfig:
-    """Very basic class for recording values used by child classes
-    mostly for filepaths and URLs"""
-    #----------
-    account_config_filepath:str = "./account_info.cfg"
-    base_cache_path:str = "./gameData/"
-    base_url:str = "https://api.spacetraders.io/v2"
 
-    #----------
-    def __init__(self):
-        pass
+#===========
+#Basic functions to get game config data:
+
+#----------
+config_path = "./account_info.cfg"
+config = get_config(config_path)
+
+#----------
+def get_config_encrypted_key() -> str:
+    return config["ACCOUNT_CREDENTIALS"]["key_encrypted"]
+
+#----------
+def get_config_callsign() -> str:
+    return config["ACCOUNT_CREDENTIALS"]["callsign"]
+
+#----------
+def get_config_cache_path() -> str:
+    return config["CACHE"]["path"]
+
+#----------
+def get_config_url() -> str:
+    return config["API"]["url"]
 
 
 #==========
@@ -51,41 +62,36 @@ class HttpConnection:
         )
 
 #==========
-class SpaceTraderConnection(HttpConnection,GameConfig):
+class SpaceTraderConnection:
     """
     Class that enables API usage for the SpaceTrader game
     - primarily by loading and storing api and base url of endpoint
     """
     #----------
     http_conn = HttpConnection()
-    game_cfg = GameConfig()
     callsign:str | None = None
     encrypted_key: str | None = None
 
     api_key: str | None = None
     default_header: dict = {"Accept": "application/json"}
+    base_url:str | None = None
+
+    base_cache_path:str | None = None
 
     #----------
     def __init__(self):
         #Loading in config which has basic information on player:
-        self.load_account_config()
+        self.callsign = get_config_callsign()
+        self.encrypted_key = get_config_encrypted_key()
+        self.base_url = get_config_url()
+        self.base_cache_path = get_config_cache_path()
+
         try:
             self.load_api_key()
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
         except Exception as e:
-            msg = f"Error in loading API key.\
-                Please check API key is present at file path {self.game_cfg.account_config_filepath}"
-            raise e(msg)
-
-    #----------
-    def load_account_config(self) -> None:
-        """Account info is stored in a local file for persistence.
-        Loading these in (particularly encrypted key)
-        is necessary to start using this game client."""
-        config = ConfigParser()
-        config.read(self.game_cfg.account_config_filepath)
-        self.callsign = config['ACCOUNT_CREDENTIALS']['callsign']
-        self.encrypted_key = config['ACCOUNT_CREDENTIALS']['key_encrypted']
+            msg = f"Error in loading API key. Please check API key at file path {config_path}"
+            raise Exception(msg) from e
 
     #----------
     def load_api_key(self) -> None:
@@ -144,6 +150,7 @@ class SpaceTraderConnection(HttpConnection,GameConfig):
                 print(page)
                 raise e
 
+
 #==========
 class RegisterNewAgent:
     """
@@ -153,12 +160,15 @@ class RegisterNewAgent:
     doesn't rely on the more complex classes.
     """
     #----------
+    config_path = config_path
     http_conn = HttpConnection()
-    game_cfg = GameConfig()
+    base_url: str | None = None
+    config: ConfigParser | None = None
 
     #----------
     def __init__(self):
-        pass
+        self.config = get_config(config_path)
+        self.base_url = get_config_url()
 
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> dict:
@@ -171,7 +181,7 @@ class RegisterNewAgent:
             ,'faction':faction
         }
         headers={'Content-Type': 'application/json'}
-        url = self.game_cfg.base_url + "/register"
+        url = self.base_url + "/register"
 
         http_response = self.http_conn.http_request("POST",url=url,body=body,headers=headers)
         data = bytes_to_dict(http_response.data)
@@ -184,22 +194,18 @@ class RegisterNewAgent:
         and encrypted API key in a local file. This local file is the basis for which player
         is playing the game.
         """
+        prompt = "Please enter password to encrypt your API key:"
+        password = get_user_password(prompt=prompt,password_name="SPACETRADER_PASSWORD")
 
-        password = get_user_password(prompt="Please enter password to decrypt your API key:"
-                                     ,password_name="SPACETRADER_PASSWORD")
         bytes_token = dict_to_bytes(new_agent_response['data']['token'])
 
         encrypted_key_bytes = password_encrypt(bytes_token,password)
 
-        config = ConfigParser()
-
-        config['ACCOUNT_CREDENTIALS'] = {
+        data = {
             'account_id':new_agent_response['data']['agent']['accountId']
             ,'callsign':new_agent_response['data']['agent']['symbol']
             ,'key_encrypted':encrypted_key_bytes.decode()
         }
 
-        #(Over)writing credentials to local file:
-        with open(self.game_cfg.account_config_filepath, 'w') as configfile:
-            config.write(configfile)
+        update_config_file(self.config_path,section="ACCOUNT_CREDENTIALS",data=data)
 

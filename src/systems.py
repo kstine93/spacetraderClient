@@ -1,6 +1,9 @@
+"""
+Data and functions related for interacting with the 'systems' endpoint of the Spacetrader API
+"""
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,GameConfig
+from .base import SpaceTraderConnection
 from .utilities.custom_types import SpaceTraderResp
 from .utilities.basic_utilities import count_keys_in_dir
 from .utilities.cache_utilities import dict_cache_wrapper,update_cache_dict
@@ -12,7 +15,6 @@ class Systems:
     """
     #----------
     stc = SpaceTraderConnection()
-    game_cfg = GameConfig()
     base_url: str | None = None
     cache_path: str | None = None
     cache_file_name: str | None = None
@@ -20,11 +22,12 @@ class Systems:
     #----------
     def __init__(self):
         self.base_url = self.stc.base_url + "/systems"
-        self.cache_path = self.game_cfg.base_cache_path + "systems/"
+        self.cache_path = self.stc.base_cache_path + "systems/"
         self.cache_file_name = "systems"
 
     #----------
     def mold_system_dict(self,response:SpaceTraderResp) -> dict:
+        """Transform systems data into an easier-to-use format for inserting into dictionaries"""
         data = response['http_data']['data']
         return {data['symbol']:data}
 
@@ -44,7 +47,7 @@ class Systems:
 
     #----------
     def reload_systems_in_cache(self,page:str=1) -> None:
-        """Updates systems data in cache with data from the API"""
+        """Force-updates all systems data in cache with data from the API"""
         for system_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for sys in system_list['http_data']['data']:
                 transformed_sys = {sys['symbol']:sys}
@@ -59,7 +62,7 @@ class Systems:
     #----------
     @cache_system
     def get_system(self,system:str) -> dict:
-        """Returns basic overview of a given system. Decorator pulls from cached data if it exists"""
+        """Returns basic overview of a given system. Decorator pulls from cached data if exists"""
         url = self.base_url + "/" + system
         response = self.stc.stc_http_request(method="GET",url=url)
         data = self.mold_system_dict(response)
@@ -67,7 +70,7 @@ class Systems:
 
     #----------
     def get_market(self,waypoint:str) -> dict:
-        """Returns information about what commodities may be bought or sold at a given market waypoint"""
+        """Returns information about what commodities may be bought/sold at a market waypoint"""
         system = self.stc.get_system_from_waypoint(waypoint)
         url = f"{self.base_url}/{system}/waypoints/{waypoint}/market"
         response = self.stc.stc_http_request(method="GET",url=url)

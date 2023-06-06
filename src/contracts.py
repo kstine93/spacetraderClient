@@ -1,6 +1,9 @@
+"""
+Data and functions related for interacting with the 'contracts' endpoint of the Spacetrader API
+"""
 #==========
 from typing import Callable
-from .base import SpaceTraderConnection,GameConfig
+from .base import SpaceTraderConnection
 from .utilities.basic_utilities import attempt_dict_retrieval
 from .utilities.cache_utilities import dict_cache_wrapper, update_cache_dict
 
@@ -14,13 +17,12 @@ class Contracts:
     cache_path: str | None = None
     cache_file_name: str | None = None
     stc = SpaceTraderConnection()
-    game_cfg = GameConfig()
 
     #----------
     def __init__(self):
         self.base_url = self.stc.base_url + "/my/contracts"
         #Using callsign as file name so contract files are associated with a particular account:
-        self.cache_path = f"{self.game_cfg.base_cache_path}contracts/{self.stc.callsign}.json"
+        self.cache_path = f"{self.stc.base_cache_path}contracts/{self.stc.callsign}.json"
 
     def mold_contract_dict(self,response:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
@@ -43,8 +45,8 @@ class Contracts:
 
     #----------
     def reload_contracts_in_cache(self,page:int=1) -> dict:
+        """Force-updates all contracts data in cache with data from the API"""
         url = "https://api.spacetraders.io/v2/my/contracts"
-        """Updates contracts data in cache with data from the API"""
         for contract_list in self.stc.stc_get_paginated_data("GET",url,page):
             for con in contract_list["http_data"]["data"]:
                 transformed_con = {con['id']:con}
@@ -61,7 +63,8 @@ class Contracts:
         if not data:
             self.reload_contracts_in_cache()
             #If no data is returned a 2nd time, it means no data is avaiable.
-            return attempt_dict_retrieval(self.cache_path)
+            data = attempt_dict_retrieval(self.cache_path)
+        return data
 
     #----------
     #@cache_contracts
