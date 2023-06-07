@@ -13,7 +13,9 @@ from .utilities.crypt_utilities import password_encrypt,password_decrypt
 from .utilities.config_utilities import get_config,update_config_file
 from .utilities.custom_types import SpaceTraderResp
 
-
+#For debugging HTTP requests:
+# import http.client
+# http.client.HTTPConnection.debuglevel=5
 
 #===========
 #Basic functions to get game config data:
@@ -54,6 +56,7 @@ class HttpConnection:
 
         if 'body' in kwargs:
             kwargs.update({'body':json.dumps(kwargs['body'])})
+            print(kwargs.get('body'))
 
         return self.conn.request(
             method=method
@@ -73,7 +76,7 @@ class SpaceTraderConnection:
     encrypted_key: str | None = None
 
     api_key: str | None = None
-    default_header: dict = {"Accept": "application/json"}
+    default_header: dict = {"Accept": "application/json","Content-Type":"application/json"}
     base_url:str | None = None
 
     base_cache_path:str | None = None
@@ -118,7 +121,7 @@ class SpaceTraderConnection:
         return waypoint[0:7]
 
     #----------
-    def stc_http_request(self, method:str, url:str, **kwargs) -> dict:
+    def stc_http_request(self, method:str, url:str, **kwargs) -> SpaceTraderResp:
         """Wrapper for HTTP get - implements spacetrader-specific handling of response"""
         http_response = self.http_conn.http_request(method=method
                                           ,url=url

@@ -46,8 +46,7 @@ class Contracts:
     #----------
     def reload_contracts_in_cache(self,page:int=1) -> dict:
         """Force-updates all contracts data in cache with data from the API"""
-        url = "https://api.spacetraders.io/v2/my/contracts"
-        for contract_list in self.stc.stc_get_paginated_data("GET",url,page):
+        for contract_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for con in contract_list["http_data"]["data"]:
                 transformed_con = {con['id']:con}
                 update_cache_dict(transformed_con,self.cache_path)

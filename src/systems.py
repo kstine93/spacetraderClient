@@ -32,6 +32,12 @@ class Systems:
         return {data['symbol']:data}
 
     #----------
+    def create_cache_path(self,system:str) -> str:
+        """Create cache path from system string. To shard data, we're using the first 4
+        characters of the system string as the file path (only last character varies A-Z)"""
+        return self.cache_path + system[0:4] + ".json"
+
+    #----------
     def cache_system(func: Callable) -> Callable:
         """
         Wrapper for an external, generic caching system.
@@ -40,7 +46,7 @@ class Systems:
         Target function and its needed arguments (self,system) also passed on.
         """
         def wrapper(self,system:str):
-            path = self.cache_path + system[0:4] + ".json"
+            path = self.create_cache_path(system)
             #Reminder: (func) and (self,system) are being passed as args to nested functions:
             return dict_cache_wrapper(file_path=path,key=system)(func)(self,system)
         return wrapper
@@ -52,7 +58,7 @@ class Systems:
             for sys in system_list['http_data']['data']:
                 transformed_sys = {sys['symbol']:sys}
                 #Using first 4 characters of the system symbol as file name:
-                file_path = self.cache_path + sys['symbol'][0:4] + ".json"
+                file_path = self.create_cache_path(sys['symbol'])
                 update_cache_dict(transformed_sys,file_path)
 
     #----------
