@@ -8,6 +8,51 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### June 6, 2023
+
+Todo next:
+1. Nav_to_waypoint is not working again- figure out why.
+   1. **RESOLVED:** Required an extra header `{"Content-Type":"application/json"}`
+2. ~~Test that nav_data looks o.k. when navigating to new waypoint~~
+   1. ~~Using this info, finish __set_status method in spaceship class.~~
+      1. ~~**Yes, format was exactly the same - no extra data on 'arrival' like I feared**~~
+
+**Notes on building new interface layer**
+I've now cleaned up my code and I'm ready to start building a new interface layer.
+
+Here's my proposed order of tasks:
+1. Build stateful 'individual_ship' class - this can hold:
+   1. data on state of the ship (fuel, cargo)
+   2. data on location of ship (current system, current waypoint)
+   3. detailed info on location (waypoint scan, system scan, survey data)
+2. See if I can build a basic CLI for playing the game
+   1. Maybe build more complex commands in the CLI?
+      1. e.g. SURVEY, EXTRACT, REFINE
+3. See if I can build a command queue
+   1. Not sure yet how to implement this... Maybe in a native Python queue? Should ideally be persistent across sessions.
+
+---
+
+**IDEAS on next layer of interface**
+The game is vaguely playable just from a python notebook - but I have to keep running around to find certain commands, and commenting out commands I don't want to run - which is a pain.
+Other stuff I want to figure out:
+1. Can I chain together commands in a reasonable way (e.g., SURVEY then EXTRACT then REFINE) and have higher-level functions to do this?
+2. Can I make a QUEUE of commands!? Since the cooldown is such a pain, it would be great if I could queue commands which get executed as soon as the last cooldown is over.
+   1. Something like "Jump to X system, nav to Y waypoint, survey and extract repeatedly until you get 50 units of copper, then go to Z waypoint" - that would be awesome.
+3. Can I make more granular classes (particularly for 'ships') which hold more runtime information?
+   1. Currently my program has no state - it has a database (cache) but that's it. But the ships class does have some endpoints which point towards state
+      1. System the ship is currently in
+      2. scan of waypoints
+      3. survey data for certain waypoints
+4. Can I make more of a nice interface for the player? (I like the idea of starting with some ASCII and moving to HTML from there)
+   1. Buttons instead of CLI to run commands
+   2. Some kind of heads-up display (or at least ASCII?)
+   3. Current contract info & progress & time left
+   4. Current state of ship & queue
+   5. Maybe a player-editable to-do list
+
+---
+
 ### June 4, 2023
 
 **Notes on transferring to composition over inheritance**
@@ -59,10 +104,10 @@ I think this is as graceful as I'm going to get.
 ```
 
 **Next Steps:**
-1. Clean up this test code with better naming, type hints, key-word arguments.
-2. Switch over all classes + test
-3. Consider implementing as class again (I don't see the need at this point though)
-4. Continue my work to get rid of inheritance (favor composition)
+1. ~~Clean up this test code with better naming, type hints, key-word arguments.~~
+2. ~~Switch over all classes + test~~
+3. ~~Consider implementing as class again (I don't see the need at this point though)~~
+4. ~~Continue my work to get rid of inheritance (favor composition)~~
 5. Continue my work to build new interface layer.
 
 
@@ -99,24 +144,6 @@ and then to do the harder (mentally) task of building the next layer of the inte
    2. ~~Organise your tests so that they're a bit more modular~~
       1. ~~Maybe a single testing file for 'systems', 'ships', etc? - and then a 'master' test file to run all of them sequentially (or parallely!?)~~
 2. Build the next layer of my interface
-
-**IDEAS on next layer of interface**
-The game is vaguely playable just from a python notebook - but I have to keep running around to find certain commands, and commenting out commands I don't want to run - which is a pain.
-Other stuff I want to figure out:
-1. Can I chain together commands in a reasonable way (e.g., SURVEY then EXTRACT then REFINE) and have higher-level functions to do this?
-2. Can I make a QUEUE of commands!? Since the cooldown is such a pain, it would be great if I could queue commands which get executed as soon as the last cooldown is over.
-   1. Something like "Jump to X system, nav to Y waypoint, survey and extract repeatedly until you get 50 units of copper, then go to Z waypoint" - that would be awesome.
-3. Can I make more granular classes (particularly for 'ships') which hold more runtime information?
-   1. Currently my program has no state - it has a database (cache) but that's it. But the ships class does have some endpoints which point towards state
-      1. System the ship is currently in
-      2. scan of waypoints
-      3. survey data for certain waypoints
-4. Can I make more of a nice interface for the player? (I like the idea of starting with some ASCII and moving to HTML from there)
-   1. Buttons instead of CLI to run commands
-   2. Some kind of heads-up display (or at least ASCII?)
-   3. Current contract info & progress & time left
-   4. Current state of ship & queue
-   5. Maybe a player-editable to-do list
 
 
 **NOTES on handling HTTP status errors:**

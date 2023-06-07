@@ -3,6 +3,7 @@ Data and functions related for interacting with the 'ships' endpoint of the Spac
 """
 #==========
 from .base import SpaceTraderConnection
+from .utilities.cache_utilities import update_cache_dict,attempt_dict_retrieval
 
 #==========
 class Ships:
@@ -26,6 +27,32 @@ class Ships:
         url = self.base_url + "/" + ship
         response = self.stc.stc_http_request(method="GET",url=url)
         return response
+
+    #----------
+    def list_ships(self,ship:str) -> dict:
+        """Get detailed information about the ship, its systems, cargo, crew and modules"""
+        url = self.base_url + "/" + ship
+        response = self.stc.stc_http_request(method="GET",url=url)
+        return response
+
+    #----------
+    def reload_ships_in_cache(self,page:int=1) -> dict:
+        """Force-updates all ships data in cache with data from the API"""
+        for ship_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
+            for ship in ship_list["http_data"]["data"]:
+                transformed_con = {ship['symbol']:ship}
+                update_cache_dict(transformed_con,self.cache_path)
+
+    #----------
+    #TODO: Make this function below prettier.
+    def list_all_ships(self) -> dict:
+        """Get all ships associated with the agent"""
+        data = attempt_dict_retrieval(self.cache_path)
+        if not data:
+            self.reload_ships_in_cache()
+            #If no data is returned a 2nd time, it means no data is avaiable.
+            data = attempt_dict_retrieval(self.cache_path)
+        return data
 
     #--------------
     #--NAVIGATION--
@@ -55,7 +82,7 @@ class Ships:
     def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> dict:
         """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
-        body = {'waypointSymbol':waypoint}
+        body = {"waypointSymbol":waypoint}
         response = self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
 
@@ -100,7 +127,8 @@ class Ships:
 
     #----------
     def scan_waypoints(self,ship:str) -> dict:
-        """Get detailed data on waypoints in the current system"""
+        """Get detailed data on waypoints in the current system
+        NOTE: This updates the cache with the new data as well."""
         url = f"{self.base_url}/{ship}/scan/waypoints"
         response = self.stc.stc_http_request(method="POST",url=url)
         return response
@@ -138,9 +166,9 @@ class Ships:
         return response
 
     #----------
-    def negotiate_contract(self,ship:str) -> dict:
+    def negotiate_ship(self,ship:str) -> dict:
         #NOTE: This appears to be an unfinished endpoint which would arguably
-        # go better in the contracts class.
+        # go better in the ships class.
         #No need to develop this until it's clarified a bit better.
         pass
 
