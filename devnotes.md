@@ -8,10 +8,21 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### June 7, 2023
+1. ~~Run all tests again - see where else my changes to caching function (Adding leading key) have impacts~~
+2. ~~Commit changes to caching function~~
+3. Read more about interfaces and see if I should refactor my 'ShipInterface' implementation or not... [article here](https://realpython.com/python-interface/)
+   1. It seems this is a way to solve multiple inheritance and isn't really necessary in Python
+   2. It's also described as a way to provide a 'contract for implementing functionality' - which is not exactly what I'm going for.
+4. Commit first version of Spaceship class (Change name?)
+5. Continue developing spaceship class
+
+---
+
 ### June 6, 2023
 
 Todo next:
-1. Nav_to_waypoint is not working again- figure out why.
+1. ~~Nav_to_waypoint is not working again- figure out why.~~
    1. **RESOLVED:** Required an extra header `{"Content-Type":"application/json"}`
 2. ~~Test that nav_data looks o.k. when navigating to new waypoint~~
    1. ~~Using this info, finish __set_status method in spaceship class.~~
