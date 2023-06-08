@@ -50,7 +50,7 @@ class TestSystems(unittest.TestCase):
     def test_get_system_without_cache(self):
         remove_dict_record_if_exists(self.system_filepath,self.system_name)
         data = self.system.get_system(self.system_name)
-        keys_counter = Counter(data.keys())
+        keys_counter = Counter(data[self.system_name].keys())
         self.assertEqual(keys_counter,Counter(self.system_schema))
 
     #----------

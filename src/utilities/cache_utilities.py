@@ -14,7 +14,8 @@ def dict_cache_wrapper(file_path,key):
         def wrapper(*args, **kwargs):
             existing_data = attempt_dict_retrieval(file_path)
             if key in existing_data:
-                return existing_data[key]
+                #Wrapping result in new dict to be consistent with result of user_function:
+                return {key:existing_data[key]}
             else:
                 data = user_function(*args,**kwargs)
                 update_cache_dict(data,file_path)

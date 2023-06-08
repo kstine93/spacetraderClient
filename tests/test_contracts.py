@@ -11,7 +11,13 @@ import unittest
 
 #==========
 class TestContracts(unittest.TestCase):
-    """Unit testing for 'contracts' class"""
+    """Unit testing for 'contracts' class
+    NOTE: Relative to other data in Spacetrader, contract data can be more fluid. For example, if
+    a contract is not 'accepted' by a certain date, it is no longer listed. For this reason, the
+    contract list can easily be completely empty and these tests can fail.
+    TODO: Find better way to handle this in testing (i.e., how can I differentiate between a
+    failure to retrieve contract data and a successful retrieval with no data?)
+    """
     #----------
     contract_name = "clija6w677t03s60d7ctvf8ec"
     contracts_filepath = "./gameData/contracts/"
