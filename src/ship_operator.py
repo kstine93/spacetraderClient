@@ -2,9 +2,14 @@
 Data and functions related for interacting with the 'ships' endpoint of the Spacetrader API
 """
 #==========
+import logging
+from threading import Timer
+from typing import Callable
 from .ships import Ships
 from .systems import Systems
 from .utilities.cache_utilities import update_cache_dict
+from .utilities.basic_utilities import time_seconds_diff_UTC
+from .art.animations import *
 
 #==========
 class ShipOperator(Ships):
@@ -37,17 +42,38 @@ class ShipOperator(Ships):
     #Crew
     current_crew:dict | None = None
 
+    #Cooldown
+    cooldown_expiry:str | None = None
+
     #----------
     def __init__(self,ship_name):
         super().__init__()
         self.spaceship_name = ship_name
+
+    #----------
+    def check_set_cooldown(func: Callable) -> Callable:
+        """Wrapper to check cooldown before attempting an action, and to set a new cooldown afterwards"""
+        def wrapper(self,*args,**kwargs):
+            if self.cooldown_expiry:
+                seconds = time_seconds_diff_UTC(self.cooldown_expiry)
+                if seconds > 0:
+                    print(f"Cooldown remaining: {seconds}s")
+                    return
+
+            result = func(self,*args,**kwargs)
+            cooldown_res = self.get_cooldown(self.spaceship_name)
+            if cooldown_res['http_data']:
+                self.cooldown_expiry = cooldown_res['http_data']['data']['expiration']
+            return result
+        return wrapper
 
     #-------------------
     #--BASIC SHIP DATA--
     #-------------------
     def reload_entire_ship(self) -> None:
         """Update local data on ship status, location, cargo, fuel and crew"""
-        response = self.get_ship(self.spaceship_name)
+        response = super().get_ship(self.spaceship_name)
+        if not self.stc.response_ok(response): return
         data = response['http_data']['data']
 
         self.__set_location(data['nav'])
@@ -57,8 +83,10 @@ class ShipOperator(Ships):
         self.__set_crew(data['crew'])
 
     #----------
+    @check_set_cooldown
     def reload_nav_details(self) -> None:
-        response = self.get_nav_details(self.spaceship_name)
+        response = super().get_nav_details(self.spaceship_name)
+        if not self.stc.response_ok(response): return
         data = response['http_data']['data']
 
         self.__set_location(data)
@@ -89,24 +117,25 @@ class ShipOperator(Ships):
     #----------
     def __set_cargo(self,cargo_details:dict) -> None:
         """Update local data on ship's cargo"""
-        self.current_status = cargo_details
+        self.current_cargo = cargo_details
 
     #----------
     def __set_fuel(self,fuel_details:dict) -> None:
         """Update local data on ship's fuel"""
-        self.current_status = fuel_details
+        self.current_fuel = fuel_details
 
     #----------
     def __set_crew(self,crew_details:dict) -> None:
         """Update local data on ship's fuel"""
-        self.current_status = crew_details
+        self.current_crew = crew_details
 
     #-------------------
     #--ENCRICHING DATA--
     #-------------------
     def enrich_current_waypoints(self) -> None:
         """Scan waypoints in system to get additional data. Ship action. Incurs cooldown."""
-        response = self.scan_waypoints(self.spaceship_name)
+        response = super().scan_waypoints(self.spaceship_name)
+        if not self.stc.response_ok(response): return
         #Error typically indicates ship is on cooldown:
         if response["http_status"] not in [200,201]:
             return response['http_data']['error']
@@ -126,6 +155,98 @@ class ShipOperator(Ships):
         update_cache_dict(system_data,cache_path)
 
     #----------
+    @check_set_cooldown
     def survey_current_waypoint(self) -> dict:
-        data = super().survey_current_waypoint(self.spaceship_name)
-        self.current_surveys = self.current_surveys + data['http_data']['data']['surveys']
+        response = super().survey_current_waypoint(self.spaceship_name)
+        if not self.stc.response_ok(response): return
+        data = response['http_data']['data']
+        self.current_surveys = self.current_surveys + data['surveys']
+
+    #--------------
+    #--NAVIGATION--
+    #--------------
+    def orbit_ship(self) -> dict:
+        response = super().orbit_ship(self.spaceship_name)
+        if not self.stc.response_ok(response): return
+        nav_data = response['http_data']['data']['nav']
+        self.__set_flight_status(nav_data)
+
+    #----------
+    def dock_ship(self) -> None:
+        response = super().dock_ship(self.spaceship_name)
+        if not self.stc.response_ok(response): return
+        nav_data = response['http_data']['data']['nav']
+        self.__set_flight_status(nav_data)
+
+    #----------
+    def nav_ship_to_waypoint(self, waypoint: str) -> None:
+        response = super().nav_ship_to_waypoint(self.spaceship_name, waypoint)
+        if not self.stc.response_ok(response): return
+        #Animating + showing travel time
+        arrival_time_str = response['http_data']['data']['nav']['route']['arrival']
+        seconds_to_arrival = time_seconds_diff_UTC(arrival_time_str)
+        animate_navigation(seconds_to_arrival)
+
+        self.reload_nav_details()
+
+    #-------------
+    #--RESOURCES--
+    #-------------
+    @check_set_cooldown
+    def extract_resources(self,target_resource:str) -> None:
+        """Extract resources from current waypoint. If a survey data structure
+        exists for the current waypoint, use it. If one of the survey data structures
+        matches the target_resource, use that specifically"""
+        survey = self.__get_optimal_survey(target_resource)
+        response = super().extract_resources(self.spaceship_name,survey)
+        if not self.stc.response_ok(response): return
+        self.__set_cargo(response['http_data']['data']['cargo'])
+
+    #----------
+    def __get_optimal_survey(self,target_resource:str) -> dict:
+        """Get surveys valid in the current waypoint. Sorts this list based on if survey
+        contains target_resource and then based on size. Returns best-choice survey."""
+        if not self.current_surveys:
+            return {} #"Blank" survey if we have no surveys
+        wp_symbol = self.current_waypoint['symbol']
+        #Get surveys for current waypoint
+        wp_surveys = list(filter(lambda item: item['symbol'] == wp_symbol,self.current_surveys))
+        #Sort surveys based on target resource & then size
+        def rsc_condition(survey):
+            return target_resource in [deposit['symbol'] for deposit in survey['deposits']]
+        def size_condition(survey):
+            return {"SMALL":1,"MODERATE":2,"LARGE":3}[survey['size']]
+        wp_surveys.sort(key=lambda x: (-rsc_condition(x), -size_condition(x)))
+        return wp_surveys[0]
+
+    #----------
+    def refuel_ship(self) -> None:
+        self.dock_ship()
+        response = super().refuel_ship(self.spaceship_name)
+        if not self.stc.response_ok(response): return
+        self.__set_fuel(response['http_data']['data']['fuel'])
+
+
+    #----------------
+    #--SHIP SYSTEMS--
+    #----------------
+
+
+
+
+    """
+    Not yet implemented:
+    jump_ship_to_system
+    set_nav_speed
+
+    scan_systems
+    scan_waypoints
+    scan_ships
+
+    refine_material
+
+    transfer_cargo_to_ship
+    purchase_cargo
+    sell_cargo
+    jettison_cargo
+    """
