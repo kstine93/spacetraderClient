@@ -3,6 +3,7 @@ Data and functions related for interacting with the 'ships' endpoint of the Spac
 """
 #==========
 from .base import SpaceTraderConnection
+from .utilities.custom_types import RefinableProduct, SpaceTraderResp
 from .utilities.cache_utilities import update_cache_dict,attempt_dict_retrieval
 
 #==========
@@ -22,21 +23,19 @@ class Ships:
         self.cache_path = f"{self.stc.base_cache_path}ships/{self.stc.callsign}.json"
 
     #----------
-    def get_ship(self,ship:str) -> dict:
+    def get_ship(self,ship:str) -> SpaceTraderResp:
         """Get detailed information about the ship, its systems, cargo, crew and modules"""
         url = self.base_url + "/" + ship
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def list_ships(self,ship:str) -> dict:
+    def list_ships(self,ship:str) -> SpaceTraderResp:
         """Get detailed information about the ship, its systems, cargo, crew and modules"""
         url = self.base_url + "/" + ship
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def reload_ships_in_cache(self,page:int=1) -> dict:
+    def reload_ships_in_cache(self,page:int=1) -> None:
         """Force-updates all ships data in cache with data from the API"""
         for ship_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for ship in ship_list["http_data"]["data"]:
@@ -57,146 +56,150 @@ class Ships:
     #--------------
     #--NAVIGATION--
     #--------------
-    def orbit_ship(self,ship:str) -> dict:
+    def orbit_ship(self,ship:str) -> SpaceTraderResp:
         """orbit the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/orbit"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def dock_ship(self,ship:str) -> dict:
+    def dock_ship(self,ship:str) -> SpaceTraderResp:
         """dock the ship at the current waypoint"""
         url = f"{self.base_url}/{ship}/dock"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def jump_ship_to_system(self,ship:str, system:str) -> dict:
+    def jump_ship_to_system(self,ship:str, system:str) -> SpaceTraderResp:
         """Jump instantaneously to another system. Alternative to warp."""
         url = f"{self.base_url}/{ship}/jump"
         body = {'systemSymbol':system}
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> dict:
+    def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> SpaceTraderResp:
         """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
         body = {"waypointSymbol":waypoint}
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def get_nav_details(self,ship:str) -> dict:
+    def get_nav_details(self,ship:str) -> SpaceTraderResp:
         """Get current navigation details for a ship"""
         url = f"{self.base_url}/{ship}/nav"
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def warp_ship(self,ship:str,waypoint:str) -> None:
+    def warp_ship(self,ship:str,waypoint:str) -> SpaceTraderResp:
         """Navigate (warp) the ship to a different system without jumping"""
         url = f"{self.base_url}/{ship}/warp"
         body = {'waypointSymbol':waypoint}
-        response = self.stc.stc_http_request(method="GET",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url,body=body)
 
     #-------------
     #--SURVEYING--
     #-------------
-    def chart_current_waypoint(self,ship:str) -> dict:
+    def chart_current_waypoint(self,ship:str) -> SpaceTraderResp:
         """Add the current waypoint to the community-wide directory of waypoints,
         if the record doesn't already exist."""
         url = f"{self.base_url}/{ship}/chart"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def survey_current_waypoint(self,ship:str) -> dict:
+    def survey_current_waypoint(self,ship:str) -> SpaceTraderResp:
         """Get a survey of resources at your current waypoint location"""
         url = f"{self.base_url}/{ship}/survey"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def scan_systems(self,ship:str) -> dict:
+    def scan_systems(self,ship:str) -> SpaceTraderResp:
         """Get information about systems close to the current system"""
         url = f"{self.base_url}/{ship}/scan/systems"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def scan_waypoints(self,ship:str) -> dict:
+    def scan_waypoints(self,ship:str) -> SpaceTraderResp:
         """Get detailed data on waypoints in the current system
         NOTE: This updates the cache with the new data as well."""
         url = f"{self.base_url}/{ship}/scan/waypoints"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def scan_for_ships(self,ship:str) -> dict:
+    def scan_for_ships(self,ship:str) -> SpaceTraderResp:
         """Look for ships in the current system"""
         url = f"{self.base_url}/{ship}/scan/ships"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #-------------------
     #--SHIP MANAGEMENT--
     #-------------------
-    def get_cooldown(self,ship:str) -> dict:
+    def get_cooldown(self,ship:str) -> SpaceTraderResp:
         """Most ship actions invoke a cooldown period.
         See how much more time until a ship action can be taken."""
         url = f"{self.base_url}/{ship}/cooldown"
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def refuel_ship(self,ship:str) -> dict:
+    def refuel_ship(self,ship:str) -> SpaceTraderResp:
         """Add fuel to ship. Requires that refueling is possible in current location."""
         url = f"{self.base_url}/{ship}/refuel"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def set_nav_speed(self,ship:str,speed:str) -> dict:
+    def set_speed(self,ship:str,speed:str) -> SpaceTraderResp:
         """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
-        response = self.stc.stc_http_request(method="PATCH",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="PATCH",url=url,body=body)
 
     #----------
-    def negotiate_contract(self,ship:str) -> dict:
+    def negotiate_contract(self,ship:str) -> SpaceTraderResp:
         #NOTE: This appears to be an unfinished endpoint which would arguably
         # go better in the ships class.
         #No need to develop this until it's clarified a bit better.
         pass
 
     #----------
-    def extract_resources(self,ship:str,survey_dict:dict={}) -> dict:
+    def extract_resources(self,ship:str,survey_dict:dict={}) -> SpaceTraderResp:
         """Extract resources from the current waypoint. an optional survey object allows better yields."""
         url = f"{self.base_url}/{ship}/extract"
-        response = self.stc.stc_http_request(method="POST",url=url,body=survey_dict)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=survey_dict)
 
     #----------
-    def refine_material(self,ship:str,) -> dict:
-        """Attempt to refine any raw materials on the ship"""
+    def refine_product(self,ship:str,product:RefinableProduct) -> SpaceTraderResp:
+        """Attempt to refine raw materials on the ship into target product"""
         url = f"{self.base_url}/{ship}/refine"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        return response
+        body = {'produce':product}
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
+
+    #----------
+    def get_mounts(self,ship:str) -> SpaceTraderResp:
+        """Get mounts currently installed on ship"""
+        url = f"{self.base_url}/{ship}/mounts"
+        return self.stc.stc_http_request(method="POST",url=url)
+
+    #----------
+    def install_mount(self,ship:str,mount:str) -> SpaceTraderResp:
+        """Install mount in Cargo onto ship"""
+        url = f"{self.base_url}/{ship}/mounts/install"
+        body = {'symbol':mount}
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
+
+    #----------
+    def remove_mount(self,ship:str,mount:str) -> SpaceTraderResp:
+        """Remove mount in Cargo onto ship"""
+        url = f"{self.base_url}/{ship}/mounts/remove"
+        body = {'symbol':mount}
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #---------
     #--CARGO--
     #---------
-    def get_current_cargo(self,ship:str) -> dict:
+    def get_current_cargo(self,ship:str) -> SpaceTraderResp:
         """See current cargo of a ship"""
         url = f"{self.base_url}/{ship}/cargo"
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def transfer_cargo_to_ship(self,ship:str,item:str,quantity:int,target_ship:str) -> dict:
+    def transfer_cargo_to_ship(self,ship:str,item:str,quantity:int,target_ship:str) -> SpaceTraderResp:
         """Move cargo in-between two ships at the same waypoint"""
         url = f"{self.base_url}/{ship}/transfer"
         body = {
@@ -204,38 +207,35 @@ class Ships:
             ,'units':quantity
             ,'shipSymbol':target_ship
         }
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def purchase_cargo(self,ship:str,item:str,quantity:int) -> dict:
+    def purchase_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
         """buy cargo at the waypoint the ship is currently at"""
         url = f"{self.base_url}/{ship}/purchase"
         body = {
-            'tradeSymbol':item
+            'symbol':item
             ,'units':quantity
         }
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def sell_cargo(self,ship:str,item:str,quantity:int) -> dict:
+    def sell_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
         """Sell cargo at the waypoint the ship is currently at"""
         url = f"{self.base_url}/{ship}/sell"
         body = {
             'symbol':item
             ,'units':quantity
         }
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def jettison_cargo(self,ship:str,item:str,quantity:int) -> dict:
+    def jettison_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
         """Remove cargo from the storage of a ship"""
         url = f"{self.base_url}/{ship}/jettison"
         body = {
-            'tradeSymbol':item
+            'symbol':item
             ,'units':quantity
         }
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
         return response
