@@ -5,6 +5,7 @@ This file also contains a class for registering a new agent and thereby setting 
 
 #==========
 import json
+import logging
 from configparser import ConfigParser
 from time import sleep
 from urllib3 import PoolManager, HTTPResponse
@@ -56,7 +57,6 @@ class HttpConnection:
 
         if 'body' in kwargs:
             kwargs.update({'body':json.dumps(kwargs['body'])})
-            print(kwargs.get('body'))
 
         return self.conn.request(
             method=method
@@ -106,12 +106,25 @@ class SpaceTraderConnection:
         self.api_key = decrypted_key_bytes.decode() #converting to string
 
     #----------
+    def response_ok(self,response:SpaceTraderResp) -> bool:
+        """Check if API response resulted in a valid response (TRUE) or not (FALSE).
+        Print and log error responses if they exist"""
+        if "error" in response['http_data'].keys():
+            print(response['http_data']['error']['message'])
+            logging.warn(f"API returned error: {response['http_data']['error']['message']}")
+            return False
+        return True
+
+    #----------
     def repackage_http_response(self,http_response:HTTPResponse) -> SpaceTraderResp:
         """Transforms http_response (sometimes in a complex format) to simple dictionary."""
-        packet = {
-            'http_data':json.loads(http_response.data),
-            'http_status':http_response.status
-        }
+        packet = {}
+        packet['http_status'] = http_response.status
+        try:
+            packet['http_data'] = json.loads(http_response.data)
+        except:
+            packet['http_data'] = {}
+            logging.info(f"Could not parse response data for {http_response.geturl()}")
         return packet
 
     #----------

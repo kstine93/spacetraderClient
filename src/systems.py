@@ -28,6 +28,7 @@ class Systems:
     #----------
     def mold_system_dict(self,response:SpaceTraderResp) -> dict:
         """Transform systems data into an easier-to-use format for inserting into dictionaries"""
+        if not self.stc.response_ok(response): raise Exception(response)
         data = response['http_data']['data']
         return {data['symbol']:data}
 
