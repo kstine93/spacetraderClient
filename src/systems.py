@@ -26,6 +26,20 @@ class Systems:
         self.cache_file_name = "systems"
 
     #----------
+    def simplify_system_dict(self,system_dict:dict) -> dict:
+        """Removing arguably unneeded waypoints info from the 'system' dictionary.
+        Particularly relevant once enriched from scanning waypoints."""
+        keys_to_remove = ['x','y','orbitals','systemSymbol','chart']
+        waypoints = system_dict['waypoints']
+        for wp in waypoints:
+            for key in keys_to_remove:
+                wp.pop(key,None)
+            #reducing traits to a simple string list:
+            wp['traits'] = [tr['symbol'] for tr in wp['traits']]
+        system_dict['waypoints'] = waypoints
+        return system_dict
+
+    #----------
     def mold_system_dict(self,response:SpaceTraderResp) -> dict:
         """Transform systems data into an easier-to-use format for inserting into dictionaries"""
         if not self.stc.response_ok(response): raise Exception(response)
