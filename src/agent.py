@@ -40,5 +40,6 @@ class Agent:
     def get_agent(self,callsign:str) -> dict:
         """Get basic information about agent: callsign, account ID, faction, HQ, etc."""
         url = self.stc.base_url + "/my/agent"
-        data = self.stc.stc_http_request(method="GET",url=url)
-        return {callsign:data['http_data']['data']}
+        response = self.stc.stc_http_request(method="GET",url=url)
+        if not self.stc.response_ok(response): raise Exception(response)
+        return {callsign:response['http_data']['data']}

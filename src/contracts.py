@@ -26,6 +26,7 @@ class Contracts:
 
     def mold_contract_dict(self,response:dict) -> dict:
         '''Index into response dict from API to get contract data in common format'''
+        if not self.stc.response_ok(response): raise Exception(response)
         data = response['http_data']['data']
         return {data['id']:data}
 
@@ -71,6 +72,7 @@ class Contracts:
         """Get information about a specific contract"""
         url = self.base_url + "/" + contract
         response = self.stc.stc_http_request(method="GET",url=url)
+        if not self.stc.response_ok(response): return
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
         return data
@@ -80,6 +82,7 @@ class Contracts:
         """Accept an in-game contract from the list of available contracts"""
         url = f"{self.base_url}/{contract}/accept"
         response = self.stc.stc_http_request(method="POST",url=url)
+        if not self.stc.response_ok(response): return
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
         update_cache_dict(data,self.cache_path)
