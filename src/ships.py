@@ -143,7 +143,7 @@ class Ships:
     #-------------------
     #--SHIP MANAGEMENT--
     #-------------------
-    def get_cooldown_details(self,ship:str) -> dict:
+    def get_cooldown(self,ship:str) -> dict:
         """Most ship actions invoke a cooldown period.
         See how much more time until a ship action can be taken."""
         url = f"{self.base_url}/{ship}/cooldown"
@@ -166,7 +166,7 @@ class Ships:
         return response
 
     #----------
-    def negotiate_ship(self,ship:str) -> dict:
+    def negotiate_contract(self,ship:str) -> dict:
         #NOTE: This appears to be an unfinished endpoint which would arguably
         # go better in the ships class.
         #No need to develop this until it's clarified a bit better.

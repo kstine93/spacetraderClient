@@ -8,13 +8,70 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+June 9, 2023
+
+**NEXT TO-DOS**
+1. Got a lot of uncommited changes - figure out reasonable commit packets and make the commits.
+2. Continue filling out methods for ship_operator.
+
+**Handling API errors**
+I'm trying to figure out where to best handle API errors.
+So far, I've not been handling them - just letting them percolate up - which I quite like. But now, I
+want *some* failed API calls to print their error messages rather than causing a crash. Where to best implement this?
+- Not in SpaceTraderConnection I think - I don't necessarily want all API calls to be soft-handled...
+- Maybe in ShipOperator? I like handling them here so I can tweak the UI (this is basically UI)
+- Best might be in the intermediate classes I have - error handling is largely tied to endpoint, so I can designate which endpoints should be 'soft fail'
+  - **UPDATE:** I need to do this where I am parsing the data - *not before*. So I can either (a) print the error message or (b) parse the data. This means I really need to do it in ShipOperator.
+    - **UPDATE:** I'm adding calls to `response_ok` in SpaceTraderConnection class before any times I parse response data (this can be earlier for cached data)
+
+
+**Handling cooldown**
+I'm trying to figure out how I want to handle **ship cooldown**. Here's what I know:
+1. Some ship actions produce cooldown, others do not. Producing cooldown:
+   1. survey
+   2. scan waypoints
+   3. scan sysytems
+   4. scan ships
+   5. extract resources
+   6. refine resources
+2. Cooldown information is returned by each of the actions above - so I could have some kind of decorator to 'track cooldown' as soon as these above actions return successfully
+   1. This tracker could do a few things:
+      1. Simply start threaded timer and print message when complete
+      2. **put cooldown expiration in class variable to be queried later**
+         1. I like this - it doesn't actually matter when the cooldown expires - **it only matters if I'm trying to do something else while the cooldown is still in-effect**
+
+> Let's move forward with a decorator which checks cooldown before allowing a cooldown-dependent function to run.
+> **NOTE:** Check beforehand if ALL functions are stopped when we're on cooldown, or just a few.
+>  -- From a basic check of 'Nav' and 'get_ship' - it looks like only the ship actions which produce cooldown actually also are limited by cooldown.
+
+---
+
+June 8, 2023
+**UPDATE**
+I've been doing a lot today
+1. I started the foundations of a neat ASCII-based animation set within the 'art' directory. I implemented it for waypoint navigation. Since there's not much that can be done while traveling, this seems nice.
+   1. This **will** need to be refactored - but I think I'll wait until I have more animations first.
+2. I built logic to extract resources based on surveys that are stored in class variables. Specifically, the logic looks for the best possible survey to use given a targeted resource.
+
+
+**Next Steps**
+1. I'm not really handling errors yet - figure out where I can best do this
+   1. Also, what behavior do I want? custom error messages depending on method? Just print the error message from the API?
+2. Find better way to persist class variable data (particularly surveys, which are semi-valuable).
+   1. Maybe store state on disk at regular intervals (or after particular actions) and then try to first reload state from disk upon making a new instance?
+      1. Could be based on ship name - so I wouldn't have to worry about multiple ships / players
+      2. I could store this somehow alongside the 'ships' data I already have - which is kind of game data too.
+
+
+---
+
 ### June 7, 2023
 1. ~~Run all tests again - see where else my changes to caching function (Adding leading key) have impacts~~
 2. ~~Commit changes to caching function~~
 3. Read more about interfaces and see if I should refactor my 'ShipInterface' implementation or not... [article here](https://realpython.com/python-interface/)
    1. It seems this is a way to solve multiple inheritance and isn't really necessary in Python
    2. It's also described as a way to provide a 'contract for implementing functionality' - which is not exactly what I'm going for.
-4. Commit first version of Spaceship class (Change name?)
+4. ~~Commit first version of Spaceship class (Change name?)~~
 5. Continue developing spaceship class
 
 ---
