@@ -75,7 +75,7 @@ class Ships:
         return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def nav_ship_to_waypoint(self,ship:str, waypoint:str) -> SpaceTraderResp:
+    def nav_to_waypoint(self,ship:str, waypoint:str) -> SpaceTraderResp:
         """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
         body = {"waypointSymbol":waypoint}
@@ -149,13 +149,6 @@ class Ships:
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
         return self.stc.stc_http_request(method="PATCH",url=url,body=body)
-
-    #----------
-    def negotiate_contract(self,ship:str) -> SpaceTraderResp:
-        #NOTE: This appears to be an unfinished endpoint which would arguably
-        # go better in the ships class.
-        #No need to develop this until it's clarified a bit better.
-        pass
 
     #----------
     def extract_resources(self,ship:str,survey_dict:dict={}) -> SpaceTraderResp:

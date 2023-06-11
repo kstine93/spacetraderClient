@@ -121,3 +121,11 @@ class Contracts:
         data = self.mold_contract_dict(response)
         update_cache_dict(data,self.cache_path)
         return data
+
+    #----------
+    def negotiate_new_contract(self,ship:str) -> None:
+        """Get offered a new contract - provided ship must be at a faction HQ waypoint"""
+        url = f"{self.base_url}/{ship}/negotiate/contract"
+        response = self.stc.stc_http_request(method="PATCH",url=url)
+        if not self.stc.response_ok(response): return
+        self.reload_contracts_in_cache()
