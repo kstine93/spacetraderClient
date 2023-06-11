@@ -7,7 +7,9 @@ from typing import Callable
 
 from .agent import Agent
 from .ships import Ships
+from .markets import Markets
 from .systems import Systems
+from .contracts import Contracts
 from .utilities.custom_types import RefinableProduct, NavSpeed
 from .utilities.cache_utilities import update_cache_dict
 from .utilities.basic_utilities import time_seconds_diff_UTC
@@ -20,7 +22,9 @@ class ShipOperator(Ships):
     """
     #----------
     systems = Systems()
+    markets = Markets()
     agent = Agent()
+    contracts = Contracts()
 
     #----------
     #Name
@@ -52,11 +56,15 @@ class ShipOperator(Ships):
     #Cooldown
     cooldownExpiry:str | None = None
 
+    #Contract
+    pursued_contract:str | None = None
+
     #----------
     def __init__(self,ship_name):
         super().__init__()
         self.spaceship_name = ship_name
         self.reload_ship_details()
+        self.reload_agent_details()
 
     #----------
     def p(self,attr:str):
@@ -90,7 +98,6 @@ class ShipOperator(Ships):
     def new_system_data_reset(self) -> None:
         """Upon traveling to a new system, reset local data appropriately."""
         self.reload_ship_details()
-        self.reload_agent_details()
         #Reseting variables which are volatile or lose relevance in a new system:
         self.nearby_ships = []
         self.nearby_systems = []
@@ -223,10 +230,20 @@ class ShipOperator(Ships):
     #----------
     @check_set_cooldown
     def survey_waypoint(self) -> dict:
+        self.orbit_ship()
         response = super().survey_current_waypoint(self.spaceship_name)
         if not self.stc.response_ok(response): return
         data = response['http_data']['data']
         self.surveys = self.surveys + data['surveys']
+
+    #----------
+    def get_market(self,waypoint:str) -> dict:
+        """Wrapper for get_market, since whether we rely on the cache or not
+        depends on ship location"""
+        if waypoint == self.curr_waypoint['symbol']:
+            return self.markets.update_market(waypoint)
+        else:
+            return self.markets.get_market(waypoint)
 
     #--------------
     #--NAVIGATION--
@@ -254,7 +271,7 @@ class ShipOperator(Ships):
     #----------
     def nav_to_waypoint(self, waypoint: str) -> None:
         self.orbit_ship()
-        response = super().nav_ship_to_waypoint(self.spaceship_name, waypoint)
+        response = super().nav_to_waypoint(self.spaceship_name, waypoint)
         if not self.stc.response_ok(response): return
         #Animating + showing travel time
         arrival_time_str = response['http_data']['data']['nav']['route']['arrival']
@@ -290,6 +307,7 @@ class ShipOperator(Ships):
         """Extract resources from current waypoint. If a survey data structure
         exists for the current waypoint, use it. If one of the survey data structures
         matches the target_resource, use that specifically"""
+        self.orbit_ship()
         survey = self.__get_optimal_survey(target_resource)
         response = super().extract_resources(self.spaceship_name,survey)
         if not self.stc.response_ok(response): return
@@ -331,7 +349,9 @@ class ShipOperator(Ships):
     #---------
     #--CARGO--
     #---------
-    def sell_cargo(self,item:str,quantity:int) -> None:
+    def sell_cargo(self,item:str,quantity:int|None) -> None:
+        if not quantity:
+            quantity = self.get_cargo_quantity(item)
         self.dock_ship()
         response = super().sell_cargo(self.spaceship_name,item,quantity)
         if not self.stc.response_ok(response): return
@@ -375,3 +395,53 @@ class ShipOperator(Ships):
         response = super().get_mounts(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.__set_mounts(response['http_data']['data'])
+
+    #----------
+    def get_cargo_quantity(self,item:str) -> int:
+        """Return quantity of item in cargo"""
+        inventory = self.cargo['inventory']
+        for item in inventory:
+            if item['symbol'] == item:
+                return item['units']
+        return 0
+
+    #-------------
+    #--CONTRACTS--
+    #-------------
+    def list_contracts(self) -> dict:
+        return self.contracts.list_all_contracts()
+
+    def __pick_first_contract(self) -> str:
+        """Returns first contract in list_contracts. Ensures contract methods always reference a
+        contract without requiring user to provide it every time."""
+        cons = self.list_contracts()
+        return cons.keys()[0]
+
+    #----------
+    def check_contract(self,contract:str|None=pursued_contract) -> dict:
+        """Return currently-pursued contract data - so player doesn't need contract ID always"""
+        if not contract:
+            contract = self.__pick_first_contract()
+        self.pursued_contract = contract
+        return self.contracts.get_contract(contract)
+
+    #----------
+    def deliver_contract(self,item:str,quantity:int|None=None,contract:str|None=pursued_contract) -> None:
+        """Attempt to deliver item for currently-pursued contract"""
+        if not contract:
+            contract = self.__pick_first_contract()
+        if not quantity:
+            quantity = self.get_cargo_quantity(item)
+        self.contracts.deliver_contract(contract,self.spaceship_name,item,quantity)
+
+    #----------
+    def fulfill_contract(self,contract:str|None=pursued_contract) -> None:
+        if not contract:
+            contract = self.__pick_first_contract()
+        self.contracts.fulfill_contract(contract)
+        self.reload_agent_details() #Reloading credits
+
+    #----------
+    def negotiate_contract(self, ship: str) -> None:
+        """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
+        self.contracts.negotiate_new_contract(self.spaceship_name)

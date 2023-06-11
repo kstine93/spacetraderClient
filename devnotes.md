@@ -8,11 +8,52 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
-June 9, 2023
+### June 11, 2023
+I've made good progress on my to-dos from June 10th - one thing still left is **profit-finding**
+--> I think I should make this a function the markets class, since I need to access those data via cache so much.
+Let's work on a prototype!
+
+
+---
+
+### June 10, 2023
+
+- I have now implemented all of the most important 'ship' methods (excluding 'chart')
+  - I just found out I'm missing 'negotiate' - which has finally been updated: https://spacetraders.stoplight.io/docs/spacetraders/1582bafa95003-negotiate-contract
+
+There are now some ways I want to branch out:
+
+**MARKET DATA -- DONE**
+The 'get_market' endpoint operates in 2 different ways:
+1. If you are AT the market waypoint, you get buy/sell prices
+2. If you are NOT at the market waypoint, you only get a list of what's bought/sold
+
+I think it's worth my while to store these market buy/sell prices persistently. I'm not sure how volatile they are, but I want to assume they're quite stable until proven otherwise - the advantages of not having to fly around to remember what prices were is very worthwhile.
+I think the most graceful way to do this would be to make a new 'market' cache - with waypoints as keys. I could store it with 'systems' but that is becoming somewhat overloaded, and market data is less relevant for exploration. This would be the logic for caching:
+1. If get_market is called in the same system where we are (dependent on ship status), then the result will have buy/sell prices and be up-to-date
+   1. Store this data peristently
+2. If get_market is called in a DIFFERENT system, try to find the data in the persistent store
+   1. If none exists, call the API and at least get the list of commodities. Store this record in the persistent store (will be force-updated next time we get_market in-location)
+
+> We have different behavior depending on where the ship is - which suggests designing this in the ship_operator class. I could keep my get_market function with a new decorator for looking in cache (as normal) and then I could make another update_market method for force-calling API and force-updating cache.
+
+**CONTRACTS -- DONE**
+I want to build out my shipOperator class to be able to deal with contracts - should be as simple as adding new instances and calling the contracts endpoints.
+
+**PROFIT-FINDING**
+I've built a prototype function in my test notebook for comparing market price data between 2 waypoints and finding the difference in buy + sell prices that might indicate a profitable reselling of goods purchased from one waypoint at another.
+I want to expand this to work with the cached data - ideally it could look across all collected market prices across all systems I've visited and establish which trade routes with what goods would be most profitable!
+
+**BETTER SELLING -- DONE**
+adapt sell method to sell all by default.
+
+---
+
+### June 9, 2023
 
 **NEXT TO-DOS**
-1. Got a lot of uncommited changes - figure out reasonable commit packets and make the commits.
-2. Continue filling out methods for ship_operator.
+1. ~~Got a lot of uncommited changes - figure out reasonable commit packets and make the commits.~~
+2. ~~Continue filling out methods for ship_operator.~~
 
 **Handling API errors**
 I'm trying to figure out where to best handle API errors.
@@ -46,7 +87,8 @@ I'm trying to figure out how I want to handle **ship cooldown**. Here's what I k
 
 ---
 
-June 8, 2023
+### June 8, 2023
+
 **UPDATE**
 I've been doing a lot today
 1. I started the foundations of a neat ASCII-based animation set within the 'art' directory. I implemented it for waypoint navigation. Since there's not much that can be done while traveling, this seems nice.
