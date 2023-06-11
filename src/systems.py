@@ -17,13 +17,11 @@ class Systems:
     stc = SpaceTraderConnection()
     base_url: str | None = None
     cache_path: str | None = None
-    cache_file_name: str | None = None
 
     #----------
     def __init__(self):
         self.base_url = self.stc.base_url + "/systems"
         self.cache_path = self.stc.base_cache_path + "systems/"
-        self.cache_file_name = "systems"
 
     #----------
     def simplify_system_dict(self,system_dict:dict) -> dict:
@@ -88,14 +86,6 @@ class Systems:
         response = self.stc.stc_http_request(method="GET",url=url)
         data = self.mold_system_dict(response)
         return data
-
-    #----------
-    def get_market(self,waypoint:str) -> dict:
-        """Returns information about what commodities may be bought/sold at a market waypoint"""
-        system = self.stc.get_system_from_waypoint(waypoint)
-        url = f"{self.base_url}/{system}/waypoints/{waypoint}/market"
-        response = self.stc.stc_http_request(method="GET",url=url)
-        return response
 
     #----------
     def get_shipyard(self,waypoint:str) -> dict:
