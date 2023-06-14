@@ -146,7 +146,7 @@ class ShipOperator(Ships):
         wp_name = nav_details['waypointSymbol']
 
         sys_data = self.systems.get_system(sys_name)
-        sys_data = sys_data[sys_name]
+        sys_data = sys_data[sys_name] #TODO: This fails when jumping to new system - test
         sys_data = self.systems.simplify_system_dict(sys_data)
         #Get single waypoint data embedded in system data in a list:
         wp_data = next((wp for wp in sys_data['waypoints'] if wp['symbol'] == wp_name),False)
@@ -184,9 +184,9 @@ class ShipOperator(Ships):
     def __set_credits(self,agent_details:dict) -> None:
         self.credits = agent_details['credits']
 
-    #-------------------
-    #--ENCRICHING DATA--
-    #-------------------
+    #------------------
+    #--ENRICHING DATA--
+    #------------------
     @check_set_cooldown
     def scan_for_ships(self) -> None:
         self.orbit_ship()
@@ -237,13 +237,23 @@ class ShipOperator(Ships):
         self.surveys = self.surveys + data['surveys']
 
     #----------
-    def get_market(self,waypoint:str) -> dict:
+    def get_market(self,waypoint:str|None = None) -> dict:
         """Wrapper for get_market, since whether we rely on the cache or not
         depends on ship location"""
+        if not waypoint:
+            waypoint = self.curr_waypoint['symbol']
         if waypoint == self.curr_waypoint['symbol']:
             return self.markets.update_market(waypoint)
         else:
             return self.markets.get_market(waypoint)
+
+    #----------
+    def find_best_margins(self,limit:int=3) -> dict:
+        return self.markets.find_best_margins(limit)
+
+    #----------
+    def find_margin(self,item:str) -> dict:
+        return self.markets.find_margin(item)
 
     #--------------
     #--NAVIGATION--
@@ -281,7 +291,7 @@ class ShipOperator(Ships):
         self.reload_nav_details()
 
     #----------
-    def jump_ship_to_system(self,system:str) -> None:
+    def jump_ship(self,system:str) -> None:
         response = super().jump_ship_to_system(self.spaceship_name,system)
         if not self.stc.response_ok(response): return
         self.new_system_data_reset()
@@ -291,8 +301,9 @@ class ShipOperator(Ships):
     def warp_ship(self,waypoint:str) -> None:
         response = super().warp_ship(self.spaceship_name,waypoint)
         if not self.stc.response_ok(response): return
+        print(response)
         #Animating + showing travel time
-        arrival_time_str = response['http_data']['data']['nav']['route']['arrival']
+        arrival_time_str = response['http_data']['data']['nav']['arrival']
         seconds_to_arrival = time_seconds_diff_UTC(arrival_time_str)
         animate_navigation(seconds_to_arrival)
 
@@ -400,9 +411,9 @@ class ShipOperator(Ships):
     def get_cargo_quantity(self,item:str) -> int:
         """Return quantity of item in cargo"""
         inventory = self.cargo['inventory']
-        for item in inventory:
-            if item['symbol'] == item:
-                return item['units']
+        for cargo in inventory:
+            if cargo['symbol'] == item:
+                return cargo['units']
         return 0
 
     #-------------
@@ -415,8 +426,14 @@ class ShipOperator(Ships):
         """Returns first contract in list_contracts. Ensures contract methods always reference a
         contract without requiring user to provide it every time."""
         cons = self.list_contracts()
-        return cons.keys()[0]
+        return list(cons.keys())[0]
 
+    #----------
+    def accept_contract(self,contract:str|None=pursued_contract) -> None:
+        """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
+        if not contract:
+            contract = self.__pick_first_contract()
+        self.contracts.accept_contract(contract)
     #----------
     def check_contract(self,contract:str|None=pursued_contract) -> dict:
         """Return currently-pursued contract data - so player doesn't need contract ID always"""
@@ -428,6 +445,7 @@ class ShipOperator(Ships):
     #----------
     def deliver_contract(self,item:str,quantity:int|None=None,contract:str|None=pursued_contract) -> None:
         """Attempt to deliver item for currently-pursued contract"""
+        self.dock_ship()
         if not contract:
             contract = self.__pick_first_contract()
         if not quantity:
@@ -442,6 +460,7 @@ class ShipOperator(Ships):
         self.reload_agent_details() #Reloading credits
 
     #----------
-    def negotiate_contract(self, ship: str) -> None:
+    def negotiate_contract(self) -> None:
         """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
+        self.dock_ship()
         self.contracts.negotiate_new_contract(self.spaceship_name)

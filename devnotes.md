@@ -8,10 +8,68 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### June 13, 2023
+
+I have finished the market analysis updates I had noted below under June 11th. I think it'll be quite nice to be able to more easily find and use best pricing information.
+Some things I need to do to clean this up:
+1. ~~Make wrapper functions in `ship_operator` class so I can access these from one interface.~~
+2. ~~Make custom data types for `margin_obj`, `price_obj` and `price_record`~~
+   1. ~~Update typing in my new functions in Markets.py so that the data structures are clearer to readers.~~
+3. Clean up / refactor things as I see the need.
+4. Commit my changes.
+
+Once that is done, I want to start on the notes I had under June 12th below (maybe start with some fun ASCII art and then move on to CLI creation?)
+
+---
+
+### June 12, 2023
+
+**CLI thoughts:**
+When I make the *actual CLI* (usable via terminal, not via Python interpreter), there are some quality-of-life changes I'd like to make:
+1. 'system' command prints out current system and waypoints in a nicer format (ASCII table) and labels waypoints by number. Then, I can make a command like 'nav wp 2' to navigate to the waypoint marked by then number '2'. --> No more needing to copy-paste waypoint IDs.
+
+**Persisting ship state**
+I thought it might be a good idea to persist ship state (attributes) on disk - in case there would be any data lost after restart that would be annoying/difficult to re-acquire. However, I'm not so sure of that anymore. Here are the things which might be volatile and why they aren't really worth persisting between game sessions:
+- `scan_systems` - only relevant for a particular system, no need to cache. Can be re-queried with only 70-second penalty.
+- `scan_waypoints` - persisted to cache immediately. Can be recalled from cache with no issues.
+- `survey_waypoint` - useful, but expires after ~30 minutes. Unlikely to be useful between game sessions.
+- `get_market` - persisted to cache immediately. Can be recalled from cache with no issues.
+
+> In conclusion, I don't see a compelling reason to worry about data persistence - let's aim to rely on the API servers to maintain state.
+
+
+**Better system scanning + jumping**
+I have been frustrated that jumping to other systems is basically a guessing game - to know which systems actually have jump gates and what (if any) information is known about them. I want to improve this data (either in UI or in deeper data structures, not sure yet):
+1. systems should show if I have visited them before (requires a binary flag on system data)
+2. systems should have symbols shown next to their names to indicate:
+   1. how many waypoints they have
+   2. how many markets
+   3. how many asteroid fields
+   4. other? (once I upgrade ship systems, can I interact with other waypoints to harvest more things?)
+3. systems should show clearly if they have a jump gate or not
+4. Other?
+---
+
+**Extra:**
+1. Make ship-nav ASCII art a bit bigger- maybe also put text to left-and-right of image to save vertical space.
+2. Let's aim for a max width of **70 chars** on all CLI UI elements. See example line:
+<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>+++++70++++////80////
+
+---
+
 ### June 11, 2023
 I've made good progress on my to-dos from June 10th - one thing still left is **profit-finding**
 --> I think I should make this a function the markets class, since I need to access those data via cache so much.
 Let's work on a prototype!
+
+NOTE: I'm thinking of a new 'market analysis' data structure which shows me - for every commodity - where I can find the lowest 'purchasePrice' and the highest 'sellPrice (and also the margin between the two).
+This would be a relatively easy thing to keep updated- as I found new markets, I could update the prices if they were better in the new market. Then, whenever I find materials or want to make money, I can consult this market analysis structure.
+
+My previous idea of analysing two markets only makes sense if I have a reason to prefer either of those markets, which might be the case if I am AT one of those markets already...
+
+Other possible analyses:
+1. Find best SELL price in current system (maybe nice for when you get a windfall item that you want to resell)
+2. ~~Find best PURCHASE price~~
 
 
 ---
