@@ -84,7 +84,8 @@ class Contracts:
         response = self.stc.stc_http_request(method="POST",url=url)
         if not self.stc.response_ok(response): return
         #Transforming returned data to be compatible with contracts dict:
-        data = self.mold_contract_dict(response)
+        data = response['http_data']['data']['contract']
+        data = {data['id']:data}
         update_cache_dict(data,self.cache_path)
         return data
 
@@ -103,7 +104,8 @@ class Contracts:
         #the quantity of the resource for the ship which was delivering this contract.
 
         #Transforming returned data to be compatible with contracts dict:
-        data = self.mold_contract_dict(response)
+        data = response['http_data']['data']['contract']
+        data = {data['id']:data}
         update_cache_dict(data,self.cache_path)
         return data
 
@@ -125,7 +127,7 @@ class Contracts:
     #----------
     def negotiate_new_contract(self,ship:str) -> None:
         """Get offered a new contract - provided ship must be at a faction HQ waypoint"""
-        url = f"{self.base_url}/{ship}/negotiate/contract"
-        response = self.stc.stc_http_request(method="PATCH",url=url)
+        url = f"{self.stc.base_url}/my/ships/{ship}/negotiate/contract"
+        response = self.stc.stc_http_request(method="POST",url=url)
         if not self.stc.response_ok(response): return
         self.reload_contracts_in_cache()
