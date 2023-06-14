@@ -92,7 +92,7 @@ class Ships:
         """Navigate (warp) the ship to a different system without jumping"""
         url = f"{self.base_url}/{ship}/warp"
         body = {'waypointSymbol':waypoint}
-        return self.stc.stc_http_request(method="GET",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #-------------
     #--SURVEYING--

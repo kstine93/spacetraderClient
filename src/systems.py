@@ -33,7 +33,8 @@ class Systems:
             for key in keys_to_remove:
                 wp.pop(key,None)
             #reducing traits to a simple string list:
-            wp['traits'] = [tr['symbol'] for tr in wp['traits']]
+            if 'traits' in wp.keys():
+                wp['traits'] = [tr['symbol'] for tr in wp['traits']]
         system_dict['waypoints'] = waypoints
         return system_dict
 
