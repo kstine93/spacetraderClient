@@ -19,3 +19,7 @@ def animate(time:int,frames:list=[]):
 def animate_navigation(time:int):
     animate(time,frames=[nav_ship_1,nav_ship_2])
     print(arrived_ship)
+
+
+if __name__ == "__main__":
+    animate_navigation(5)

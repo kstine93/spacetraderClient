@@ -15,8 +15,8 @@ Some things I need to do to clean this up:
 1. ~~Make wrapper functions in `ship_operator` class so I can access these from one interface.~~
 2. ~~Make custom data types for `margin_obj`, `price_obj` and `price_record`~~
    1. ~~Update typing in my new functions in Markets.py so that the data structures are clearer to readers.~~
-3. Clean up / refactor things as I see the need.
-4. Commit my changes.
+3. ~~Clean up / refactor things as I see the need.~~
+4. ~~Commit my changes.~~
 
 Once that is done, I want to start on the notes I had under June 12th below (maybe start with some fun ASCII art and then move on to CLI creation?)
 
@@ -24,11 +24,11 @@ Once that is done, I want to start on the notes I had under June 12th below (may
 
 ### June 12, 2023
 
-**CLI thoughts:**
+#### CLI thoughts:
 When I make the *actual CLI* (usable via terminal, not via Python interpreter), there are some quality-of-life changes I'd like to make:
 1. 'system' command prints out current system and waypoints in a nicer format (ASCII table) and labels waypoints by number. Then, I can make a command like 'nav wp 2' to navigate to the waypoint marked by then number '2'. --> No more needing to copy-paste waypoint IDs.
 
-**Persisting ship state**
+#### ~~CANCELLED: Persisting ship state~~
 I thought it might be a good idea to persist ship state (attributes) on disk - in case there would be any data lost after restart that would be annoying/difficult to re-acquire. However, I'm not so sure of that anymore. Here are the things which might be volatile and why they aren't really worth persisting between game sessions:
 - `scan_systems` - only relevant for a particular system, no need to cache. Can be re-queried with only 70-second penalty.
 - `scan_waypoints` - persisted to cache immediately. Can be recalled from cache with no issues.
@@ -38,7 +38,7 @@ I thought it might be a good idea to persist ship state (attributes) on disk - i
 > In conclusion, I don't see a compelling reason to worry about data persistence - let's aim to rely on the API servers to maintain state.
 
 
-**Better system scanning + jumping**
+#### Better system scanning + jumping
 I have been frustrated that jumping to other systems is basically a guessing game - to know which systems actually have jump gates and what (if any) information is known about them. I want to improve this data (either in UI or in deeper data structures, not sure yet):
 1. systems should show if I have visited them before (requires a binary flag on system data)
 2. systems should have symbols shown next to their names to indicate:
@@ -51,7 +51,7 @@ I have been frustrated that jumping to other systems is basically a guessing gam
 ---
 
 **Extra:**
-1. Make ship-nav ASCII art a bit bigger- maybe also put text to left-and-right of image to save vertical space.
+1. ~~Make ship-nav ASCII art a bit bigger- maybe also put text to left-and-right of image to save vertical space.~~
 2. Let's aim for a max width of **70 chars** on all CLI UI elements. See example line:
 <><><><><><><><><><><><><><><><><><><><><><><><><><><><><>+++++70++++////80////
 
