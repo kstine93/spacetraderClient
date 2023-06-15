@@ -62,7 +62,7 @@ class Markets:
         """
         def wrapper(self,waypoint:str):
             system = self.stc.get_system_from_waypoint(waypoint)
-            path = self.create_cache_path(system)
+            path = self.__create_cache_path(system)
             return dict_cache_wrapper(file_path=path,key=waypoint)(func)(self,waypoint)
         return wrapper
 
@@ -122,7 +122,7 @@ class Markets:
         if len(price_obj.items()) > self.price_chart_cutoff:
             #Each run of this function should at most increment the number of items by 1.
             #If we exceed our cutoff, remove the record with the worst value.
-            worst_price_record = self.get_worst_price_record(price_obj,low_best)
+            worst_price_record = self.__get_worst_price_record(price_obj,low_best)
             worst_price_key = list(worst_price_record.keys())[0]
             del price_obj[worst_price_key]
         return price_obj
@@ -188,6 +188,6 @@ class Markets:
         return {best_price_key:price_obj[best_price_key]}
 
     #----------
-    def get_worst_price_record(self,price_obj:PriceObj,low_best:bool) -> PriceRecord:
+    def __get_worst_price_record(self,price_obj:PriceObj,low_best:bool) -> PriceRecord:
         low_best_reversed = not low_best
         return self.__get_best_price_record(price_obj,low_best_reversed)

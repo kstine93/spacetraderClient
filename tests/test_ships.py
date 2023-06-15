@@ -19,7 +19,7 @@ class TestShips(unittest.TestCase):
     """
     #----------
     ship = Ships()
-    ship_name = "PERSIMMONS-1"
+    ship_name = "AMBROSIUS-RITZ-1"
 
     #----------
     def test_get_ship(self):

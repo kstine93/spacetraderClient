@@ -16,23 +16,14 @@ class TestSystems(unittest.TestCase):
     system_schema = ['symbol','sectorSymbol','type','x','y','waypoints','factions']
     system_filepath = "./gameData/systems/X1-A.json"
 
-    market_waypoint = 'X1-HQ18-56588B'
-    market_schema = ['symbol','imports','exports','exchange']
-
-    shipyard_waypoint = 'X1-HQ18-60817D'
+    shipyard_waypoint = "X1-HQ18-60817D"
     shipyard_schema = ['symbol', 'shipTypes', 'transactions', 'ships']
 
-    jump_gate_waypoint = 'X1-HQ18-58999A'
+    jump_gate_waypoint = "X1-YM80-51157Z"
     jump_gate_schema = ['jumpRange', 'factionSymbol', 'connectedSystems']
 
 
     system = Systems()
-
-    #----------
-    def test_get_market(self):
-        data = self.system.get_market(self.market_waypoint)
-        keys_counter = Counter(data['http_data']['data'].keys())
-        self.assertEqual(keys_counter, Counter(self.market_schema))
 
     #----------
     def test_get_shipyard(self):

@@ -19,7 +19,7 @@ class TestContracts(unittest.TestCase):
     failure to retrieve contract data and a successful retrieval with no data?)
     """
     #----------
-    contract_name = "clija6w677t03s60d7ctvf8ec"
+    contract_name = 'clirua70n05qes60d694sbpze'
     contracts_filepath = "./gameData/contracts/"
     contract_schema = ['id','factionSymbol','type','terms','accepted','fulfilled','expiration','deadlineToAccept']
     contract = Contracts()
