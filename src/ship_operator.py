@@ -13,7 +13,6 @@ from .contracts import Contracts
 from .utilities.custom_types import RefinableProduct, NavSpeed
 from .utilities.cache_utilities import update_cache_dict
 from .utilities.basic_utilities import time_seconds_diff_UTC
-from .art.animations import *
 
 #==========
 class ShipOperator(Ships):
@@ -97,7 +96,7 @@ class ShipOperator(Ships):
     #-------------------
     def new_system_data_reset(self) -> None:
         """Upon traveling to a new system, reset local data appropriately."""
-        self.reload_ship_details()
+        self.reload_nav_details()
         #Reseting variables which are volatile or lose relevance in a new system:
         self.nearby_ships = []
         self.nearby_systems = []
@@ -283,32 +282,21 @@ class ShipOperator(Ships):
         self.orbit_ship()
         response = super().nav_to_waypoint(self.spaceship_name, waypoint)
         if not self.stc.response_ok(response): return
-        #Animating + showing travel time
-        arrival_time_str = response['http_data']['data']['nav']['route']['arrival']
-        seconds_to_arrival = time_seconds_diff_UTC(arrival_time_str)
-        animate_navigation(seconds_to_arrival)
-
         self.reload_nav_details()
 
     #----------
     def jump_ship(self,system:str) -> None:
+        self.orbit_ship()
         response = super().jump_ship_to_system(self.spaceship_name,system)
         if not self.stc.response_ok(response): return
         self.new_system_data_reset()
-        print(f" === Jump complete. Arrived at {system} ===")
 
     #----------
     def warp_ship(self,waypoint:str) -> None:
+        self.orbit_ship()
         response = super().warp_ship(self.spaceship_name,waypoint)
         if not self.stc.response_ok(response): return
-        print(response)
-        #Animating + showing travel time
-        arrival_time_str = response['http_data']['data']['nav']['arrival']
-        seconds_to_arrival = time_seconds_diff_UTC(arrival_time_str)
-        animate_navigation(seconds_to_arrival)
-
         self.new_system_data_reset()
-        print(f" === Warp complete. Arrived at {waypoint} ===")
 
     #-------------
     #--RESOURCES--

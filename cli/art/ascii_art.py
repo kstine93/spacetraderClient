@@ -1,5 +1,17 @@
-intro_text="""
-<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+# import rich
+# import re
+
+#NOTE: Attempted here to dynamically colorize ASCII, but it's gotten a bit too complicated.
+# def rich_colorify(text:str,regex:str,color:str):
+#     """Dynamically markup a string (or ASCII art) with color markup used by the 'rich' module"""
+#     # text = re.sub(rf"{regex}","[yellow](1)[/yellow]",text)
+#     text = re.sub(r"( \* )",r"[yellow]\g<1>[/yellow]",text)
+#     rich.print(text)
+
+border_long_carat =  """<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>"""
+border_med_equals =  """=============================================="""
+
+bootup_image="""
    _____      .            _______       .    _
   / ____|         `  *    |__   __|          | |   '   .
  | (___  _ __   __ _  ___ ___| |_ __ __ _  __| | ___ _ __
@@ -8,8 +20,12 @@ intro_text="""
  |_____/| .__/ \__,_|\___\___|_|_|  \__,_|\__,_|\___|_|
         | |      '                        .
     '   |_|    .             '        *              '
-<><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 """
+
+bootup_text = """Welcome back Captain."""
+
+
+#===================
 
 nav_ship_1 = """
                        Navigating..
@@ -52,7 +68,3 @@ arrived_ship = """
 |            `                  `                   *    |
                   Arrived at destination
 """
-
-
-
-
