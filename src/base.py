@@ -5,42 +5,82 @@ This file also contains a class for registering a new agent and thereby setting 
 
 #==========
 import logging
-from configparser import ConfigParser
+import yaml
 from time import sleep
 from typing import Generator
 from requests import request
 from requests.models import Response
-from .utilities.basic_utilities import get_user_password,dict_to_bytes
+from .utilities.basic_utilities import get_user_password,dict_to_bytes,get_keys_in_file,get_dict_from_file
 from .utilities.crypt_utilities import password_encrypt,password_decrypt
-from .utilities.config_utilities import get_config,update_config_file
 from .utilities.custom_types import SpaceTraderResp
 
 #For debugging HTTP requests:
 # import http.client
 # http.client.HTTPConnection.debuglevel=5
 
+
 #===========
-#Basic functions to get game config data:
+class SpaceTraderConfigSetup:
+    """Class to interact with the configurtion file which provides game details"""
+    config_path = "./gameinfo.yaml"
+    config:dict
 
-#----------
-config_path = "./account_info.cfg"
-config = get_config(config_path)
+    #----------
+    def __init__(self):
+        self.reload_config()
 
-#----------
-def get_config_encrypted_key() -> str:
-    return config["ACCOUNT_CREDENTIALS"]["key_encrypted"]
+    #----------
+    def reload_config(self) -> None:
+        with open(self.config_path, "r") as stream:
+            try:
+                self.config = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
 
-#----------
-def get_config_callsign() -> str:
-    return config["ACCOUNT_CREDENTIALS"]["callsign"]
+    #----------
+    def get_encrypted_key(self,callsign:str) -> str:
+        agents = self.config['agents']['all_agents']
+        item = next((item for item in agents if item['callsign'] == callsign),False)
+        return item['key_encrypted']
 
-#----------
-def get_config_cache_path() -> str:
-    return config["CACHE"]["path"]
+    #----------
+    def get_callsign(self) -> str:
+        return self.config['agents']['current']
 
-#----------
-def get_config_url() -> str:
-    return config["API"]["url"]
+    #----------
+    def get_cache_path(self) -> str:
+        return self.config["cache"]["path"]
+
+    #----------
+    def get_api_url(self) -> str:
+        return self.config["api"]["url"]
+
+    #----------
+    def write_to_file(self) -> None:
+        """Write config to file"""
+        with open(self.config_path, 'w') as configfile:
+            yaml.dump(self.config,configfile)
+
+    #----------
+    def get_config(self) -> dict:
+        return self.config
+
+    #----------
+    def get_all_callsigns(self) -> list[str]:
+        agents = self.config['agents']['all_agents']
+        return [item['callsign'] for item in agents]
+
+    #----------
+    def set_new_current_agent(self,callsign:str) -> None:
+        self.config['agents']['current'] = callsign
+        self.write_to_file()
+
+    #----------
+    def add_new_agent(self,callsign:str,encrypted_key:str) -> None:
+        data = {callsign:encrypted_key}
+        self.config['agents']['all_agents'].append(data)
+        self.write_to_file()
+
 
 #==========
 class SpaceTraderConnection:
@@ -49,6 +89,8 @@ class SpaceTraderConnection:
     - primarily by loading and storing api and base url of endpoint
     """
     #----------
+    config_setup = SpaceTraderConfigSetup()
+
     callsign:str
     encrypted_key: str
 
@@ -61,16 +103,16 @@ class SpaceTraderConnection:
     #----------
     def __init__(self):
         #Loading in config which has basic information on player:
-        self.callsign = get_config_callsign()
-        self.encrypted_key = get_config_encrypted_key()
-        self.base_url = get_config_url()
-        self.base_cache_path = get_config_cache_path()
+        self.callsign = self.config_setup.get_callsign()
+        self.encrypted_key = self.config_setup.get_encrypted_key(self.callsign)
+        self.base_url = self.config_setup.get_api_url()
+        self.base_cache_path = self.config_setup.get_cache_path()
 
         try:
             self.load_api_key()
             self.default_header.update({"Authorization" : "Bearer " + self.api_key})
         except Exception as e:
-            msg = f"Error in loading API key. Please check API key at file path {config_path}"
+            msg = f"Error in loading API key. Please check API key at file path {self.config_setup.config_path}"
             raise Exception(msg) from e
 
     #----------
@@ -156,14 +198,12 @@ class RegisterNewAgent:
     doesn't rely on the more complex classes.
     """
     #----------
-    config_path = config_path
+    config_setup = SpaceTraderConfigSetup()
     base_url: str
-    config: ConfigParser
 
     #----------
     def __init__(self):
-        self.config = get_config(config_path)
-        self.base_url = get_config_url()
+        self.base_url = self.config_setup.get_config_url()
 
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> None:
@@ -196,11 +236,8 @@ class RegisterNewAgent:
 
         encrypted_key_bytes = password_encrypt(bytes_token,password)
 
-        data = {
-            'account_id':new_agent_response['data']['agent']['accountId']
-            ,'callsign':new_agent_response['data']['agent']['symbol']
-            ,'key_encrypted':encrypted_key_bytes.decode()
-        }
+        callsign = new_agent_response['data']['agent']['symbol']
+        encrypted_key = encrypted_key_bytes.decode()
 
-        update_config_file(self.config_path,section="ACCOUNT_CREDENTIALS",data=data)
+        self.config_setup.add_new_agent(callsign,encrypted_key)
 
