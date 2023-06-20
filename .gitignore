@@ -9,3 +9,6 @@ testing.ipynb
 
 #Not storing game data in git
 /gameData
+
+#Ignoring virtual environments
+/venv
