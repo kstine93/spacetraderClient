@@ -6,7 +6,6 @@ Basic functional programming utilities portable across applications
 import json
 import getpass
 from datetime import datetime
-from time import tzname
 from typing import Iterator
 from os import listdir, remove, fsdecode, getenv, environ, path
 

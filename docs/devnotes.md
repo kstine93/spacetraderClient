@@ -8,6 +8,24 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### June 20, 2023
+
+**Note about Liskov Substitution Principle:**
+
+I am currently violating this (one of the SOLID principles of OOP) with my 'ShipOperator' class because this subclass is using the same name for some of its methods as the parent class (Ships), overriding these methods, but the subclass methods take in different arguments and return different values.
+I think I have a few options:
+1. Change the name of these subclass methods
+   1. They're not intended to achieve the same goal, so there's no reason to name them the same except that they're good names.
+2. Change the subclasses to behave similarly to the parent class
+   1. Not a good idea - they're qualitatively different and need to work differently
+3. Combine the 'ships' and 'ship operator' classes into one class
+   1. Not the worst idea - they don't necessarily have to be different, but the 'Ships' class is basically an API wrapper, whereas 'ShipOperator' is about representing the ship...
+4. Change the name of the parent class methods
+   1. I kind of like this - I could even make them private - but then again maybe this would be too inconsistent with the other Classes.
+
+> DECISION: I like Option #1 the best - it's not great to use different names, but I think that's the best representation of what's going on in  my classes.
+
+---
 
 ### Feedback from Bengisu
 Bengisu wrote me back on June 17th with some notes about how I could improve my project:

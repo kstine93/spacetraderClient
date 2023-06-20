@@ -31,21 +31,43 @@ class NavSpeed(Enum):
 class SpaceTraderResp(TypedDict):
     '''Responses from the SpaceTrader API are transformed into this standard dictionary upon retrieval
     before further processing'''
-    http_data:str
+    http_data:dict
     http_status:int
 
 
 #==========
 #NOTE: PriceRecord is a little inaccurate in that this definition allows any number of items,
 #whereas its use in the codebase usually refers to a dictionary with only 1 item.
+'''
+priceRecord = {"X1-LJ2DS-RSE": 340}
+'''
 PriceRecord = dict[str,int]
 
-
 #==========
+'''
+priceObj = {
+    "purchase_prices": {
+        "X1-LJ2DS-RSE": 340,
+        "X1-SFL31-F3D": 394
+    },
+    "sell_prices": {
+        "X1-LJ2DS-RSE": 324,
+        "X1-SFL31-F3D": 355
+    }
+}
+'''
 PriceObj = dict[str,PriceRecord]
 
 
 #==========
+'''
+marginObj = {
+    "item":"COPPER",
+    "sell":{"X1-SFL31-F3D": 355},
+    "buy":{"X1-SFL31-F3D": 394},
+    "margin": -39
+}
+'''
 class MarginObj(TypedDict):
     item:str
     sell:PriceRecord
