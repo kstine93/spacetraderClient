@@ -188,7 +188,7 @@ class ShipOperator(Ships):
     #------------------
     @check_set_cooldown
     def scan_for_ships(self) -> None:
-        self.orbit_ship()
+        self.orbit()
         response = super().scan_for_ships(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.nearby_ships = response['http_data']['data']['ships']
@@ -196,7 +196,7 @@ class ShipOperator(Ships):
     #----------
     @check_set_cooldown
     def scan_systems(self) -> None:
-        self.orbit_ship()
+        self.orbit()
         response = super().scan_systems(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.nearby_systems = response['http_data']['data']['systems']
@@ -205,7 +205,7 @@ class ShipOperator(Ships):
     @check_set_cooldown
     def scan_waypoints(self) -> None:
         """Scan waypoints in system to get additional data. Ship action. Incurs cooldown."""
-        self.orbit_ship()
+        self.orbit()
         response = super().scan_waypoints(self.spaceship_name)
         if not self.stc.response_ok(response): return
         #Error typically indicates ship is on cooldown:
@@ -229,7 +229,7 @@ class ShipOperator(Ships):
     #----------
     @check_set_cooldown
     def survey_waypoint(self) -> None:
-        self.orbit_ship()
+        self.orbit()
         response = super().survey_current_waypoint(self.spaceship_name)
         if not self.stc.response_ok(response): return None
         data = response['http_data']['data']
@@ -258,42 +258,42 @@ class ShipOperator(Ships):
     #--NAVIGATION--
     #--------------
     def set_speed(self,speed:NavSpeed) -> None:
-        response = super().set_speed(self.spaceship_name,speed)
+        response = super().set_ship_speed(self.spaceship_name,speed)
         if not self.stc.response_ok(response): return
         nav_data = response['http_data']['data']
         self.__set_flight_status(nav_data)
 
     #----------
-    def orbit_ship(self) -> dict:
+    def orbit(self) -> None:
         response = super().orbit_ship(self.spaceship_name)
         if not self.stc.response_ok(response): return
         nav_data = response['http_data']['data']['nav']
         self.__set_flight_status(nav_data)
 
     #----------
-    def dock_ship(self) -> None:
+    def dock(self) -> None:
         response = super().dock_ship(self.spaceship_name)
         if not self.stc.response_ok(response): return
         nav_data = response['http_data']['data']['nav']
         self.__set_flight_status(nav_data)
 
     #----------
-    def nav_to_waypoint(self, waypoint: str) -> None:
-        self.orbit_ship()
+    def nav(self, waypoint: str) -> None:
+        self.orbit()
         response = super().nav_to_waypoint(self.spaceship_name, waypoint)
         if not self.stc.response_ok(response): return
         self.reload_nav_details()
 
     #----------
-    def jump_ship(self,system:str) -> None:
-        self.orbit_ship()
+    def jump(self,system:str) -> None:
+        self.orbit()
         response = super().jump_ship_to_system(self.spaceship_name,system)
         if not self.stc.response_ok(response): return
         self.new_system_data_reset()
 
     #----------
-    def warp_ship(self,waypoint:str) -> None:
-        self.orbit_ship()
+    def warp(self,waypoint:str) -> None:
+        self.orbit()
         response = super().warp_ship(self.spaceship_name,waypoint)
         if not self.stc.response_ok(response): return
         self.new_system_data_reset()
@@ -302,11 +302,11 @@ class ShipOperator(Ships):
     #--RESOURCES--
     #-------------
     @check_set_cooldown
-    def extract_resources(self,target_resource:str) -> None:
+    def extract(self,target_resource:str) -> None:
         """Extract resources from current waypoint. If a survey data structure
         exists for the current waypoint, use it. If one of the survey data structures
         matches the target_resource, use that specifically"""
-        self.orbit_ship()
+        self.orbit()
         survey = self.__get_optimal_survey(target_resource)
         response = super().extract_resources(self.spaceship_name,survey)
         if not self.stc.response_ok(response): return
@@ -331,15 +331,15 @@ class ShipOperator(Ships):
 
     #----------
     @check_set_cooldown
-    def refine_product(self,product:RefinableProduct) -> None:
+    def refine(self,product:RefinableProduct) -> None:
         ##UNTESTED! Requires ship with refining module.
         response = super().refine_product(self.spaceship_name,product)
         if not self.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
 
     #----------
-    def refuel_ship(self) -> None:
-        self.dock_ship()
+    def refuel(self) -> None:
+        self.dock()
         response = super().refuel_ship(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.__set_fuel(response['http_data']['data']['fuel'])
@@ -348,50 +348,50 @@ class ShipOperator(Ships):
     #---------
     #--CARGO--
     #---------
-    def sell_cargo(self,item:str,quantity:int|None) -> None:
+    def sell(self,item:str,quantity:int|None) -> None:
         if not quantity:
             quantity = self.get_cargo_quantity(item)
-        self.dock_ship()
+        self.dock()
         response = super().sell_cargo(self.spaceship_name,item,quantity)
         if not self.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
 
     #----------
-    def purchase_cargo(self,item:str,quantity:int) -> None:
-        self.dock_ship()
+    def purchase(self,item:str,quantity:int) -> None:
+        self.dock()
         response = super().purchase_cargo(self.spaceship_name,item,quantity)
         if not self.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
 
     #----------
-    def jettison_cargo(self,item:str,quantity:int) -> None:
+    def jettison(self,item:str,quantity:int) -> None:
         response = super().jettison_cargo(self.spaceship_name,item,quantity)
         if not self.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
 
     #----------
-    def transfer_cargo_to_ship(self,item:str,quantity:int,target_ship:str) -> None:
+    def transfer_cargo(self,item:str,quantity:int,target_ship:str) -> None:
         response = super().transfer_cargo_to_ship(self.spaceship_name,item,quantity,target_ship)
         if not self.stc.response_ok(response): return
         self.reload_cargo_details()
 
     #----------
     def install_mount(self,mount: str) -> None:
-        response = super().install_mount(self.spaceship_name, mount)
+        response = super().install_ship_mount(self.spaceship_name, mount)
         if not self.stc.response_ok(response): return
         self.reload_ship_details()
 
     #----------
     def remove_mount(self,mount: str) -> None:
-        response = super().remove_mount(self.spaceship_name, mount)
+        response = super().remove_ship_mount(self.spaceship_name, mount)
         if not self.stc.response_ok(response): return
         self.reload_ship_details()
 
     #----------
     def get_mounts(self) -> None:
-        response = super().get_mounts(self.spaceship_name)
+        response = super().get_ship_mounts(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.__set_mounts(response['http_data']['data'])
 
@@ -433,7 +433,7 @@ class ShipOperator(Ships):
     #----------
     def deliver_contract(self,item:str,quantity:int|None=None,contract:str|None=pursued_contract) -> None:
         """Attempt to deliver item for currently-pursued contract"""
-        self.dock_ship()
+        self.dock()
         if not contract:
             contract = self.__pick_first_contract()
         if not quantity:
@@ -450,5 +450,5 @@ class ShipOperator(Ships):
     #----------
     def negotiate_contract(self) -> None:
         """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
-        self.dock_ship()
+        self.dock()
         self.contracts.negotiate_new_contract(self.spaceship_name)

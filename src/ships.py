@@ -144,7 +144,7 @@ class Ships:
         return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def set_speed(self,ship:str,speed:NavSpeed) -> SpaceTraderResp:
+    def set_ship_speed(self,ship:str,speed:NavSpeed) -> SpaceTraderResp:
         """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
@@ -164,20 +164,20 @@ class Ships:
         return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def get_mounts(self,ship:str) -> SpaceTraderResp:
+    def get_ship_mounts(self,ship:str) -> SpaceTraderResp:
         """Get mounts currently installed on ship"""
         url = f"{self.base_url}/{ship}/mounts"
         return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def install_mount(self,ship:str,mount:str) -> SpaceTraderResp:
+    def install_ship_mount(self,ship:str,mount:str) -> SpaceTraderResp:
         """Install mount in Cargo onto ship"""
         url = f"{self.base_url}/{ship}/mounts/install"
         body = {'symbol':mount}
         return self.stc.stc_http_request(method="POST",url=url,body=body)
 
     #----------
-    def remove_mount(self,ship:str,mount:str) -> SpaceTraderResp:
+    def remove_ship_mount(self,ship:str,mount:str) -> SpaceTraderResp:
         """Remove mount in Cargo onto ship"""
         url = f"{self.base_url}/{ship}/mounts/remove"
         body = {'symbol':mount}
