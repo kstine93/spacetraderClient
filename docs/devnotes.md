@@ -8,6 +8,64 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+
+### Feedback from Bengisu
+Bengisu wrote me back on June 17th with some notes about how I could improve my project:
+- One thing that is needed, in my opinion, is documentation. Your code and development process is very well documented, but I think I was missing general documentation on your application as whole, especially the architecture. You use a lot of classes and dependent internal modules, so an overarching documentation that explains the architecture, how to interact with your client and some diagrams would be very helpful.
+- When I have to use many interconnected classes that require data validation and modeling, I usually use [Pydantic](https://docs.pydantic.dev/latest/). If you haven’t heard of it, it’s definitely worth a look. Their [model object](https://docs.pydantic.dev/latest/usage/models/) definition, type declaration and validation is quite practical and extendable (And has a built-in [model export](https://docs.pydantic.dev/latest/usage/exporting_models/) feature).
+- Tests: As far as I can see, you are focusing on the unit tests, testing individual components/functions. I would heavily recommend doing integration tests as well, and testing the dependencies and flows between the components.
+- A random question: Is there a specific reason why you are using urllib for HTTP requests, instead of the “requests” library? I was just curious since the “requests” module is regarded as more developer friendly .
+- account_info.cfg —> As you know it’s considered a bad practice to store credentials in open readable files, even if they are encrypted (And especially when you have the encryption script also available in Github, but I know you’re already aware of that). You can maybe utilize environment variables to store and use account credentials for your implementation?
+- General comment: it’s really a great project that showcases a lot of different skills and a solid software design approach. Maybe you can put focus on the deployment aspect in the future. Like containerizing it? Release as docker image/package, and it can be run from command line? I would suggest using GitHub Actions and Github container registry for building and publishing images. It’s now one of the most popular CI/CD tools in the industry.
+
+---
+
+### June 16, 2023
+
+**Necessary changes to enable CLI:**
+1. I need to store API keys differently. Only having one config file with one possible agent (and API key) disallows multiple players.
+   1. Suggestion: What about a 'encrypted_keys.json' file with callsign as key and encrypted API token as value? Then, each player could be asked to pick their callsign and then provide a decrypting password.
+   2. Note: If I'm getting rid of account credentials, maybe it's time to get rid of the config file entirely and just put cache_path and API url in base.py
+2. I want to provide the option to set up a new player as well. The CLI should allow 'Register new agent' as an option alongside existing callsigns...
+
+---
+
+### June 15, 2023
+
+**Notes on de-coupling Interface from Source code**
+
+I have made some (minor) decisions so far which are tightly coupling my interface from the source code:
+- ~~"ship_operator" class prints directly to interface~~
+- ~~art directory is part of 'src' source code directory rather than in an interface~~
+- **'response_ok' function in `base.py`**
+  - This is a slightly bigger problem - I need to think about how I want to handle this differently...
+
+> I want to change these decisions so that my interface is the only thing printing anything other than error output, and that my ASCII art is part of the CLI module only.
+
+**Notes on CLI setup**
+
+I am starting to make a CLI using a bit of a clunky mix of `Typer` and `PyInquirer` - but it's working!
+PyInquirer especially lets me create these nice menus that can be interacted with via arrow keys.
+Typer seems to be geared towards using single commands rather than having a command loop with sequential commands.
+I'm not sure if this is actually a problem, but it might be worth exploring simpler alternatives like `argparse` if I continue to find I'm not really using the features of `Typer`.
+
+Other ideas:
+- I want to have 2 ways to interact with the CLI:
+  - Through the menus provided by `PyInquirer` (or a similar tool)
+  - Through direct commands (for experts)
+- The menu interface can be nested- for example: `navigation` leads to a choice of `nav to waypoint`, `jump to system` `warp to...`. A choice of `nav to waypoint` gives a list of waypoints in the current system and a short description!
+- I want to provide some help text in the interface for learning how to play the game, although I know I can and should also rely on Spacetrader documentation since this might change.
+- I want to provide a better interface for starting a new game, which might include the following characteristics:
+  - Absolutely no cache data (do I actually need to reload all systems from cache in the beginning?)
+  - No account info
+  - No API key yet
+- I want to not have to load API key until I do something like "> start game". Not on bootup of CLI.
+- (Minor) maybe include more ASCII-like line breaks in the terminal to make it less a wall of text?
+- Can / should I have a HUD that is always up / can be called up with a command?
+- (Expansion): Allow user to switch ships (and print out which ship we're currently commanding with HUD?)
+
+---
+
 ### June 13, 2023
 
 I have finished the market analysis updates I had noted below under June 11th. I think it'll be quite nice to be able to more easily find and use best pricing information.
