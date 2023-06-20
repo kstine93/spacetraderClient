@@ -5,6 +5,7 @@ This file also contains a class for registering a new agent and thereby setting 
 
 #==========
 import logging
+import json
 import yaml
 from time import sleep
 from typing import Generator
@@ -77,7 +78,10 @@ class SpaceTraderConfigSetup:
 
     #----------
     def add_new_agent(self,callsign:str,encrypted_key:str) -> None:
-        data = {callsign:encrypted_key}
+        data = {
+            "callsign":callsign
+            ,"key_encrypted":encrypted_key
+            }
         self.config['agents']['all_agents'].append(data)
         self.write_to_file()
 
@@ -203,7 +207,7 @@ class RegisterNewAgent:
 
     #----------
     def __init__(self):
-        self.base_url = self.config_setup.get_config_url()
+        self.base_url = self.config_setup.get_api_url()
 
     #----------
     def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> None:
@@ -211,15 +215,16 @@ class RegisterNewAgent:
         Register a new player with the game.
         Returns dictionary with agent metadata (as well as other ship + contract information)
         """
-        body = {
-            'symbol':agent_callsign
-            ,'faction':faction
+        data = {
+            'faction':faction
+            ,'symbol':agent_callsign
         }
-        headers={'Content-Type': 'application/json'}
+        headers = {"Accept": "application/json","Content-Type":"application/json"}
         url = self.base_url + "/register"
 
-        http_response = request("POST",url=url,body=body,headers=headers)
+        http_response = request("POST",url=url,data=json.dumps(data),headers=headers)
         data = http_response.json()
+        print(data)
         self.save_agent_metadata_locally(data)
 
     #----------
