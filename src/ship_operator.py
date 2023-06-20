@@ -56,7 +56,7 @@ class ShipOperator(Ships):
     cooldownExpiry:str
 
     #Contract
-    pursued_contract:str
+    pursued_contract:str | None = None
 
     #----------
     def __init__(self,ship_name):

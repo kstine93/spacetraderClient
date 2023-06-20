@@ -10,6 +10,20 @@ Notes on tricky problems, decisions, etc.
 
 ### June 20, 2023
 
+**Next Steps:**
+I have worked on Bengisu's suggestions below, including:
+1. Building documentation about architecture
+2. Replacing urllib with requests
+
+I now want to work on the following:
+1. Read about Pydantic and how I could use it.
+   1. I have read about Pydantic and I don't yet understand why it's needed. It's for checking types, but I don't yet understand where and how that adds value outside of type hints + enumerated types that I already have. I will keep this in mind though and approach it once I understand it a bit more.
+2. ~~Fix Liskov problem I wrote aboute below for ShipOperator~~
+3. Continue implementing CLI
+   1. **See my notes from June 16th**
+4. (TBD) Change how I'm handling credentials in terms of security?
+5. (Stretch) Containerize game (suggestion from Bengisu, but i'm not sure it makes sense)
+
 **Note about Liskov Substitution Principle:**
 
 I am currently violating this (one of the SOLID principles of OOP) with my 'ShipOperator' class because this subclass is using the same name for some of its methods as the parent class (Ships), overriding these methods, but the subclass methods take in different arguments and return different values.
@@ -23,7 +37,7 @@ I think I have a few options:
 4. Change the name of the parent class methods
    1. I kind of like this - I could even make them private - but then again maybe this would be too inconsistent with the other Classes.
 
-> DECISION: I like Option #1 the best - it's not great to use different names, but I think that's the best representation of what's going on in  my classes.
+> DECISION: I like Option #1 and Option #4 the best - it's not great to use different names, but I think that's the best representation of what's going on in  my classes. I will rename my methods in one class or the other so they don't collide.
 
 ---
 
@@ -42,7 +56,9 @@ Bengisu wrote me back on June 17th with some notes about how I could improve my 
 
 **Necessary changes to enable CLI:**
 1. I need to store API keys differently. Only having one config file with one possible agent (and API key) disallows multiple players.
-   1. Suggestion: What about a 'encrypted_keys.json' file with callsign as key and encrypted API token as value? Then, each player could be asked to pick their callsign and then provide a decrypting password.
+   1. Suggestion: What about a 'encrypted_keys.json' file with callsign as key and encrypted API token as value? Then, each player could be asked to pick their callsign and then provide a decrypting password. I like this. Steps include:
+         1. Adapt RegisterNewAgent to create or update this json (use cache functions)
+         2. Adapt base.py to read from this json
    2. Note: If I'm getting rid of account credentials, maybe it's time to get rid of the config file entirely and just put cache_path and API url in base.py
 2. I want to provide the option to set up a new player as well. The CLI should allow 'Register new agent' as an option alongside existing callsigns...
 
