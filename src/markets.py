@@ -16,9 +16,9 @@ class Markets:
     """
     #----------
     stc = SpaceTraderConnection()
-    base_url: str | None = None
-    cache_path: str | None = None
-    price_chart_path: str | None = None
+    base_url: str
+    cache_path: str
+    price_chart_path: str
 
     #For the price chart, how many values should we store per commodity (i.e., the best 5 prices).
     #More prices gives flexibility in finding a good market, but there are diminishing returns.
@@ -39,7 +39,7 @@ class Markets:
         return {data['symbol']:data}
 
     #----------
-    def __simplify_market_dict(self,market_dict:dict) -> dict:
+    def __simplify_market_dict(self,market_dict:dict[str,dict]) -> dict:
         """Transform market data into an easier-to-use format with less extra data"""
         market_dict.pop("transactions",None) #Removing info on past transactions
         for key in ['imports','exports','exchange']:
@@ -100,13 +100,13 @@ class Markets:
     #----------
     def __update_price_obj(self,price_obj:PriceObj,new_record:PriceRecord,waypoint:str) -> PriceObj:
         new_purchase = {waypoint:new_record["purchasePrice"]}
-        price_obj["purchase_prices"] = self.__add_to_price_obj(
+        price_obj["purchase_prices"] = self.__add_to_price_records(
             price_obj['purchase_prices']
             ,new_purchase
             ,low_best=True)
 
         new_sell = {waypoint:new_record["sellPrice"]}
-        price_obj["sell_prices"] = self.__add_to_price_obj(
+        price_obj["sell_prices"] = self.__add_to_price_records(
             price_obj["sell_prices"]
             ,new_sell
             ,low_best=False)
@@ -114,18 +114,18 @@ class Markets:
         return price_obj
 
     #----------
-    def __add_to_price_obj(self,price_obj:PriceObj,new_record:PriceRecord,low_best:bool) -> PriceObj:
+    def __add_to_price_records(self,prev_records:PriceRecord,new_record:PriceRecord,low_best:bool) -> PriceRecord:
         """Add price_record to price_obj so that price_obj has the best X values, where X is
         the value given by 'cutoff'. """
-        price_obj.update(new_record)
+        prev_records.update(new_record)
 
-        if len(price_obj.items()) > self.price_chart_cutoff:
+        if len(prev_records.items()) > self.price_chart_cutoff:
             #Each run of this function should at most increment the number of items by 1.
             #If we exceed our cutoff, remove the record with the worst value.
-            worst_price_record = self.__get_worst_price_record(price_obj,low_best)
+            worst_price_record = self.__get_worst_price_record(prev_records,low_best)
             worst_price_key = list(worst_price_record.keys())[0]
-            del price_obj[worst_price_key]
-        return price_obj
+            del prev_records[worst_price_key]
+        return prev_records
 
     #----------
     def update_price_chart(self,market_dict:dict) -> None:
@@ -179,15 +179,15 @@ class Markets:
         return margins[0:limit]
 
     #----------
-    def __get_best_price_record(self,price_obj:PriceObj,low_best:bool) -> PriceRecord:
+    def __get_best_price_record(self,price_records:PriceRecord,low_best:bool) -> PriceRecord:
         """For getting the record in a price object that is highest / lowest"""
         if low_best:
-            best_price_key = min(price_obj,key=price_obj.get)
+            best_price_key = min(price_records,key=price_records.get)
         else:
-            best_price_key = max(price_obj,key=price_obj.get)
-        return {best_price_key:price_obj[best_price_key]}
+            best_price_key = max(price_records,key=price_records.get)
+        return {best_price_key:price_records[best_price_key]}
 
     #----------
-    def __get_worst_price_record(self,price_obj:PriceObj,low_best:bool) -> PriceRecord:
+    def __get_worst_price_record(self,price_records:PriceRecord,low_best:bool) -> PriceRecord:
         low_best_reversed = not low_best
-        return self.__get_best_price_record(price_obj,low_best_reversed)
+        return self.__get_best_price_record(price_records,low_best_reversed)

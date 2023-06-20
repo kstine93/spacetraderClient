@@ -4,6 +4,7 @@ Data and functions related for interacting with the 'contracts' endpoint of the 
 #==========
 from typing import Callable
 from .base import SpaceTraderConnection
+from .utilities.custom_types import SpaceTraderResp
 from .utilities.basic_utilities import attempt_dict_retrieval
 from .utilities.cache_utilities import dict_cache_wrapper, update_cache_dict
 
@@ -13,9 +14,9 @@ class Contracts:
     Class to query and edit game data related to contracts.
     """
     #----------
-    base_url:str | None = None
-    cache_path: str | None = None
-    cache_file_name: str | None = None
+    base_url:str
+    cache_path: str
+    cache_file_name: str
     stc = SpaceTraderConnection()
 
     #----------
@@ -24,7 +25,7 @@ class Contracts:
         #Using callsign as file name so contract files are associated with a particular account:
         self.cache_path = f"{self.stc.base_cache_path}contracts/{self.stc.callsign}.json"
 
-    def mold_contract_dict(self,response:dict) -> dict:
+    def mold_contract_dict(self,response:SpaceTraderResp) -> dict:
         '''Index into response dict from API to get contract data in common format'''
         if not self.stc.response_ok(response): raise Exception(response)
         data = response['http_data']['data']
@@ -45,7 +46,7 @@ class Contracts:
         return wrapper
 
     #----------
-    def reload_contracts_in_cache(self,page:int=1) -> dict:
+    def reload_contracts_in_cache(self,page:int=1) -> None:
         """Force-updates all contracts data in cache with data from the API"""
         for contract_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for con in contract_list["http_data"]["data"]:
@@ -72,7 +73,7 @@ class Contracts:
         """Get information about a specific contract"""
         url = self.base_url + "/" + contract
         response = self.stc.stc_http_request(method="GET",url=url)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): return {}
         #Transforming returned data to be compatible with contracts dict:
         data = self.mold_contract_dict(response)
         return data
@@ -82,7 +83,7 @@ class Contracts:
         """Accept an in-game contract from the list of available contracts"""
         url = f"{self.base_url}/{contract}/accept"
         response = self.stc.stc_http_request(method="POST",url=url)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): return {}
         #Transforming returned data to be compatible with contracts dict:
         data = response['http_data']['data']['contract']
         data = {data['id']:data}

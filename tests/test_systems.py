@@ -28,13 +28,13 @@ class TestSystems(unittest.TestCase):
     #----------
     def test_get_shipyard(self):
         data = self.system.get_shipyard(self.shipyard_waypoint)
-        keys_counter = Counter(data['http_data']['data'].keys())
+        keys_counter = Counter(data.keys())
         self.assertEqual(keys_counter, Counter(self.shipyard_schema))
 
     #----------
     def test_get_jump_gate(self):
         data = self.system.get_jump_gate(self.jump_gate_waypoint)
-        keys_counter = Counter(data['http_data']['data'].keys())
+        keys_counter = Counter(data.keys())
         self.assertEqual(keys_counter, Counter(self.jump_gate_schema))
 
     #----------

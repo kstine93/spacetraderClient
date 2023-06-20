@@ -15,8 +15,8 @@ class Systems:
     """
     #----------
     stc = SpaceTraderConnection()
-    base_url: str | None = None
-    cache_path: str | None = None
+    base_url: str
+    cache_path: str
 
     #----------
     def __init__(self):
@@ -39,14 +39,14 @@ class Systems:
         return system_dict
 
     #----------
-    def mold_system_dict(self,response:SpaceTraderResp) -> dict:
+    def __mold_system_dict(self,response:SpaceTraderResp) -> dict:
         """Transform systems data into an easier-to-use format for inserting into dictionaries"""
         if not self.stc.response_ok(response): raise Exception(response)
         data = response['http_data']['data']
         return {data['symbol']:data}
 
     #----------
-    def create_cache_path(self,system:str) -> str:
+    def __create_cache_path(self,system:str) -> str:
         """Create cache path from system string. To shard data, we're using the first 4
         characters of the system string as the file path (only last character varies A-Z)"""
         return self.cache_path + system[0:4] + ".json"
@@ -60,19 +60,19 @@ class Systems:
         Target function and its needed arguments (self,system) also passed on.
         """
         def wrapper(self,system:str):
-            path = self.create_cache_path(system)
+            path = self.__create_cache_path(system)
             #Reminder: (func) and (self,system) are being passed as args to nested functions:
             return dict_cache_wrapper(file_path=path,key=system)(func)(self,system)
         return wrapper
 
     #----------
-    def reload_systems_in_cache(self,page:str=1) -> None:
+    def reload_systems_in_cache(self,page:int=1) -> None:
         """Force-updates all systems data in cache with data from the API"""
         for system_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for sys in system_list['http_data']['data']:
                 transformed_sys = {sys['symbol']:sys}
                 #Using first 4 characters of the system symbol as file name:
-                file_path = self.create_cache_path(sys['symbol'])
+                file_path = self.__create_cache_path(sys['symbol'])
                 update_cache_dict(transformed_sys,file_path)
 
     #----------
@@ -85,7 +85,7 @@ class Systems:
         """Returns basic overview of a given system. Decorator pulls from cached data if exists"""
         url = self.base_url + "/" + system
         response = self.stc.stc_http_request(method="GET",url=url)
-        data = self.mold_system_dict(response)
+        data = self.__mold_system_dict(response)
         return data
 
     #----------
@@ -94,7 +94,8 @@ class Systems:
         system = self.stc.get_system_from_waypoint(waypoint)
         url = f"{self.base_url}/{system}/waypoints/{waypoint}/shipyard"
         response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        if not self.stc.response_ok(response): return {}
+        return response['http_data']['data']
 
     #----------
     def get_jump_gate(self,waypoint:str) -> dict:
@@ -102,4 +103,5 @@ class Systems:
         system = self.stc.get_system_from_waypoint(waypoint)
         url = f"{self.base_url}/{system}/waypoints/{waypoint}/jump-gate"
         response = self.stc.stc_http_request(method="GET",url=url)
-        return response
+        if not self.stc.response_ok(response): return {}
+        return response['http_data']['data']

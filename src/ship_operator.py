@@ -10,7 +10,7 @@ from .ships import Ships
 from .markets import Markets
 from .systems import Systems
 from .contracts import Contracts
-from .utilities.custom_types import RefinableProduct, NavSpeed
+from .utilities.custom_types import RefinableProduct, NavSpeed, MarginObj
 from .utilities.cache_utilities import update_cache_dict
 from .utilities.basic_utilities import time_seconds_diff_UTC
 
@@ -27,11 +27,11 @@ class ShipOperator(Ships):
 
     #----------
     #Name
-    spaceship_name:str | None = None
+    spaceship_name:str
 
     #Location
-    curr_system:dict | None = None
-    curr_waypoint:dict | None = None
+    curr_system:dict
+    curr_waypoint:dict
 
     #Enriched data
     surveys:list[dict] = []
@@ -39,24 +39,24 @@ class ShipOperator(Ships):
     nearby_systems:list[dict] = []
 
     #Inventory
-    cargo:dict | None = None
-    fuel:dict | None = None
-    credits:int | None = None
-    mounts:list[dict] | None = None
+    cargo:dict
+    fuel:dict
+    credits:int
+    mounts:list[dict]
 
     #Flight Status
-    status:str | None = None
-    flightMode:str | None = None
-    arrivalTime:str | None = None
+    status:str
+    flightMode:str
+    arrivalTime:str
 
     #Crew
-    crew:dict | None = None
+    crew:dict
 
     #Cooldown
-    cooldownExpiry:str | None = None
+    cooldownExpiry:str
 
     #Contract
-    pursued_contract:str | None = None
+    pursued_contract:str
 
     #----------
     def __init__(self,ship_name):
@@ -133,7 +133,7 @@ class ShipOperator(Ships):
 
     #----------
     def reload_cargo_details(self) -> None:
-        response = super().get_cargo(self.spaceship_name)
+        response = super().get_current_cargo(self.spaceship_name)
         if not self.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data'])
 
@@ -164,7 +164,7 @@ class ShipOperator(Ships):
         self.cargo = cargo_details
 
     #----------
-    def __set_mounts(self,mounts_details:dict) -> None:
+    def __set_mounts(self,mounts_details:list[dict]) -> None:
         self.mounts = mounts_details
 
     #----------
@@ -223,15 +223,15 @@ class ShipOperator(Ships):
 
         #Updating system data
         system_data[system]['waypoints'] = waypointData
-        cache_path = self.systems.create_cache_path(system)
+        cache_path = self.systems.__create_cache_path(system)
         update_cache_dict(system_data,cache_path)
 
     #----------
     @check_set_cooldown
-    def survey_waypoint(self) -> dict:
+    def survey_waypoint(self) -> None:
         self.orbit_ship()
         response = super().survey_current_waypoint(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): return None
         data = response['http_data']['data']
         self.surveys = self.surveys + data['surveys']
 
@@ -247,11 +247,11 @@ class ShipOperator(Ships):
             return self.markets.get_market(waypoint)
 
     #----------
-    def find_best_margins(self,limit:int=3) -> dict:
+    def find_best_margins(self,limit:int=3) -> list[MarginObj]:
         return self.markets.find_best_margins(limit)
 
     #----------
-    def find_margin(self,item:str) -> dict:
+    def find_margin(self,item:str) -> MarginObj:
         return self.markets.find_margin(item)
 
     #--------------

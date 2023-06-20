@@ -3,7 +3,7 @@ Data and functions related for interacting with the 'ships' endpoint of the Spac
 """
 #==========
 from .base import SpaceTraderConnection
-from .utilities.custom_types import RefinableProduct, SpaceTraderResp
+from .utilities.custom_types import RefinableProduct, SpaceTraderResp, NavSpeed
 from .utilities.cache_utilities import update_cache_dict,attempt_dict_retrieval
 
 #==========
@@ -13,8 +13,8 @@ class Ships:
     """
     #----------
     stc = SpaceTraderConnection()
-    cache_path: str | None = None
-    cache_file_name: str | None = None
+    cache_path: str
+    cache_file_name: str
 
     #----------
     def __init__(self):
@@ -144,7 +144,7 @@ class Ships:
         return self.stc.stc_http_request(method="POST",url=url)
 
     #----------
-    def set_speed(self,ship:str,speed:str) -> SpaceTraderResp:
+    def set_speed(self,ship:str,speed:NavSpeed) -> SpaceTraderResp:
         """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
@@ -231,4 +231,3 @@ class Ships:
             ,'units':quantity
         }
         return self.stc.stc_http_request(method="POST",url=url,body=body)
-        return response

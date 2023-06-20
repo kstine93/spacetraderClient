@@ -14,8 +14,8 @@ class Factions():
     """
     #----------
     stc = SpaceTraderConnection()
-    cache_path: str | None = None
-    cache_file_name: str | None = None
+    cache_path: str
+    cache_file_name: str
 
     #----------
     def __init__(self):

@@ -7,6 +7,7 @@ This file also contains a class for registering a new agent and thereby setting 
 import logging
 from configparser import ConfigParser
 from time import sleep
+from typing import Generator
 from requests import request
 from requests.models import Response
 from .utilities.basic_utilities import get_user_password,dict_to_bytes
@@ -48,14 +49,14 @@ class SpaceTraderConnection:
     - primarily by loading and storing api and base url of endpoint
     """
     #----------
-    callsign:str | None = None
-    encrypted_key: str | None = None
+    callsign:str
+    encrypted_key: str
 
-    api_key: str | None = None
+    api_key: str
     default_header: dict = {"Accept": "application/json","Content-Type":"application/json"}
-    base_url:str | None = None
+    base_url:str
 
-    base_cache_path:str | None = None
+    base_cache_path:str
 
     #----------
     def __init__(self):
@@ -78,7 +79,8 @@ class SpaceTraderConnection:
         for future API calls"""
         password = get_user_password(prompt="Please enter password to decrypt your API key:"
                                      ,password_name="SPACETRADER_PASSWORD")
-        decrypted_key_bytes = password_decrypt(self.encrypted_key, password)
+        bytes_key = self.encrypted_key.encode("utf-8")
+        decrypted_key_bytes = password_decrypt(bytes_key, password)
         self.api_key = decrypted_key_bytes.decode() #converting to string
 
     #----------
@@ -122,7 +124,7 @@ class SpaceTraderConnection:
         return self.repackage_http_response(http_response)
 
     #----------
-    def stc_get_paginated_data(self,method:str,url:str,page:str=1,**kwargs) -> None:
+    def stc_get_paginated_data(self,method:str,url:str,page:int=1,**kwargs) -> Generator[SpaceTraderResp,None,None]:
         """Generator function for getting paginated data from the SpaceTrader API."""
         #NOTE: The speed of this is heavily constrained by API limits (<2 per second).
         # If the API limits are raised, we could remove the sleep function and try
@@ -155,8 +157,8 @@ class RegisterNewAgent:
     """
     #----------
     config_path = config_path
-    base_url: str | None = None
-    config: ConfigParser | None = None
+    base_url: str
+    config: ConfigParser
 
     #----------
     def __init__(self):
@@ -164,7 +166,7 @@ class RegisterNewAgent:
         self.base_url = get_config_url()
 
     #----------
-    def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> dict:
+    def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> None:
         """
         Register a new player with the game.
         Returns dictionary with agent metadata (as well as other ship + contract information)
