@@ -4,12 +4,12 @@ This file also contains a class for registering a new agent and thereby setting 
 """
 
 #==========
-import json
 import logging
 from configparser import ConfigParser
 from time import sleep
-from urllib3 import PoolManager, HTTPResponse
-from .utilities.basic_utilities import get_user_password,bytes_to_dict,dict_to_bytes
+from requests import request
+from requests.models import Response
+from .utilities.basic_utilities import get_user_password,dict_to_bytes
 from .utilities.crypt_utilities import password_encrypt,password_decrypt
 from .utilities.config_utilities import get_config,update_config_file
 from .utilities.custom_types import SpaceTraderResp
@@ -41,29 +41,6 @@ def get_config_cache_path() -> str:
 def get_config_url() -> str:
     return config["API"]["url"]
 
-
-#==========
-class HttpConnection:
-    """Generic class for making API requests"""
-    #----------
-    conn:PoolManager | None = None
-
-    #----------
-    def __init__(self):
-        self.conn = PoolManager()
-
-    #----------
-    def http_request(self, method:str, url:str, **kwargs) -> HTTPResponse:
-
-        if 'body' in kwargs:
-            kwargs.update({'body':json.dumps(kwargs['body'])})
-
-        return self.conn.request(
-            method=method
-            ,url=url
-            ,**kwargs
-        )
-
 #==========
 class SpaceTraderConnection:
     """
@@ -71,7 +48,6 @@ class SpaceTraderConnection:
     - primarily by loading and storing api and base url of endpoint
     """
     #----------
-    http_conn = HttpConnection()
     callsign:str | None = None
     encrypted_key: str | None = None
 
@@ -116,15 +92,15 @@ class SpaceTraderConnection:
         return True
 
     #----------
-    def repackage_http_response(self,http_response:HTTPResponse) -> SpaceTraderResp:
+    def repackage_http_response(self,http_response:Response) -> SpaceTraderResp:
         """Transforms http_response (sometimes in a complex format) to simple dictionary."""
         packet = {}
-        packet['http_status'] = http_response.status
+        packet['http_status'] = http_response.status_code
         try:
-            packet['http_data'] = json.loads(http_response.data)
+            packet['http_data'] = http_response.json()
         except:
             packet['http_data'] = {}
-            logging.info(f"Could not parse response data for {http_response.geturl()}")
+            logging.info(f"Could not parse response data for {http_response.url}")
         return packet
 
     #----------
@@ -136,10 +112,12 @@ class SpaceTraderConnection:
     #----------
     def stc_http_request(self, method:str, url:str, **kwargs) -> SpaceTraderResp:
         """Wrapper for HTTP get - implements spacetrader-specific handling of response"""
-        http_response = self.http_conn.http_request(method=method
-                                          ,url=url
-                                          ,headers=self.default_header
-                                          ,**kwargs)
+        http_response = request(
+            method=method
+            ,url=url
+            ,headers=self.default_header
+            ,**kwargs
+        )
 
         return self.repackage_http_response(http_response)
 
@@ -177,7 +155,6 @@ class RegisterNewAgent:
     """
     #----------
     config_path = config_path
-    http_conn = HttpConnection()
     base_url: str | None = None
     config: ConfigParser | None = None
 
@@ -199,8 +176,8 @@ class RegisterNewAgent:
         headers={'Content-Type': 'application/json'}
         url = self.base_url + "/register"
 
-        http_response = self.http_conn.http_request("POST",url=url,body=body,headers=headers)
-        data = bytes_to_dict(http_response.data)
+        http_response = request("POST",url=url,body=body,headers=headers)
+        data = http_response.json()
         self.save_agent_metadata_locally(data)
 
     #----------
