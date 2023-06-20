@@ -16,10 +16,10 @@ class TestSystems(unittest.TestCase):
     system_schema = ['symbol','sectorSymbol','type','x','y','waypoints','factions']
     system_filepath = "./gameData/systems/X1-A.json"
 
-    shipyard_waypoint = "X1-HQ18-60817D"
+    shipyard_waypoint = 'X1-ZT91-25027X'
     shipyard_schema = ['symbol', 'shipTypes', 'transactions', 'ships']
 
-    jump_gate_waypoint = "X1-YM80-51157Z"
+    jump_gate_waypoint = "X1-ZT91-85739D"
     jump_gate_schema = ['jumpRange', 'factionSymbol', 'connectedSystems']
 
 
