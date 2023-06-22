@@ -5,7 +5,6 @@ Data and functions related for interacting with the 'ships' endpoint of the Spac
 import json
 from typing import Callable
 
-from .agent import Agent
 from .ships import Ships
 from .markets import Markets
 from .systems import Systems
@@ -22,7 +21,6 @@ class ShipOperator(Ships):
     #----------
     systems = Systems()
     markets = Markets()
-    agent = Agent()
     contracts = Contracts()
 
     #----------
@@ -104,7 +102,7 @@ class ShipOperator(Ships):
     #----------
     def reload_agent_details(self) -> None:
         """Update local data with agent information - particularly credit balance."""
-        agent_data = self.agent.get_agent(self.stc.callsign)
+        agent_data = self.stc.get_agent(self.stc.callsign)
         self.__set_credits(agent_data[self.stc.callsign])
 
     #----------

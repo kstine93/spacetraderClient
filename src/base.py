@@ -11,7 +11,7 @@ from time import sleep
 from typing import Generator
 from requests import request
 from requests.models import Response
-from .utilities.basic_utilities import get_user_password,dict_to_bytes,get_keys_in_file,get_dict_from_file
+from .utilities.basic_utilities import get_user_password,dict_to_bytes
 from .utilities.crypt_utilities import password_encrypt,password_decrypt
 from .utilities.custom_types import SpaceTraderResp
 
@@ -57,12 +57,6 @@ class SpaceTraderConfigSetup:
         return self.config["api"]["url"]
 
     #----------
-    def write_to_file(self) -> None:
-        """Write config to file"""
-        with open(self.config_path, 'w') as configfile:
-            yaml.dump(self.config,configfile)
-
-    #----------
     def get_config(self) -> dict:
         return self.config
 
@@ -84,6 +78,12 @@ class SpaceTraderConfigSetup:
             }
         self.config['agents']['all_agents'].append(data)
         self.write_to_file()
+
+    #----------
+    def write_to_file(self) -> None:
+        """Write config to file"""
+        with open(self.config_path, 'w') as configfile:
+            yaml.dump(self.config,configfile)
 
 
 #==========
@@ -130,12 +130,20 @@ class SpaceTraderConnection:
         self.api_key = decrypted_key_bytes.decode() #converting to string
 
     #----------
+    def get_agent(self) -> dict:
+        """Get basic information about agent: callsign, account ID, faction, HQ, etc."""
+        url = f"{self.base_url}/my/agent"
+        response = self.stc_http_request(method="GET",url=url)
+        if not self.response_ok(response): raise Exception(response)
+        return response['http_data']['data']
+
+    #----------
     def response_ok(self,response:SpaceTraderResp) -> bool:
         """Check if API response resulted in a valid response (TRUE) or not (FALSE).
         Print and log error responses if they exist"""
         if "error" in response['http_data'].keys():
             print(response['http_data']['error']['message'])
-            logging.warn(f"API returned error: {response['http_data']['error']['message']}")
+            logging.warning(f"API returned error: {response['http_data']['error']['message']}")
             return False
         return True
 
