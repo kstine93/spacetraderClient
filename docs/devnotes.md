@@ -8,6 +8,82 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+---
+
+### June 22, 2023
+
+**Notes on CLI building**
+I want to start organising how I build out my CLI command structure. Here's a semi-organised list of things I want:
+
+1. Game flow:
+   1. ~~Player chooses which agent they want (or creates a new agent)~~
+   2. Main menu:
+      1. list contracts (END)
+      2. Explore systems
+         1. Show ASCII map (new feature - show map (with key), including locations of current ships and already-visited locations; maybe this should generate a file so that we aren't limited by 70-char line width?)
+         2. (Other?)
+      3. Command ship
+         1. Pick ship from list
+            1. Navigate (exclude 'orbit' and 'dock' since these are only prerequisites for other actions)
+               1. nav
+                  1. (list waypoints in system)
+               2. jump
+                  1. (list systems in range)
+               3. warp
+                  1. (list waypoints in range - can I provide a menu for this??)
+               4. set_speed
+            2. Trade
+               1. find_best_margins
+               2. find_margin
+               3. get_market
+               4. purchase
+               5. sell
+            3. Explore
+               1. chart_current_waypoint
+               2. scan_for_ships
+               3. scan_systems
+               4. scan_waypoints
+            4. Mine
+               1. survey_waypoint
+               2. extract
+               3. refine
+            5. Manage Contracts
+               1. request new contract (location-specific...)
+               2. list contracts
+                  1. Accept / select contract
+               3. **check contract (should be in HUD instead?)**
+               4. deliver contract shipment (location-specific...)
+               5. **fulfill contract (should instead be auto-checked I think upon delivery of shipment)**
+            6. Manage Ship
+               1. Switch ship (goes back to main menu 'list ships')
+               2. **get ship info (should be in HUD instead?)**
+                  1. get_mount
+                  2. .cargo
+                  3. .fuel
+                  4. .credits
+               3. Mounts
+                  1. install
+                  2. remove
+               4. Cargo
+                  1. jettison
+                  2. transfer
+               5. **refuel (should this really be a command? Or should I just refuel automatically when I go anywhere with fuel?)**
+            7. back to main menu
+      4. Quit game (END)
+
+
+---
+
+### June 21, 2023
+I'm considering removing caching for the 'agents' class - I don't really see the value of caching this data.
+Additionally, the get_agent endpoint doesn't take any callsign to retrieve information about the given agent. Rather, it INFERS the agent from the API key - so it's not actually adaptable for different callsigns. This kind of breaks the logic of my endpoint classes generally. The agent endpoint is really more of a game metadata endpoint than an in-game information-gathering endpoint in that way.
+
+TODO: Decide what to do here.
+
+**Decision:** It doesn't make sense for me to keep an entire 'Agent' class or the caching. I will instead make this part of the SpaceTraderConnection class as a way to get metadata about the agent.
+
+---
+
 ### June 20, 2023
 
 **Next Steps:**
@@ -20,8 +96,10 @@ I now want to work on the following:
    1. I have read about Pydantic and I don't yet understand why it's needed. It's for checking types, but I don't yet understand where and how that adds value outside of type hints + enumerated types that I already have. I will keep this in mind though and approach it once I understand it a bit more.
 2. ~~Fix Liskov problem I wrote aboute below for ShipOperator~~
 3. Continue implementing CLI
-   1. **See my notes from June 16th**
-4. (TBD) Change how I'm handling credentials in terms of security?
+   1. ~~**See my notes from June 16th**~~
+   2. Build out CLI functions more
+4. ~~(TBD) Change how I'm handling credentials in terms of security?~~
+   1. I don't see this as a big deal, particularly since this is just a game. If I want, I can always adapt my code later to save the yaml in a secret location.
 5. (Stretch) Containerize game (suggestion from Bengisu, but i'm not sure it makes sense)
 
 **Note about Liskov Substitution Principle:**
@@ -55,12 +133,12 @@ Bengisu wrote me back on June 17th with some notes about how I could improve my 
 ### June 16, 2023
 
 **Necessary changes to enable CLI:**
-1. I need to store API keys differently. Only having one config file with one possible agent (and API key) disallows multiple players.
-   1. Suggestion: What about a 'encrypted_keys.json' file with callsign as key and encrypted API token as value? Then, each player could be asked to pick their callsign and then provide a decrypting password. I like this. Steps include:
-         1. Adapt RegisterNewAgent to create or update this json (use cache functions)
-         2. Adapt base.py to read from this json
+1. ~~I need to store API keys differently. Only having one config file with one possible agent (and API key) disallows multiple players.~~
+   1. ~~Suggestion: What about a 'encrypted_keys.json' file with callsign as key and encrypted API token as value? Then, each player could be asked to pick their callsign and then provide a decrypting password. I like this. Steps include:~~
+         1. ~~Adapt RegisterNewAgent to create or update this json (use cache functions)~~
+         2. ~~Adapt base.py to read from this json~~
    2. Note: If I'm getting rid of account credentials, maybe it's time to get rid of the config file entirely and just put cache_path and API url in base.py
-2. I want to provide the option to set up a new player as well. The CLI should allow 'Register new agent' as an option alongside existing callsigns...
+2. ~~I want to provide the option to set up a new player as well. The CLI should allow 'Register new agent' as an option alongside existing callsigns...~~
 
 ---
 

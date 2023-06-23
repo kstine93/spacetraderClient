@@ -1,29 +1,40 @@
 """
-First version of a basic CLI.
-This startup script sets up the game for a Python terminal.
-Needs to be run in terminal as "python3 -i startup_cli.py"
+This separate file before the game initializes is to allow the modification of the chosen player.
+Can also be done manually (less fun) in the gameinfo.yaml file
 """
-
-import os
-from src.base import get_config_callsign
-from src.ship_operator import *
-from src.art.ascii_art import intro_text
-
-callsign = get_config_callsign()
-default_ship = callsign+"-1"
+from PyInquirer import prompt
+from src.base import SpaceTraderConfigSetup
+import subprocess
 
 
+#----------
+def set_player() -> None:
+    config_setup = SpaceTraderConfigSetup()
+    callsigns = config_setup.get_all_callsigns()
+    if len(callsigns) > 1:
+        chosen_callsign = prompt_player_select(callsigns)
+    else:
+        chosen_callsign = callsigns[0]
+    config_setup.set_new_current_agent(chosen_callsign)
 
-def startup():
-    os.system("clear")
-    print(intro_text)
-    print(f"Welcome back Captain {callsign}\n")
-    print(f"Your ship {default_ship} is ready to command.\nEx: ship.curr_system")
+#----------
+def prompt_player_select(callsigns:list[str]) -> str:
+    callsigns_list = [{"name":cs} for cs in callsigns]
+    module_list_question = [
+        {
+            'type': 'list',
+            'name': 'Players',
+            'message': 'Please pick your player: ',
+            'choices': callsigns_list,
+        }
+    ]
+    answer_dict = prompt(module_list_question)
+    return list(answer_dict.values())[0]
 
-def loadShip() -> ShipOperator:
-    return ShipOperator(default_ship)
-
-
+#----------
 if __name__ == "__main__":
-    startup()
-    ship = loadShip()
+    set_player()
+    subprocess.run(["python3","cli/main.py"])
+
+
+
