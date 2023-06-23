@@ -2,6 +2,10 @@
 
 from src.utilities.basic_utilities import get_time_diff_UTC
 
+def remove_list_formatting(user_list:str):
+    user_list = str(user_list)[1:-1]
+    return user_list.replace("'","")
+
 #---------------
 #-- CONTRACTS --
 #---------------
@@ -51,4 +55,21 @@ def format_contract_template(contract:dict) -> str:
 
     return contract_template.format(**format_dict)
 
-
+#---------------
+#-- WAYPOINTS --
+#---------------
+waypoint_template = """\
+{num}. {symbol} ({type})
+{trait_list}\
+"""
+#---------------
+def format_waypoint_template(number:int,waypoint:dict) -> str:
+    """Format the waypoint template with data returned from the current system
+    Designed to be part of a list of waypoints with 'number' giving index in list"""
+    format_dict = {
+    "num": number,
+    "symbol": waypoint["symbol"],
+    "type": waypoint["type"],
+    "trait_list": remove_list_formatting(waypoint['traits'])
+}
+    return waypoint_template.format(**format_dict)

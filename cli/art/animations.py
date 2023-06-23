@@ -1,7 +1,6 @@
-from src.art.ascii_art import *
+from cli.art.ascii_art import *
 from time import sleep
 import os
-from IPython.display import clear_output
 
 def animate(time:int,frames:list=[]):
     while time > 0:
@@ -12,7 +11,6 @@ def animate(time:int,frames:list=[]):
             print(item)
             sleep(1)
             time -= 1
-    clear_output(wait=True)
     os.system("clear")
 
 

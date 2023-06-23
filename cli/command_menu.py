@@ -1,5 +1,6 @@
 """Holder of most commands for CLI"""
-from .cli_utilities import *
+from cli.cli_utilities import *
+from cli.command.navigate_menu import *
 from src.ship_operator import *
 
 
@@ -8,43 +9,40 @@ TODO: Make a base version of my menu which always has a "< Exit menu" option to 
 """
 ship_operator:ShipOperator
 
+
 #==========
-def startup_ship_command(ship:str):
+def ship_command_loop(ship:str) -> None:
     global ship_operator
     ship_operator = ShipOperator(ship)
+    cli_print(border_cmd_menu,color="deep_pink4")
     cli_print(f"Welcome aboard {ship}, Captain")
-    ship_command_loop()
-
-
-#==========
-def ship_command_loop() -> None:
-    command_loop(command_menu)
+    command_loop(command_menu,sep=border_cmd_menu,color="deep_pink4")
     cli_print("Returning to main menu...")
 
 #==========
 command_menu = {
     "navigate": {
-        "func": lambda: navigate_menu(),
+        "func": lambda: navigate_loop(ship_operator),
         "desc": "Navigate your ship to a new location."
     },
     "trade": {
-        "func": lambda: trade_menu(),
+        "func": lambda: trade_menu(ship_operator),
         "desc": "Purchase, sell and study profitable markets"
     },
     "explore": {
-        "func": lambda: explore_menu(),
+        "func": lambda: explore_menu(ship_operator),
         "desc": "Learn more about surrounding ships, waypoints and systems."
     },
     "mine": {
-        "func": lambda: mine_menu(),
+        "func": lambda: mine_menu(ship_operator),
         "desc": "survey, extract and refine valuable resources."
     },
     "contracts": {
-        "func": lambda: explore_menu(),
+        "func": lambda: explore_menu(ship_operator),
         "desc": "Request new contracts or fulfill your current ones."
     },
     "ship": {
-        "func": lambda: mine_menu(),
+        "func": lambda: ship_menu(ship_operator),
         "desc": "Study and modify your ship;s cargo, crew and capabilities"
     },
     "list": {
@@ -57,26 +55,24 @@ command_menu = {
     }
 }
 
-#==========
-def navigate_menu():
-    cli_print("Nav menu in development")
+
 
 #==========
-def trade_menu():
+def trade_menu(ship_operator:ShipOperator):
     cli_print("trade menu in development")
 
 #==========
-def explore_menu():
+def explore_menu(ship_operator:ShipOperator):
     cli_print("explore menu in development")
 
 #==========
-def mine_menu():
+def mine_menu(ship_operator:ShipOperator):
     cli_print("mine menu in development")
 
 #==========
-def contract_menu():
+def contract_menu(ship_operator:ShipOperator):
     cli_print("contract menu in development")
 
 #==========
-def ship_menu():
+def ship_menu(ship_operator:ShipOperator):
     cli_print("ship menu in development")
