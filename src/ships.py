@@ -29,12 +29,6 @@ class Ships:
         return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def list_ships(self,ship:str) -> SpaceTraderResp:
-        """Get detailed information about the ship, its systems, cargo, crew and modules"""
-        url = self.base_url + "/" + ship
-        return self.stc.stc_http_request(method="GET",url=url)
-
-    #----------
     def reload_ships_in_cache(self,page:int=1) -> None:
         """Force-updates all ships data in cache with data from the API"""
         for ship_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):

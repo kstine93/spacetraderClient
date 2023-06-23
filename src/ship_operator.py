@@ -11,7 +11,7 @@ from .systems import Systems
 from .contracts import Contracts
 from .utilities.custom_types import RefinableProduct, NavSpeed, MarginObj
 from .utilities.cache_utilities import update_cache_dict
-from .utilities.basic_utilities import time_seconds_diff_UTC
+from .utilities.basic_utilities import time_diff_seconds
 
 #==========
 class ShipOperator(Ships):
@@ -77,7 +77,7 @@ class ShipOperator(Ships):
         """Wrapper to check cooldown before attempting an action, and to set a new cooldown afterwards"""
         def wrapper(self,*args,**kwargs):
             if self.cooldownExpiry:
-                seconds = time_seconds_diff_UTC(self.cooldownExpiry)
+                seconds = time_diff_seconds(self.cooldownExpiry)
                 if seconds > 0:
                     print(f"Cooldown remaining: {seconds}s")
                     return
@@ -102,8 +102,8 @@ class ShipOperator(Ships):
     #----------
     def reload_agent_details(self) -> None:
         """Update local data with agent information - particularly credit balance."""
-        agent_data = self.stc.get_agent(self.stc.callsign)
-        self.__set_credits(agent_data[self.stc.callsign])
+        agent_data = self.stc.get_agent()
+        self.__set_credits(agent_data)
 
     #----------
     def reload_ship_details(self) -> None:

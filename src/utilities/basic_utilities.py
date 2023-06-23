@@ -5,7 +5,7 @@ Basic functional programming utilities portable across applications
 # ==========
 import json
 import getpass
-from datetime import datetime
+from datetime import datetime,timedelta
 from typing import Iterator
 from os import listdir, remove, fsdecode, getenv, environ, path
 
@@ -45,15 +45,19 @@ def empty_directory(dir_path: str):
         file_path = f"{dir_path}/{fsdecode(file)}"
         remove(file_path)
 
+# ==========
+def time_diff_seconds(utc_time_str: str, format: str = "%Y-%m-%dT%H:%M:%S.%fZ") -> int:
+    """Find difference between given UTC time and current local time in seconds"""
+    time_diff = get_time_diff_UTC(utc_time_str,format)
+    return int(time_diff.total_seconds())
 
 # ==========
-def time_seconds_diff_UTC(
-    utc_time_str: str, format: str = "%Y-%m-%dT%H:%M:%S.%fZ"
-) -> int:
+def get_time_diff_UTC(utc_time_str: str, format: str = "%Y-%m-%dT%H:%M:%S.%fZ") -> int:
     """Find difference between given UTC time and current local time in seconds"""
     utc_time = datetime.strptime(utc_time_str, format)
-    time_diff = utc_time - datetime.utcnow()
-    return int(time_diff.total_seconds())
+    diff = utc_time - datetime.utcnow()
+    no_microseconds_diff = diff - timedelta(microseconds = diff.microseconds)
+    return no_microseconds_diff
 
 
 # ==============
