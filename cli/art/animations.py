@@ -7,7 +7,6 @@ def animate(time:int,frames:list=[]):
         for item in frames:
             item = item.format(time) #For adding time if '{}' in frame
             os.system("clear") #For terminal
-            clear_output(wait=True) #For Python notebooks
             print(item)
             sleep(1)
             time -= 1

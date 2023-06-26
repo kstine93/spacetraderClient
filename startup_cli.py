@@ -13,7 +13,7 @@ import subprocess
 def set_player() -> None:
     config_setup = SpaceTraderConfigSetup()
     callsigns = config_setup.get_all_callsigns()
-    setup_player_option = "[ Create New Agent ]"
+    setup_player_option = "[Create New Agent]"
     callsigns.append(setup_player_option)
     choice = prompt_player_select(callsigns,"Please pick your player")
     if choice == setup_player_option:
