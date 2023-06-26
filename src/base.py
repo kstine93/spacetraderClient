@@ -22,68 +22,79 @@ from .utilities.custom_types import SpaceTraderResp
 
 #===========
 class SpaceTraderConfigSetup:
-    """Class to interact with the configurtion file which provides game details"""
+    """Class to interact with the configurtion file which provides game details
+    NOTE: This class purposefully does not hold stateful data as class attributes because
+    config data can change mid-game (most commonly after creating new agents"""
+
     config_path = "./gameinfo.yaml"
-    config:dict
 
     #----------
     def __init__(self):
-        self.reload_config()
+        pass
 
     #----------
-    def reload_config(self) -> None:
+    def __get_config(self) -> None:
         with open(self.config_path, "r") as stream:
             try:
-                self.config = yaml.safe_load(stream)
+                return yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
 
     #----------
     def get_encrypted_key(self,callsign:str) -> str:
-        agents = self.config['agents']['all_agents']
+        config = self.__get_config()
+        agents = config['agents']['all_agents']
         item = next((item for item in agents if item['callsign'] == callsign),False)
         return item['key_encrypted']
 
     #----------
     def get_callsign(self) -> str:
-        return self.config['agents']['current']
+        config = self.__get_config()
+        return config['agents']['current']
 
     #----------
     def get_cache_path(self) -> str:
-        return self.config["cache"]["path"]
+        config = self.__get_config()
+        return config["cache"]["path"]
 
     #----------
     def get_api_url(self) -> str:
-        return self.config["api"]["url"]
+        config = self.__get_config()
+        return config["api"]["url"]
 
     #----------
     def get_config(self) -> dict:
-        return self.config
+        config = self.__get_config()
+        return config
 
     #----------
     def get_all_callsigns(self) -> list[str]:
-        agents = self.config['agents']['all_agents']
+        config = self.__get_config()
+        agents = config['agents']['all_agents']
         return [item['callsign'] for item in agents]
 
     #----------
     def set_new_current_agent(self,callsign:str) -> None:
-        self.config['agents']['current'] = callsign
-        self.write_to_file()
+        config = self.__get_config()
+        config['agents']['current'] = callsign
+        self.write_to_file(config)
 
     #----------
     def add_new_agent(self,callsign:str,encrypted_key:str) -> None:
+        config = self.__get_config()
         data = {
             "callsign":callsign
             ,"key_encrypted":encrypted_key
             }
-        self.config['agents']['all_agents'].append(data)
-        self.write_to_file()
+        config['agents']['all_agents'].append(data)
+        self.write_to_file(config)
+        self.set_new_current_agent(callsign)
 
     #----------
-    def write_to_file(self) -> None:
+    def write_to_file(self,config:dict) -> None:
         """Write config to file"""
         with open(self.config_path, 'w') as configfile:
-            yaml.dump(self.config,configfile)
+            yaml.dump(config,configfile)
 
 
 #==========
@@ -232,7 +243,6 @@ class RegisterNewAgent:
 
         http_response = request("POST",url=url,data=json.dumps(data),headers=headers)
         data = http_response.json()
-        print(data)
         self.save_agent_metadata_locally(data)
 
     #----------

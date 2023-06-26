@@ -141,7 +141,6 @@ class ShipOperator(Ships):
         """Update local data on ship's location"""
         sys_name = nav_details['systemSymbol']
         wp_name = nav_details['waypointSymbol']
-
         sys_data = self.systems.get_system(sys_name)
         sys_data = sys_data[sys_name] #TODO: This fails when jumping to new system - test
         sys_data = self.systems.simplify_system_dict(sys_data)
