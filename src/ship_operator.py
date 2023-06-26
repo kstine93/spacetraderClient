@@ -51,7 +51,7 @@ class ShipOperator(Ships):
     crew:dict
 
     #Cooldown
-    cooldownExpiry:str
+    cooldownExpiry:str | None = None
 
     #Contract
     pursued_contract:str | None = None
@@ -220,7 +220,7 @@ class ShipOperator(Ships):
 
         #Updating system data
         system_data[system]['waypoints'] = waypointData
-        cache_path = self.systems.__create_cache_path(system)
+        cache_path = self.systems.create_cache_path(system)
         update_cache_dict(system_data,cache_path)
 
     #----------
@@ -278,7 +278,7 @@ class ShipOperator(Ships):
     def nav(self, waypoint: str) -> None:
         self.orbit()
         response = super().nav_to_waypoint(self.spaceship_name, waypoint)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): raise Exception #If navigation fails
         self.reload_nav_details()
 
     #----------
