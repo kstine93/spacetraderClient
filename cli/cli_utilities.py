@@ -1,7 +1,12 @@
 import typer
-from PyInquirer import prompt,Separator
+from os import system
 from rich import print as rprint
-from cli.art.ascii_art import *
+from art.ascii_art import *
+from simple_term_menu import TerminalMenu
+
+#==========
+def cli_clear() -> None:
+    system('clear')
 
 #==========
 def cli_print(string:str,color:str|None=None) -> None:
@@ -15,32 +20,26 @@ def cli_print(string:str,color:str|None=None) -> None:
         typer.echo(string)
 
 #==========
-def create_menu(menu_items:list[str],prompt:str='Choose your next action, Captain.',sep:bool=False) -> list:
-    choices = []
-    for item in menu_items:
-        choices.append({'name':item})
-        if sep:
-            choices.append(Separator(border_menu_item))
-    module_list_question = [
-            {
-                'type': 'list',
-                'name': 'commands',
-                'message': prompt,
-                'choices': choices,
-            }
-        ]
-    return module_list_question
+def create_menu(menu_items:list[str],prompt:str='Choose your next action, Captain.',**kwargs) -> TerminalMenu:
+    options = ["entry 1", "entry 2", "entry 3"]
+    terminal_menu = TerminalMenu(menu_items,
+                                 title=prompt,
+                                 menu_cursor_style=("fg_green","bold"),
+                                 menu_highlight_style=None,
+                                 menu_cursor="-> "
+                                )
+    return terminal_menu
 
 #==========
-def use_menu(menu_dict:dict,sep:bool=False):
-    menu = create_menu(list(menu_dict.keys()),sep=sep)
+def use_menu(menu_dict:dict,**kwargs):
+    menu = create_menu(list(menu_dict.keys()),**kwargs)
     cmd = menu_prompt(menu)
     command_switch(cmd,menu_dict)
 
 #==========
-def menu_prompt(menu_list) -> str:
-    response = prompt(menu_list)
-    return list(response.values())[0]
+def menu_prompt(menu:TerminalMenu) -> str:
+    menu.show()
+    return menu.chosen_menu_entry
 
 #==========
 def command_prompt(prompt:str="Use 'list' or 'menu' to get help. '<-back' for last menu.") -> str:

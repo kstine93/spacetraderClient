@@ -10,5 +10,4 @@ typer-cli==0.0.13
 click==8.1.3
 rich==12.6.0
 shellingham==1.4.0
-PyInquirer==1.0.3
-prompt-toolkit==1.0.14
+simple-term-menu==1.6.1
