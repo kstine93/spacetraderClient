@@ -1,10 +1,31 @@
+"""Main menu of the spacetrader CLI game"""
+
+
+#==========
+"""
+Adding parent directory to Python path so that 'src' imports are possible.
+TODO: Make a more graceful import solution than this.
+"""
+#==========
+import os
+import sys
+PROJECT_ROOT = os.path.abspath(os.path.join(
+                os.path.dirname(__file__),
+                os.pardir)
+)
+sys.path.append(PROJECT_ROOT)
+
+#==========
+from src.contracts import Contracts
+from src.ships import Ships
+
+
 import typer
-from PyInquirer import prompt
-from cli.cli_utilities import *
-from src.contracts import *
-from src.ships import *
-from cli.command_menu import ship_command_loop
-from cli.art.str_formatting import format_contract_template
+from command_menu import ship_command_loop
+from cli_utilities import *
+from art.str_formatting import format_contract_template
+
+
 
 #==========
 app = typer.Typer()
@@ -13,6 +34,7 @@ ships = Ships()
 
 #==========
 def main_menu_loop() -> None:
+    cli_clear()
     bootup()
     cli_print(border_main_menu,"blue")
     prompt = "Use 'list' or 'menu' to get help. 'exit' to stop playing."
