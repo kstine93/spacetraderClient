@@ -7,6 +7,28 @@ from typing import TypedDict
 from enum import Enum
 
 #==========
+class SpaceFactions(Enum):
+    COSMIC = 1
+    VOID = 2
+    GALACTIC = 3
+    QUANTUM = 4
+    DOMINION = 5
+    ASTRO = 6
+    CORSAIRS = 7
+    OBSIDIAN = 8
+    AEGIS = 9
+    UNITED = 10
+    SOLITARY = 11
+    COBALT = 12
+    OMEGA = 13
+    ECHO = 14
+    LORDS = 15
+    CULT = 16
+    ANCIENTS = 17
+    SHADOW = 18
+    ETHEREAL = 19
+
+#==========
 class RefinableProduct(Enum):
     '''Product that can be refined using 'Ship Refine' endpoint within Ships class'''
     IRON = 1

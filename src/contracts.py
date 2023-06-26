@@ -99,7 +99,7 @@ class Contracts:
             ,'tradeSymbol':item
             ,'units':quantity
         }
-        response = self.stc.stc_http_request(method="POST",url=url,body=body)
+        response = self.stc.stc_http_request(method="POST",url=url,json=body)
         #NOTE: This method also returns a 'cargo' object which represents the type and quantity
         #of resource which was delivered. I could pass this object to my 'fleet' class to update
         #the quantity of the resource for the ship which was delivering this contract.

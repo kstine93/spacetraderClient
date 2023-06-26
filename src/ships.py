@@ -66,14 +66,14 @@ class Ships:
         """Jump instantaneously to another system. Alternative to warp."""
         url = f"{self.base_url}/{ship}/jump"
         body = {'systemSymbol':system}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def nav_to_waypoint(self,ship:str, waypoint:str) -> SpaceTraderResp:
         """Navigate the ship to a given waypoint"""
         url = f"{self.base_url}/{ship}/navigate"
         body = {"waypointSymbol":waypoint}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def get_nav_details(self,ship:str) -> SpaceTraderResp:
@@ -86,7 +86,7 @@ class Ships:
         """Navigate (warp) the ship to a different system without jumping"""
         url = f"{self.base_url}/{ship}/warp"
         body = {'waypointSymbol':waypoint}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #-------------
     #--SURVEYING--
@@ -142,20 +142,20 @@ class Ships:
         """Set navigation speed for the ship."""
         url = f"{self.base_url}/{ship}/nav"
         body = {'flightMode':speed}
-        return self.stc.stc_http_request(method="PATCH",url=url,body=body)
+        return self.stc.stc_http_request(method="PATCH",url=url,json=body)
 
     #----------
     def extract_resources(self,ship:str,survey_dict:dict={}) -> SpaceTraderResp:
         """Extract resources from the current waypoint. an optional survey object allows better yields."""
         url = f"{self.base_url}/{ship}/extract"
-        return self.stc.stc_http_request(method="POST",url=url,body=survey_dict)
+        return self.stc.stc_http_request(method="POST",url=url, json=survey_dict)
 
     #----------
     def refine_product(self,ship:str,product:RefinableProduct) -> SpaceTraderResp:
         """Attempt to refine raw materials on the ship into target product"""
         url = f"{self.base_url}/{ship}/refine"
         body = {'produce':product}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def get_ship_mounts(self,ship:str) -> SpaceTraderResp:
@@ -168,14 +168,14 @@ class Ships:
         """Install mount in Cargo onto ship"""
         url = f"{self.base_url}/{ship}/mounts/install"
         body = {'symbol':mount}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def remove_ship_mount(self,ship:str,mount:str) -> SpaceTraderResp:
         """Remove mount in Cargo onto ship"""
         url = f"{self.base_url}/{ship}/mounts/remove"
         body = {'symbol':mount}
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #---------
     #--CARGO--
@@ -194,7 +194,7 @@ class Ships:
             ,'units':quantity
             ,'shipSymbol':target_ship
         }
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def purchase_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
@@ -204,7 +204,7 @@ class Ships:
             'symbol':item
             ,'units':quantity
         }
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def sell_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
@@ -214,7 +214,7 @@ class Ships:
             'symbol':item
             ,'units':quantity
         }
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
 
     #----------
     def jettison_cargo(self,ship:str,item:str,quantity:int) -> SpaceTraderResp:
@@ -224,4 +224,4 @@ class Ships:
             'symbol':item
             ,'units':quantity
         }
-        return self.stc.stc_http_request(method="POST",url=url,body=body)
+        return self.stc.stc_http_request(method="POST",url=url,json=body)
