@@ -1,7 +1,7 @@
 """Holder of most commands for CLI"""
-from cli.cli_utilities import *
-from cli.command.navigate_menu import *
 from src.ship_operator import *
+from cli_utilities import *
+from command.navigate_menu import *
 
 
 """
@@ -12,11 +12,14 @@ ship_operator:ShipOperator
 
 #==========
 def ship_command_loop(ship:str) -> None:
+    cli_clear()
+    cli_print("Loading ship details...","deep_pink4")
     global ship_operator
     ship_operator = ShipOperator(ship)
     cli_print(border_cmd_menu,color="deep_pink4")
     cli_print(f"Welcome aboard {ship}, Captain")
     command_loop(command_menu,sep=border_cmd_menu,color="deep_pink4")
+    cli_clear()
     cli_print("Returning to main menu...")
 
 #==========
