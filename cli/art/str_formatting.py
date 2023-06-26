@@ -58,10 +58,10 @@ def format_contract_template(contract:dict) -> str:
 #---------------
 #-- WAYPOINTS --
 #---------------
-waypoint_template = """\
-{num}. {symbol} ({type})
-{trait_list}\
-"""
+
+#NOTE: the bar | in this template signals to simple_term_menu module that what comes after the bar
+#should be sent to the 'preview' window instead.
+waypoint_template = """{num}. {symbol} ({type}) | {trait_list}"""
 #---------------
 def format_waypoint_template(number:int,waypoint:dict) -> str:
     """Format the waypoint template with data returned from the current system
@@ -70,6 +70,8 @@ def format_waypoint_template(number:int,waypoint:dict) -> str:
     "num": number,
     "symbol": waypoint["symbol"],
     "type": waypoint["type"],
-    "trait_list": remove_list_formatting(waypoint['traits'])
-}
+    "trait_list": "(Traits unknown - waypoint not yet scanned)"
+    }
+    if 'traits' in waypoint.keys():
+        format_dict['trait_list'] = remove_list_formatting(waypoint['traits'])
     return waypoint_template.format(**format_dict)

@@ -1,26 +1,46 @@
 """Holder of most commands for CLI"""
 from src.ship_operator import *
+from src.ships import Ships
 from cli_utilities import *
 from command.navigate_menu import *
 
-
-"""
-TODO: Make a base version of my menu which always has a "< Exit menu" option to go back to command loop
-"""
+#==========
 ship_operator:ShipOperator
 
+#==========
+cmd_menu_color = "deep_pink4"
 
 #==========
-def ship_command_loop(ship:str) -> None:
+def pick_ship():
+    ships = Ships()
+    data = ships.list_all_ships()
+    ship_list = list(data.keys())
+    if len(ship_list) > 1:
+        ship_menu = create_menu(ship_list,prompt="Choose a ship to command, Captain:")
+        chosen_ship = menu_prompt(ship_menu)
+    else:
+        chosen_ship = ship_list[0]
+    return chosen_ship
+
+#==========
+def ship_command_loop() -> bool:
+    ship = pick_ship()
     cli_clear()
-    cli_print("Loading ship details...","deep_pink4")
+    cli_print("Loading ship details...",cmd_menu_color)
+
     global ship_operator
     ship_operator = ShipOperator(ship)
-    cli_print(border_cmd_menu,color="deep_pink4")
+
+    cli_print(border_cmd_menu,color=cmd_menu_color)
     cli_print(f"Welcome aboard {ship}, Captain")
-    command_loop(command_menu,sep=border_cmd_menu,color="deep_pink4")
+
+    exit = command_loop(command_menu,sep=border_cmd_menu,color=cmd_menu_color)
+    if exit: #If player wants to exit, return True to signal to parent menu
+        return True
+
     cli_clear()
     cli_print("Returning to main menu...")
+    return False
 
 #==========
 command_menu = {
@@ -57,8 +77,6 @@ command_menu = {
         "desc": "Provide interactive menu of commands."
     }
 }
-
-
 
 #==========
 def trade_menu(ship_operator:ShipOperator):

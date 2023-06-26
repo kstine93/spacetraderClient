@@ -16,41 +16,43 @@ PROJECT_ROOT = os.path.abspath(os.path.join(
 sys.path.append(PROJECT_ROOT)
 
 #==========
-from src.contracts import Contracts
-from src.ships import Ships
-
-
 import typer
+from src.contracts import Contracts
 from command_menu import ship_command_loop
 from cli_utilities import *
 from art.str_formatting import format_contract_template
-
-
+from command_menu import ship_command_loop
 
 #==========
 app = typer.Typer()
 contracts = Contracts()
-ships = Ships()
+
+#==========
+main_menu_color = "cornflower_blue" #Color used by default in cli_print
 
 #==========
 def main_menu_loop() -> None:
+    """Wrapper for command_loop. First menu in the game. Once this function ends the game ends.
+    """
     cli_clear()
     bootup()
-    cli_print(border_main_menu,"blue")
+    cli_print(border_main_menu,main_menu_color)
     prompt = "Use 'list' or 'menu' to get help. 'exit' to stop playing."
-    command_loop(main_menu,prompt,border_main_menu,"blue")
+    command_loop(main_menu,prompt,border_main_menu,main_menu_color)
     shutdown()
 
 #==========
 def bootup() -> None:
-    cli_print(border_long_carat,"blue")
+    cli_print(border_long_carat,main_menu_color)
     cli_print(bootup_image,"yellow")
-    cli_print(border_long_carat,"blue")
-    cli_print(f"\n{bootup_text}\n")
+    cli_print(border_long_carat,main_menu_color)
+    cli_print(f"\nWelcome back, Captain\n")
 
 #==========
 def shutdown() -> None:
-    cli_print("Goodbye captain")
+    cli_print("----------------------",main_menu_color)
+    cli_print("-- Goodbye, Captain --",main_menu_color)
+    cli_print("----------------------",main_menu_color)
 
 #==========
 main_menu = {
@@ -59,7 +61,7 @@ main_menu = {
         "desc": "List all active contracts."
     },
     "command": {
-        "func": lambda: command_ship(),
+        "func": lambda: ship_command_loop(),
         "desc": "Command one of your ships - play the game!"
     },
     "explore": {
@@ -71,7 +73,7 @@ main_menu = {
         "desc": "List the commands in this menu."
     },
     "menu": {
-        "func": lambda: use_menu(main_menu,sep=True),
+        "func": lambda: use_menu(main_menu),
         "desc": "Provide interactive menu of commands."
     }
 }
@@ -86,21 +88,7 @@ def list_contracts() -> None:
 def explore_systems() -> None:
     print("Not yet implemented - sorry!")
 
-#==========
-def command_ship() -> None:
-    data = ships.list_all_ships()
-    ship_list = list(data.keys())
-    if len(ship_list) > 1:
-        ship_menu = create_menu(ship_list,prompt="Choose a ship to command, Captain:")
-        chosen_ship = menu_prompt(ship_menu)
-    else:
-        chosen_ship = ship_list[0]
-    ship_command_loop(chosen_ship)
 
-
-
-
-#==========
-#==========
+#/////////////////////////
 if __name__ == "__main__":
     typer.run(main_menu_loop)
