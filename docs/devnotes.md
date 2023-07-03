@@ -10,6 +10,62 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### Jul 3, 2023
+Took a bit of a break to spend my evenings playing Dyson Sphere Program (fantastic game - for anyone reading this - it's very much like coding...).
+
+Back to this project: the current priority is to finish the 'mine_menu', including:
+1. Creating 'refine' function (should be very easy).
+2. Deciding on solution for conundrum in 'extract' function where some game happenings are hidden from the player, which makes some things confusing...
+3. Deciding whether I want to keep cooldown-checking as part of ship_operator class
+   1. It's convenient to be notified that I can't do X action because cooldown is still in effect, but I want to be able to control this message myself...
+      1. What if I just pulled the logic to check cooldown *out of the wrapper function in ship_operator class*? Then I could use that function separately, but if I failed, the wrapper would still catch the cooldown violation and spit out the generic warning!
+         1. Good idea - and i'm not sure I even need a generic function; code is like 2 lines:
+         ```
+         seconds = time_diff_seconds(self.cooldownExpiry)
+         if seconds > 0:
+            print(f"Cooldown remaining: {seconds}s")
+         ```
+
+After that is complete, here are my priorities:
+1. Design HUD interface. I would like one template which I can more-or-less adjust for navigation, trading, contracts, etc... That way, I get a reliable HUD no matter what menu I'm on, it looks very similar, but I can:
+   1. easily see that I'm on the HUD for 'mining' or 'navigation' or 'trading
+   2. see all of the relevant information to make decisions (e.g., for mining, I see current cargo and maybe current contract details...)
+2. Finish navigation endpoints:
+   1. jump ship
+   2. warp ship
+   3. set_speed
+3. Tackle the next menu (Trading?)
+4. Update Architecture.md notes ('Agents' class no longer exists; some misspellings)
+
+
+**UNRELATED:**
+I would like to share my project and code with the community more! Here are my steps to do that:
+1. Finish more of the cli so it's vaguely playable (doesn't have to be 100%, but maybe fix any outstanding bugs and make it smooooother)
+2. Finish Readme + setup instructions so that others could conceivably clone and play the game
+   1. Test this on Linux
+   2. Test this on Windows
+3. Post to Spacetraders Discord and get some feedback from them
+4. Post to LinkedIn
+5. Post elsewhere??
+
+---
+
+### June 25, 2023
+Notes:
+I spent a lot of time today trying to fix an issue with python imports that *magically disappeared*. I was having issues importing from`src` from the `cli` code, but now it's fixed. I have no idea why.
+
+TODO:
+1. ~~Make commits of new changes. Biggest change should be from 'pyinquirer' to 'terminalmenu'~~
+2. ~~Figure out a way to use the 'preview' feature of the terminal menu to include meta information about waypoints~~
+3. Continue to build out menus for ship command
+4. (Bonus): I'm not 100% satisfied with the flow of the game. I think some things are missing:
+   1. ~~"Exit" should exit the entire game, even from a nested menu~~
+   2. The 'spacetrader logo' should appear at the top whenever accessing sub menus (it looks like the game has failed otherwise after the terminal screen clears)
+      1. **ALTERNATIVELY - MAKE A HUD INSTEAD** (I kind of like this instead... more useful.)
+         1. HUD could have a standard header, but custom info depending on menu (e.g., navigate menu could show location and surrounding systems...)
+
+---
+
 ### June 22, 2023
 
 **Notes on CLI building**
