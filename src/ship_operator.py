@@ -299,15 +299,23 @@ class ShipOperator(Ships):
     #--RESOURCES--
     #-------------
     @check_set_cooldown
-    def extract(self,target_resource:str) -> None:
+    def extract(self,target_resource:str|None=None) -> None:
         """Extract resources from current waypoint. If a survey data structure
         exists for the current waypoint, use it. If one of the survey data structures
         matches the target_resource, use that specifically"""
         self.orbit()
-        survey = self.__get_optimal_survey(target_resource)
+
+        if target_resource is not None:
+            survey = self.__get_optimal_survey(target_resource)
+        else:
+            survey = {}
+
         response = super().extract_resources(self.spaceship_name,survey)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): return None
+
         self.__set_cargo(response['http_data']['data']['cargo'])
+        #Returning so that we can know what new resources we gained.
+        return response['http_data']['data']['extraction']['yield']
 
     #----------
     def __get_optimal_survey(self,target_resource:str) -> dict:
