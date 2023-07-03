@@ -1,6 +1,6 @@
 """Code to format data from the spacetrader client in ASCII (pretty printing"""
 
-from src.utilities.basic_utilities import get_time_diff_UTC
+from src.utilities.basic_utilities import get_time_diff_UTC,dedup_list
 
 def remove_list_formatting(user_list:str):
     user_list = str(user_list)[1:-1]
@@ -62,6 +62,7 @@ def format_contract_template(contract:dict) -> str:
 #NOTE: the bar | in this template signals to simple_term_menu module that what comes after the bar
 #should be sent to the 'preview' window instead.
 waypoint_template = """{num}. {symbol} ({type}) | {trait_list}"""
+
 #---------------
 def format_waypoint_template(number:int,waypoint:dict) -> str:
     """Format the waypoint template with data returned from the current system
@@ -75,3 +76,31 @@ def format_waypoint_template(number:int,waypoint:dict) -> str:
     if 'traits' in waypoint.keys():
         format_dict['trait_list'] = remove_list_formatting(waypoint['traits'])
     return waypoint_template.format(**format_dict)
+
+#-------------
+#-- SURVEYS --
+#-------------
+survey_template = """\
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~ SURVEY ~~~~~~~~~~~~~~
+Location: {symbol}
+---------------------------------
+Size: {size}
+---------------------------------
+Deposits:
+{deposits}
+"""
+
+#---------------
+def format_survey_template(survey:dict) -> str:
+    """Format the survey template with data from the collected survey data."""
+    dep_list = [item['symbol'] for item in survey['deposits']]
+    dep_list = dedup_list(dep_list)
+    dep_list = [f"> {dep}" for dep in dep_list] #Prefixing strings
+
+    format_dict = {
+    "symbol": survey["symbol"],
+    "size": survey["size"],
+    "deposits": "\n".join(dep_list)
+    }
+    return survey_template.format(**format_dict)
