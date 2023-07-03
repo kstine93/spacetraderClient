@@ -46,6 +46,11 @@ def empty_directory(dir_path: str):
         remove(file_path)
 
 # ==========
+def dedup_list(list:list) -> list:
+    return [*set(list)]
+
+
+# ==========
 def time_diff_seconds(utc_time_str: str, format: str = "%Y-%m-%dT%H:%M:%S.%fZ") -> int:
     """Find difference between given UTC time and current local time in seconds"""
     time_diff = get_time_diff_UTC(utc_time_str,format)
