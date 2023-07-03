@@ -84,4 +84,3 @@ def list_cmds(menu_dict:dict):
     for (key,val) in menu_dict.items():
         cli_print(f"== '{key}' ==","orange1")
         cli_print(str(val['desc']))
-

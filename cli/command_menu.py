@@ -2,7 +2,8 @@
 from src.ship_operator import *
 from src.ships import Ships
 from cli_utilities import *
-from command.navigate_menu import *
+from command.navigate_menu import navigate_loop
+from command.mine_menu import mine_loop
 
 #==========
 ship_operator:ShipOperator
@@ -57,7 +58,7 @@ command_menu = {
         "desc": "Learn more about surrounding ships, waypoints and systems."
     },
     "mine": {
-        "func": lambda: mine_menu(ship_operator),
+        "func": lambda: mine_loop(ship_operator),
         "desc": "survey, extract and refine valuable resources."
     },
     "contracts": {
