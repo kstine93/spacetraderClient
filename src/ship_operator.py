@@ -14,11 +14,12 @@ from .utilities.cache_utilities import update_cache_dict
 from .utilities.basic_utilities import time_diff_seconds
 
 #==========
-class ShipOperator(Ships):
+class ShipOperator():
     """
     Class to operate a ship
     """
     #----------
+    ships = Ships()
     systems = Systems()
     markets = Markets()
     contracts = Contracts()
@@ -47,10 +48,10 @@ class ShipOperator(Ships):
     arrivalTime:str
 
     #Ship Info
-    shipCrew:dict #renamed
-    shipFrame:dict #new
-    shipReactor:dict #new
-    shipModules:list[dict] #new
+    shipCrew:dict
+    shipFrame:dict
+    shipReactor:dict
+    shipModules:list[dict]
     shipMounts:list[dict]
 
     #Cooldown
@@ -61,7 +62,6 @@ class ShipOperator(Ships):
 
     #----------
     def __init__(self,ship_name):
-        super().__init__()
         self.spaceship_name = ship_name
         self.reload_ship_details()
         self.reload_agent_details()
@@ -86,7 +86,7 @@ class ShipOperator(Ships):
                     return
 
             result = func(self,*args,**kwargs)
-            cooldown_res = self.get_cooldown(self.spaceship_name)
+            cooldown_res = self.ships.get_cooldown(self.spaceship_name)
             if cooldown_res['http_data']:
                 self.cooldownExpiry = cooldown_res['http_data']['data']['expiration']
             return result
@@ -105,14 +105,14 @@ class ShipOperator(Ships):
     #----------
     def reload_agent_details(self) -> None:
         """Update local data with agent information - particularly credit balance."""
-        agent_data = self.stc.get_agent()
+        agent_data = self.ships.stc.get_agent()
         self.__set_credits(agent_data)
 
     #----------
     def reload_ship_details(self) -> None:
         """Update local data on ship status, location, cargo, fuel and crew"""
-        response = super().get_ship(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.get_ship(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         data = response['http_data']['data']
         #setting Flight Status attributes
         self.__set_location(data['nav'])
@@ -131,8 +131,8 @@ class ShipOperator(Ships):
 
     #----------
     def reload_nav_details(self) -> None:
-        response = super().get_nav_details(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.get_nav_details(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         data = response['http_data']['data']
 
         self.__set_location(data)
@@ -140,8 +140,8 @@ class ShipOperator(Ships):
 
     #----------
     def reload_cargo_details(self) -> None:
-        response = super().get_current_cargo(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.get_current_cargo(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data'])
 
     #----------
@@ -203,16 +203,16 @@ class ShipOperator(Ships):
     @check_set_cooldown
     def scan_for_ships(self) -> None:
         self.orbit()
-        response = super().scan_for_ships(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.scan_for_ships(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         self.nearby_ships = response['http_data']['data']['ships']
 
     #----------
     @check_set_cooldown
     def scan_systems(self) -> None:
         self.orbit()
-        response = super().scan_systems(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.scan_systems(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         self.nearby_systems = response['http_data']['data']['systems']
 
     #----------
@@ -220,11 +220,11 @@ class ShipOperator(Ships):
     def scan_waypoints(self) -> None:
         """Scan waypoints in system to get additional data. Ship action. Incurs cooldown."""
         self.orbit()
-        response = super().scan_waypoints(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.scan_waypoints(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         #Error typically indicates ship is on cooldown:
         if response["http_status"] not in [200,201]:
-            return response['http_data']['error']
+            return None
         wp_data = response['http_data']['data']['waypoints']
         self.__enrich_waypoint_cache(wp_data)
         self.reload_nav_details()
@@ -244,8 +244,8 @@ class ShipOperator(Ships):
     @check_set_cooldown
     def survey_waypoint(self) -> None:
         self.orbit()
-        response = super().survey_current_waypoint(self.spaceship_name)
-        if not self.stc.response_ok(response): return None
+        response = self.ships.survey_current_waypoint(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return None
         data = response['http_data']['data']
         self.surveys = self.surveys + data['surveys']
 
@@ -272,44 +272,44 @@ class ShipOperator(Ships):
     #--NAVIGATION--
     #--------------
     def set_speed(self,speed:NavSpeed) -> None:
-        response = super().set_ship_speed(self.spaceship_name,speed)
-        if not self.stc.response_ok(response): return
+        response = self.ships.set_ship_speed(self.spaceship_name,speed)
+        if not self.ships.stc.response_ok(response): return
         nav_data = response['http_data']['data']
         self.__set_flight_status(nav_data)
 
     #----------
     def orbit(self) -> None:
-        response = super().orbit_ship(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.orbit_ship(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         nav_data = response['http_data']['data']['nav']
         self.__set_flight_status(nav_data)
 
     #----------
     def dock(self) -> None:
-        response = super().dock_ship(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.dock_ship(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         nav_data = response['http_data']['data']['nav']
         self.__set_flight_status(nav_data)
 
     #----------
     def nav(self, waypoint: str) -> None:
         self.orbit()
-        response = super().nav_to_waypoint(self.spaceship_name, waypoint)
-        if not self.stc.response_ok(response): raise Exception #If navigation fails
+        response = self.ships.nav_to_waypoint(self.spaceship_name, waypoint)
+        if not self.ships.stc.response_ok(response): raise Exception #If navigation fails
         self.reload_nav_details()
 
     #----------
     def jump(self,system:str) -> None:
         self.orbit()
-        response = super().jump_ship_to_system(self.spaceship_name,system)
-        if not self.stc.response_ok(response): return
+        response = self.ships.jump_ship_to_system(self.spaceship_name,system)
+        if not self.ships.stc.response_ok(response): return
         self.new_system_data_reset()
 
     #----------
     def warp(self,waypoint:str) -> None:
         self.orbit()
-        response = super().warp_ship(self.spaceship_name,waypoint)
-        if not self.stc.response_ok(response): return
+        response = self.ships.warp_ship(self.spaceship_name,waypoint)
+        if not self.ships.stc.response_ok(response): return
         self.new_system_data_reset()
 
     #-------------
@@ -327,8 +327,8 @@ class ShipOperator(Ships):
         else:
             survey = {}
 
-        response = super().extract_resources(self.spaceship_name,survey)
-        if not self.stc.response_ok(response): return None
+        response = self.ships.extract_resources(self.spaceship_name,survey)
+        if not self.ships.stc.response_ok(response): return None
 
         self.__set_cargo(response['http_data']['data']['cargo'])
         #Returning so that we can know what new resources we gained.
@@ -355,16 +355,16 @@ class ShipOperator(Ships):
     @check_set_cooldown
     def refine(self,product:RefinableProduct) -> None | dict:
         ##UNTESTED! Requires ship with refining module.
-        response = super().refine_product(self.spaceship_name,product)
-        if not self.stc.response_ok(response): return None
+        response = self.ships.refine_product(self.spaceship_name,product)
+        if not self.ships.stc.response_ok(response): return None
         self.__set_cargo(response['http_data']['data']['cargo'])
         return response['http_data']['data']['produced']
 
     #----------
     def refuel(self) -> None:
         self.dock()
-        response = super().refuel_ship(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.refuel_ship(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         self.__set_fuel(response['http_data']['data']['fuel'])
 
 
@@ -375,47 +375,47 @@ class ShipOperator(Ships):
         if not quantity:
             quantity = self.get_cargo_quantity(item)
         self.dock()
-        response = super().sell_cargo(self.spaceship_name,item,quantity)
-        if not self.stc.response_ok(response): return
+        response = self.ships.sell_cargo(self.spaceship_name,item,quantity)
+        if not self.ships.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
 
     #----------
     def purchase(self,item:str,quantity:int) -> None:
         self.dock()
-        response = super().purchase_cargo(self.spaceship_name,item,quantity)
-        if not self.stc.response_ok(response): return
+        response = self.ships.purchase_cargo(self.spaceship_name,item,quantity)
+        if not self.ships.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
 
     #----------
     def jettison(self,item:str,quantity:int) -> None:
-        response = super().jettison_cargo(self.spaceship_name,item,quantity)
-        if not self.stc.response_ok(response): return
+        response = self.ships.jettison_cargo(self.spaceship_name,item,quantity)
+        if not self.ships.stc.response_ok(response): return
         self.__set_cargo(response['http_data']['data']['cargo'])
 
     #----------
     def transfer_cargo(self,item:str,quantity:int,target_ship:str) -> None:
-        response = super().transfer_cargo_to_ship(self.spaceship_name,item,quantity,target_ship)
-        if not self.stc.response_ok(response): return
+        response = self.ships.transfer_cargo_to_ship(self.spaceship_name,item,quantity,target_ship)
+        if not self.ships.stc.response_ok(response): return
         self.reload_cargo_details()
 
     #----------
     def install_mount(self,mount: str) -> None:
-        response = super().install_ship_mount(self.spaceship_name, mount)
-        if not self.stc.response_ok(response): return
+        response = self.ships.install_ship_mount(self.spaceship_name, mount)
+        if not self.ships.stc.response_ok(response): return
         self.reload_ship_details()
 
     #----------
     def remove_mount(self,mount: str) -> None:
-        response = super().remove_ship_mount(self.spaceship_name, mount)
-        if not self.stc.response_ok(response): return
+        response = self.ships.remove_ship_mount(self.spaceship_name, mount)
+        if not self.ships.stc.response_ok(response): return
         self.reload_ship_details()
 
     #----------
     def get_mounts(self) -> None:
-        response = super().get_ship_mounts(self.spaceship_name)
-        if not self.stc.response_ok(response): return
+        response = self.ships.get_ship_mounts(self.spaceship_name)
+        if not self.ships.stc.response_ok(response): return
         self.__set_mounts(response['http_data']['data'])
 
     #----------
