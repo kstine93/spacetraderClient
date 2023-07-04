@@ -47,6 +47,10 @@ navigate_menu = {
         "func": lambda: warp_ship(),
         "desc": "Learn more about surrounding ships, waypoints and systems."
     },
+    "speed": {
+        "func": lambda: set_speed(),
+        "desc": "Learn more about surrounding ships, waypoints and systems."
+    },
     "list": {
         "func": lambda: list_cmds(navigate_menu),
         "desc": "List the commands in this menu."
@@ -117,6 +121,10 @@ def warp_ship():
     3. If no warp drive, inform player they cannot warp - use 'jump' and 'nav' instead.
 
     """
+    pass
+
+#==========
+def set_speed():
     pass
 
 #==========
