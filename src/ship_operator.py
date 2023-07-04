@@ -40,15 +40,18 @@ class ShipOperator(Ships):
     cargo:dict
     fuel:dict
     credits:int
-    mounts:list[dict]
 
     #Flight Status
     status:str
     flightMode:str
     arrivalTime:str
 
-    #Crew
-    crew:dict
+    #Ship Info
+    shipCrew:dict #renamed
+    shipFrame:dict #new
+    shipReactor:dict #new
+    shipModules:list[dict] #new
+    shipMounts:list[dict]
 
     #Cooldown
     cooldownExpiry:str | None = None
@@ -111,14 +114,20 @@ class ShipOperator(Ships):
         response = super().get_ship(self.spaceship_name)
         if not self.stc.response_ok(response): return
         data = response['http_data']['data']
-
+        #setting Flight Status attributes
         self.__set_location(data['nav'])
         self.__set_flight_status(data['nav'])
-        self.__set_cargo(data['cargo'])
-        self.__set_fuel(data['fuel'])
+
+        #setting Ship Info attributes
         self.__set_crew(data['crew'])
         self.__set_mounts(data['mounts'])
         self.__set_modules(data['modules'])
+        self.__set_frame(data['frame'])
+        self.__set_reactor(data['reactor'])
+
+        #setting Inventory attributes
+        self.__set_cargo(data['cargo'])
+        self.__set_fuel(data['fuel'])
 
     #----------
     def reload_nav_details(self) -> None:
@@ -166,15 +175,23 @@ class ShipOperator(Ships):
 
     #----------
     def __set_modules(self,modules_details:dict) -> None:
-        self.modules = modules_details
+        self.shipModules = modules_details
+
+    #----------
+    def __set_reactor(self,reactor_details:dict) -> None:
+        self.shipReactor = reactor_details
+
+    #----------
+    def __set_frame(self,frame_details:dict) -> None:
+        self.shipFrame = frame_details
+
+    #----------
+    def __set_crew(self,crew_details:dict) -> None:
+        self.shipCrew = crew_details
 
     #----------
     def __set_fuel(self,fuel_details:dict) -> None:
         self.fuel = fuel_details
-
-    #----------
-    def __set_crew(self,crew_details:dict) -> None:
-        self.crew = crew_details
 
     #----------
     def __set_credits(self,agent_details:dict) -> None:
@@ -299,7 +316,7 @@ class ShipOperator(Ships):
     #--RESOURCES--
     #-------------
     @check_set_cooldown
-    def extract(self,target_resource:str|None=None) -> None:
+    def extract(self,target_resource:str|None=None) -> None | dict:
         """Extract resources from current waypoint. If a survey data structure
         exists for the current waypoint, use it. If one of the survey data structures
         matches the target_resource, use that specifically"""
@@ -336,11 +353,12 @@ class ShipOperator(Ships):
 
     #----------
     @check_set_cooldown
-    def refine(self,product:RefinableProduct) -> None:
+    def refine(self,product:RefinableProduct) -> None | dict:
         ##UNTESTED! Requires ship with refining module.
         response = super().refine_product(self.spaceship_name,product)
-        if not self.stc.response_ok(response): return
+        if not self.stc.response_ok(response): return None
         self.__set_cargo(response['http_data']['data']['cargo'])
+        return response['http_data']['data']['produced']
 
     #----------
     def refuel(self) -> None:
