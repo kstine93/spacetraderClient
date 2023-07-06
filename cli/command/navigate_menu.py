@@ -2,8 +2,8 @@
 from src.ship_operator import *
 from src.utilities.basic_utilities import time_diff_seconds
 from cli_utilities import *
-from art.str_formatting import format_waypoint_template
-from art.ascii_art import border_med_dash,border_nav_menu
+from art.str_formatting import format_waypoint_template, format_base_hud_template
+from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
 
 #==========
@@ -11,6 +11,19 @@ ship_operator:ShipOperator
 
 #==========
 nav_menu_color = "orange3" #Color used by default in cli_print
+
+#==========
+def print_nav_menu_header() -> str:
+    print_nav_hud()
+    cli_print(border_nav_menu,nav_menu_color)
+
+#==========
+def print_nav_hud() -> str:
+    flightMode = ship_operator.flightMode
+    fuel = ship_operator.fuel
+    system = ship_operator.curr_system
+    hud = format_base_hud_template(flightMode,system,fuel)
+    cli_print(hud)
 
 #==========
 def navigate_loop(ship:ShipOperator) -> bool:
@@ -25,7 +38,7 @@ def navigate_loop(ship:ShipOperator) -> bool:
     cli_print(border_nav_menu,nav_menu_color)
     cli_print("Choose a navigation option",nav_menu_color)
 
-    exit = command_loop(navigate_menu,sep=border_nav_menu,color=nav_menu_color)
+    exit = command_loop(navigate_menu,loop_func=print_nav_menu_header)
     if exit: #If player wants to exit, return True to signal to parent menu
         return True
 

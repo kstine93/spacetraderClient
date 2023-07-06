@@ -3,6 +3,7 @@ from os import system
 from rich import print as rprint
 from art.ascii_art import *
 from simple_term_menu import TerminalMenu
+from typing import Callable
 
 #==========
 def cli_clear() -> None:
@@ -47,23 +48,34 @@ def command_prompt(prompt:str="Use 'list' or 'menu' to get help. '<-back' for la
     cli_print(prompt)
     return typer.prompt("=")
 
+
 #==========
-def command_loop(cmd_list:dict,prompt:str|None=None,sep:str=border_med_equals,color:str="white") -> bool:
+def print_generic_header() -> str:
+    cli_print(border_med_equals,"white")
+
+#==========
+def command_loop(cmd_list:dict,prompt:str|None=None,loop_func:Callable=print_generic_header) -> bool:
     """Generic function to loop indefinitely while processing user commands. The given cmd_list
     provides a standardized mapping of strings with commands (e.g., "{'nav':Navigate_Ship()}").
-    Returns a bool flag only to show whether the command was given to exit the game (True)
+    Returns a bool flag only to show whether the command was given to exit the game (True).
+
+    Note that the 'loop_func' is to allow the user to have a function called BEFORE the results of
+    commands are processed. A basic use of this is to print a 'header' which appears
+    above prompts (e.g., a heads-up display)
     """
     while True:
+        # loop_func()
         command = command_prompt(prompt) if prompt else command_prompt()
         if command == "<-back": #Return to previous command loop
             break
         if command == "exit": #Return flag showing that all parent command loops should end
             return True
         try:
+            cli_clear()
+            loop_func()
             res = command_switch(command,cmd_list)
             if res == True: #If response is True, it means an exit command has been given.
                 return True
-            cli_print(sep,color)
         except SystemExit as e:
             if str(e) != "0":
                 typer.echo(f"Error: {e}")
@@ -80,7 +92,7 @@ def command_switch(cmd:str,cmd_map:dict) -> bool | None:
 
 #==========
 def list_cmds(menu_dict:dict):
-    cli_clear()
+    # cli_clear()
     for (key,val) in menu_dict.items():
         cli_print(f"== '{key}' ==","orange1")
         cli_print(str(val['desc']))

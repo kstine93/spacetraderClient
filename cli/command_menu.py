@@ -2,6 +2,7 @@
 from src.ship_operator import *
 from src.ships import Ships
 from cli_utilities import *
+from art.str_formatting import format_base_hud_template
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
 
@@ -10,6 +11,20 @@ ship_operator:ShipOperator
 
 #==========
 cmd_menu_color = "deep_pink4"
+
+#==========
+def print_cmd_menu_header() -> str:
+    print_cmd_hud()
+    cli_print(border_cmd_menu,cmd_menu_color)
+
+#==========
+def print_cmd_hud() -> str:
+    flightMode = ship_operator.flightMode
+    fuel = ship_operator.fuel
+    system = ship_operator.curr_system
+    hud = format_base_hud_template(flightMode,system,fuel)
+    cli_print(hud)
+
 
 #==========
 def pick_ship():
@@ -32,10 +47,10 @@ def ship_command_loop() -> bool:
     global ship_operator
     ship_operator = ShipOperator(ship)
 
-    cli_print(border_cmd_menu,color=cmd_menu_color)
     cli_print(f"Welcome aboard {ship}, Captain")
+    print_cmd_menu_header()
 
-    exit = command_loop(command_menu,sep=border_cmd_menu,color=cmd_menu_color)
+    exit = command_loop(command_menu,loop_func=print_cmd_menu_header)
     if exit: #If player wants to exit, return True to signal to parent menu
         return True
 
