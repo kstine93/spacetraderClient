@@ -154,7 +154,7 @@ class SpaceTraderConnection:
         Print and log error responses if they exist"""
         if "error" in response['http_data'].keys():
             print(response['http_data']['error']['message'])
-            logging.warning(f"API returned error: {response['http_data']['error']['message']}")
+            # logging.warning(f"API returned error: {response['http_data']['error']['message']}")
             return False
         return True
 

@@ -79,11 +79,10 @@ class ShipOperator():
     def check_set_cooldown(func: Callable) -> Callable:
         """Wrapper to check cooldown before attempting an action, and to set a new cooldown afterwards"""
         def wrapper(self,*args,**kwargs):
-            if self.cooldownExpiry:
-                seconds = time_diff_seconds(self.cooldownExpiry)
-                if seconds > 0:
-                    print(f"Cooldown remaining: {seconds}s")
-                    return
+            seconds = self.get_cooldown_seconds()
+            if seconds > 0:
+                print(f"Cooldown remaining: {seconds}s")
+                return None
 
             result = func(self,*args,**kwargs)
             cooldown_res = self.ships.get_cooldown(self.spaceship_name)
@@ -171,7 +170,7 @@ class ShipOperator():
 
     #----------
     def __set_mounts(self,mounts_details:list[dict]) -> None:
-        self.mounts = mounts_details
+        self.shipMounts = mounts_details
 
     #----------
     def __set_modules(self,modules_details:dict) -> None:
@@ -315,6 +314,15 @@ class ShipOperator():
     #-------------
     #--RESOURCES--
     #-------------
+    def get_cooldown_seconds(self) -> int:
+        """Most ship actions invoke a cooldown period.
+        See how much more time until a ship action can be taken."""
+        if self.cooldownExpiry == None:
+            return 0
+        else:
+            return time_diff_seconds(self.cooldownExpiry)
+
+    #----------
     @check_set_cooldown
     def extract(self,target_resource:str|None=None) -> None | dict:
         """Extract resources from current waypoint. If a survey data structure

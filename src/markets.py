@@ -7,7 +7,7 @@ from .base import SpaceTraderConnection
 from .utilities.custom_types import SpaceTraderResp,PriceRecord,PriceObj,MarginObj
 from .utilities.cache_utilities import dict_cache_wrapper,update_cache_dict
 from .utilities.basic_utilities import (attempt_dict_retrieval,write_dict_to_file,get_files_in_dir
-    ,get_keys_in_file,dict_vals_to_list)
+    ,get_keys_in_file)
 
 #==========
 class Markets:
