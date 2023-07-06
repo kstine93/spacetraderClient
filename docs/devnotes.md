@@ -10,16 +10,34 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### Jul 5, 2023:
+
+---
+
+### Jul 4, 2023
+
+I have been looking around a bit at **pygame** - it's a nifty open-source library for buildin games in Python.
+I'm not yet sure whether I want to use it (and archive my homemade CLI design) or continue as I am...
+
+I think in the end it would be smart of me to see how pygame works - I'll look at some examples of projects.
+
+> Update: I've seen some pretty cool stuff - 3D worlds, a lot of 2D platformers. However, I haven't seen anything yet which would really pertain
+> to the CLI style that I want to keep - except maybe some videos about how to create buttons (could switch from CLI menu to clickable buttons...).
+> I'm enjoying making the CLI myself enough that I'm happy to keep doing that and ignore pygame for now - particularly since it doesn't seem super relevant to making CLI games.
+
+---
+
 ### Jul 3, 2023
 Took a bit of a break to spend my evenings playing Dyson Sphere Program (fantastic game - for anyone reading this - it's very much like coding...).
 
 Back to this project: the current priority is to finish the 'mine_menu', including:
-1. Creating 'refine' function (should be very easy).
-2. Deciding on solution for conundrum in 'extract' function where some game happenings are hidden from the player, which makes some things confusing...
-3. Deciding whether I want to keep cooldown-checking as part of ship_operator class
-   1. It's convenient to be notified that I can't do X action because cooldown is still in effect, but I want to be able to control this message myself...
-      1. What if I just pulled the logic to check cooldown *out of the wrapper function in ship_operator class*? Then I could use that function separately, but if I failed, the wrapper would still catch the cooldown violation and spit out the generic warning!
-         1. Good idea - and i'm not sure I even need a generic function; code is like 2 lines:
+1. ~~Creating 'refine' function (should be very easy).~~
+2. Deciding on solution for conundrum in 'extract' function where some game happenings are hidden from the player, which makes some things confusing. Specifically, the 'extract' function allows the player to choose an item to try to refine, but the extracted item will often be different from that item (but the extracted item is often part of a SURVEY). See more notes next to the function in mine_menu.
+   1. I decided in the end to give the player control over which survey to use (from a list of surveys relevant for the current waypoint + not yet expired)
+3.~~ Deciding whether I want to keep cooldown-checking as part of ship_operator class~~
+   1. ~~It's convenient to be notified that I can't do X action because cooldown is still in effect, but I want to be able to control this message myself...~~
+      1. ~~What if I just pulled the logic to check cooldown out of the wrapper function in ship_operator class? Then I could use that function separately, but if I failed, the wrapper would still catch the cooldown violation and spit out the generic warning!~~
+         1. ~~Good idea - and i'm not sure I even need a generic function; code is like 2 lines:~~
          ```
          seconds = time_diff_seconds(self.cooldownExpiry)
          if seconds > 0:
@@ -27,15 +45,18 @@ Back to this project: the current priority is to finish the 'mine_menu', includi
          ```
 
 After that is complete, here are my priorities:
-1. Design HUD interface. I would like one template which I can more-or-less adjust for navigation, trading, contracts, etc... That way, I get a reliable HUD no matter what menu I'm on, it looks very similar, but I can:
-   1. easily see that I'm on the HUD for 'mining' or 'navigation' or 'trading
-   2. see all of the relevant information to make decisions (e.g., for mining, I see current cargo and maybe current contract details...)
-2. Finish navigation endpoints:
+1. ~~Design HUD interface. I would like one template which I can more-or-less adjust for navigation, trading, contracts, etc... That way, I get a reliable HUD no matter what menu I'm on, it looks very similar, but I can:~~
+   1. ~~easily see that I'm on the HUD for 'mining' or 'navigation' or 'trading~~
+   2. ~~see all of the relevant information to make decisions (e.g., for mining, I see current cargo and maybe current contract details...)~~
+2. Implement HUD
+   1. ~~Basic HUD~~
+   2. Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art)
+3. Finish navigation endpoints:
    1. jump ship
    2. warp ship
    3. set_speed
-3. Tackle the next menu (Trading?)
-4. Update Architecture.md notes ('Agents' class no longer exists; some misspellings)
+4. Tackle the next menu (Trading?)
+5. Update Architecture.md notes ('Agents' class no longer exists; some misspellings)
 
 
 **UNRELATED:**

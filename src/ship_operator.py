@@ -323,17 +323,21 @@ class ShipOperator():
             return time_diff_seconds(self.cooldownExpiry)
 
     #----------
-    @check_set_cooldown
-    def extract(self,target_resource:str|None=None) -> None | dict:
-        """Extract resources from current waypoint. If a survey data structure
-        exists for the current waypoint, use it. If one of the survey data structures
-        matches the target_resource, use that specifically"""
-        self.orbit()
+    def get_surveys_current_waypoint(self) -> list[dict] | None:
+        """Get the list of surveys that are not expired and valid at the ship's current waypoint"""
+        surveys = self.surveys
+        curr_wp = self.curr_waypoint['symbol']
+        #Get surveys valid at current waypoint
+        surveys = list(filter(lambda survey: survey['symbol'] == curr_wp, surveys))
+        #Get non-expired surveys:
+        surveys = list(filter(lambda survey: time_diff_seconds(survey['expiration']) > 0, surveys))
+        return surveys
 
-        if target_resource is not None:
-            survey = self.__get_optimal_survey(target_resource)
-        else:
-            survey = {}
+    #----------
+    @check_set_cooldown
+    def extract(self,survey:dict={}) -> None | dict:
+        """Extract resources from current waypoint using optional survey"""
+        self.orbit()
 
         response = self.ships.extract_resources(self.spaceship_name,survey)
         if not self.ships.stc.response_ok(response): return None
@@ -343,10 +347,19 @@ class ShipOperator():
         return response['http_data']['data']['extraction']['yield']
 
     #----------
+    def extract_by_resource(self,target_resource:str) -> None | dict:
+        """Extract resources from current waypoint. If a survey data structure
+        exists for the current waypoint, use it. If one of the survey data structures
+        matches the target_resource, use that specifically"""
+
+        survey = self.__get_optimal_survey(target_resource)
+        return self.extract(survey)
+
+    #----------
     def __get_optimal_survey(self,target_resource:str) -> dict:
         """Get surveys valid in the current waypoint. Sorts this list based on if survey
         contains target_resource and then based on size. Returns best-choice survey."""
-        if not self.surveys:
+        if not self.get_surveys_current_waypoint():
             return {} #"Blank" survey if we have no surveys
         wp_symbol = self.curr_waypoint['symbol']
         #Get surveys for current waypoint
@@ -441,6 +454,7 @@ class ShipOperator():
     def list_contracts(self) -> dict:
         return self.contracts.list_all_contracts()
 
+    #----------
     def __pick_first_contract(self) -> str:
         """Returns first contract in list_contracts. Ensures contract methods always reference a
         contract without requiring user to provide it every time."""
@@ -453,6 +467,7 @@ class ShipOperator():
         if not contract:
             contract = self.__pick_first_contract()
         self.contracts.accept_contract(contract)
+
     #----------
     def check_contract(self,contract:str|None=pursued_contract) -> dict:
         """Return currently-pursued contract data - so player doesn't need contract ID always"""

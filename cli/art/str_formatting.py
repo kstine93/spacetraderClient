@@ -131,6 +131,25 @@ def format_survey_template(survey:dict) -> str:
     }
     return survey_template.format(**format_dict)
 
+
+#---------------
+surveyMenu_template = """{num}. {signature} | (Size: {size})\n{deposits}"""
+
+#---------------
+def format_surveyMenu_template(number:int,survey:dict) -> str:
+    """Format the survey template with data from the collected survey data."""
+    dep_list = [item['symbol'] for item in survey['deposits']]
+    dep_list = dedup_list(dep_list)
+    dep_list = [f"- {dep}" for dep in dep_list] #Prefixing strings
+
+    format_dict = {
+    "num": number,
+    "signature": survey["signature"],
+    "size": survey["size"],
+    "deposits": "\n".join(dep_list)
+    }
+    return surveyMenu_template.format(**format_dict)
+
 #----------------------
 #-- HEADS-UP DISPLAY --
 #----------------------

@@ -4,7 +4,10 @@ from src.utilities.basic_utilities import dedup_list
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
 from art.ascii_art import border_med_dash,border_mine_menu
-from art.str_formatting import format_survey_template, format_base_hud_template
+from art.str_formatting import (format_survey_template,
+                                format_surveyMenu_template,
+                                format_base_hud_template
+)
 
 #==========
 ship_operator:ShipOperator
@@ -53,7 +56,7 @@ mine_menu = {
         "desc": "Collect information about resources at your current location."
     },
     "extract": {
-        "func": lambda: extract(),
+        "func": lambda: extract_choose_survey(),
         "desc": "Extract resources from the current location\nwith an optional target resource."
     },
     "refine": {
@@ -90,54 +93,115 @@ def list_surveys() -> None:
         cli_print(format_survey_template(survey),mine_menu_color)
 
 #==========
-def extract() -> None:
-    #QUESTION: Should I filter surveys based on whether they are from the current location?
-    #Code will work either way, but we might offer player a surveyed resource not possible at
-    #current location...
-    #NOTE: It is a bit odd to have the player choose a resource to 'target' and then they get a
-    #totally different resource (if another resource in survey). I'm not sure of the best way to
-    #solve this though. Make it more clear that we're using a particular survey?
-    #I'm actually considering maybe removing my 'optimal survey' code and just prompting
-    #the user to select a survey. It's less sophisticated, but it gives some agency back to the
-    #user and lets them make some decisions...
+def extract_choose_survey() -> None:
 
     cooldown_secs = ship_operator.get_cooldown_seconds()
     if cooldown_secs > 0:
         cli_print(f"Cannot extract until cooldown expires in {cooldown_secs} seconds",mine_menu_color)
         return None
 
-    menu_items = get_items_in_surveys()
+    #Filtering surveys for those relevant to current waypoint:
+    survey_list = ship_operator.get_surveys_current_waypoint()
 
-    no_preference_option = "Do not target a resource"
-    cancel_option = "Cancel mining"
-    menu_items.append(no_preference_option)
-    menu_items.append(cancel_option)
+    if survey_list is None:
+        #If no surveys, extract without surveys:
+        cli_print("No survey data found for current waypoint. Extracting without survey...",mine_menu_color)
+        rsc_yield = ship_operator.extract()
+    else:
+        menu_items = [format_surveyMenu_template(num,sur) for num,sur in enumerate(survey_list)]
 
-    #Prompt user to select item to target in mining:
-    survey_menu = create_menu(menu_items,prompt="Try to target a particular surveyed resource?")
+        #Adding other menu options:
+        no_preference_option = "Do not use a survey"
+        cancel_option = "Cancel mining"
 
-    chosen_resource = menu_prompt(survey_menu)
-    if chosen_resource == cancel_option:
-        return None
-    if chosen_resource == no_preference_option:
-        chosen_resource = None
+        menu_items.append(no_preference_option)
+        menu_items.append(cancel_option)
+        #Making survey_list items & order consistent with menu_items
+        survey_list.append(no_preference_option)
+        survey_list.append(cancel_option)
 
-    cli_print(f"Using optimal survey to extract {chosen_resource}...")
 
-    #Extract:
-    rsc_yield = ship_operator.extract(chosen_resource)
+        #Prompt user to select waypoint + process:
+        '''NOTE: When using preview, the menu items are truncated at the bar ("|"). In this case,
+        returning the INDEX rather than the VALUE of the chosen option helps avoid mis-matched items'''
+        survey_menu = create_menu(menu_items
+                            ,prompt="Target resources with a certain survey?"
+                            ,preview_command=lambda x: x #Should print traits to preview box
+                            ,preview_title="Survey overview:"
+                            ,preview_size=0.25)
+
+        chosen_survey_index = menu_prompt(survey_menu,index=True)
+        chosen_survey = survey_list[chosen_survey_index]
+
+        if chosen_survey == cancel_option:
+            return None
+        if chosen_survey == no_preference_option:
+            rsc_yield = ship_operator.extract()
+        rsc_yield = ship_operator.extract(chosen_survey)
+
     if rsc_yield is None:
         return None
     cli_print(f"Extracted {rsc_yield['units']} units of {rsc_yield['symbol']}",mine_menu_color)
 
-#==========
-def get_items_in_surveys() -> list[str]:
-    survey_list = ship_operator.surveys
-    rsc_list = []
-    for survey in survey_list:
-        survey_rscs = [dep['symbol'] for dep in survey['deposits']]
-        rsc_list.extend(survey_rscs)
-    return dedup_list(rsc_list)
+
+"""
+NOTE: I have commented out the function below because it represents an alternate version of
+resource-extraction that I'm not sure I want to fully get rid of yet...
+This version allows the user to just select a certain resource to mine for (from a list of
+resources in the collected 'surveys'). However, this often resulted in the player choosing 1
+resource, but collecting another since the survey that was eventually used had multiple resources
+possible. This was determined to be too counter-intuitive, so now the player just chooses the survey
+they want to apply to extraction (or none).
+"""
+# #==========
+# def extract_target_resource() -> None:
+#     #QUESTION: Should I filter surveys based on whether they are from the current location?
+#     #Code will work either way, but we might offer player a surveyed resource not possible at
+#     #current location...
+#     #NOTE: It is a bit odd to have the player choose a resource to 'target' and then they get a
+#     #totally different resource (if another resource in survey). I'm not sure of the best way to
+#     #solve this though. Make it more clear that we're using a particular survey?
+#     #I'm actually considering maybe removing my 'optimal survey' code and just prompting
+#     #the user to select a survey. It's less sophisticated, but it gives some agency back to the
+#     #user and lets them make some decisions...
+
+#     cooldown_secs = ship_operator.get_cooldown_seconds()
+#     if cooldown_secs > 0:
+#         cli_print(f"Cannot extract until cooldown expires in {cooldown_secs} seconds",mine_menu_color)
+#         return None
+
+#     menu_items = get_items_in_surveys()
+
+#     no_preference_option = "Do not target a resource"
+#     cancel_option = "Cancel mining"
+#     menu_items.append(no_preference_option)
+#     menu_items.append(cancel_option)
+
+#     #Prompt user to select item to target in mining:
+#     survey_menu = create_menu(menu_items,prompt="Try to target a particular surveyed resource?")
+
+#     chosen_resource = menu_prompt(survey_menu)
+#     if chosen_resource == cancel_option:
+#         return None
+#     if chosen_resource == no_preference_option:
+#         chosen_resource = None
+
+#     cli_print(f"Using optimal existing survey to extract {chosen_resource}...")
+
+#     #Extract:
+#     rsc_yield = ship_operator.extract(chosen_resource)
+#     if rsc_yield is None:
+#         return None
+#     cli_print(f"Extracted {rsc_yield['units']} units of {rsc_yield['symbol']}",mine_menu_color)
+
+# #==========
+# def get_items_in_surveys() -> list[str]:
+#     survey_list = ship_operator.surveys
+#     rsc_list = []
+#     for survey in survey_list:
+#         survey_rscs = [dep['symbol'] for dep in survey['deposits']]
+#         rsc_list.extend(survey_rscs)
+#     return dedup_list(rsc_list)
 
 #==========
 def refine():
@@ -158,10 +222,3 @@ def refine():
 
     refine_yield = ship_operator.refine(chosen_resource)
     cli_print(f"Refined {refine_yield['units']} units of {refine_yield['tradeSymbol']}",mine_menu_color)
-
-#==========
-def print_mine_hud():
-    """Placeholder. I would like a function to print a 'HUD' to the top of the terminal showing relevant infos.
-    This might be better served by a format string function though...
-    Also, need to solve the problem for how I keep this info updated as commands occur."""
-    pass
