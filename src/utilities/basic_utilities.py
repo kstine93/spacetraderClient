@@ -5,6 +5,7 @@ Basic functional programming utilities portable across applications
 # ==========
 import json
 import getpass
+from math import floor, ceil
 from datetime import datetime,timedelta
 from typing import Iterator
 from os import listdir, remove, fsdecode, getenv, environ, path
@@ -19,6 +20,8 @@ def get_user_password(prompt: str, password_name: str) -> str:
         pw = getpass.getpass(prompt)
         environ[password_name] = pw
     return pw
+
+
 
 
 # =======================
@@ -48,6 +51,19 @@ def empty_directory(dir_path: str):
 # ==========
 def dedup_list(list:list) -> list:
     return [*set(list)]
+
+
+def halve_into_two_ints(dividend:int,first_high:bool=False) -> tuple[int]:
+    '''Divides integers by '2' and returns a tuple with the results. If the dividend is even, the
+    returned numbers are identical. If the dividend is odd, the function still ensures two integers
+    are returned by assigning either the first or second item the 'higher' value. For example,
+    dividend = 7 would yield (4,3) or (3,4) depending on the value of 'first_high'.
+    Dividend = 10 would always yield (5,5).
+    '''
+    if first_high:
+        return (ceil(dividend/2), floor(dividend/2))
+    else:
+        return (floor(dividend/2), ceil(dividend/2))
 
 
 # ==========
