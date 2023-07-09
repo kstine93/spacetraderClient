@@ -71,7 +71,7 @@ class SpaceTraderConfigSetup:
     def get_all_callsigns(self) -> list[str]:
         config = self.__get_config()
         agents = config['agents']['all_agents']
-        return [item['callsign'] for item in agents]
+        return [item['callsign'] for item in agents] if agents else []
 
     #----------
     def set_new_current_agent(self,callsign:str) -> None:
@@ -86,7 +86,10 @@ class SpaceTraderConfigSetup:
             "callsign":callsign
             ,"key_encrypted":encrypted_key
             }
-        config['agents']['all_agents'].append(data)
+        if config['agents']['all_agents']:
+            config['agents']['all_agents'].append(data)
+        else:
+            config['agents']['all_agents'] = [data]
         self.write_to_file(config)
         self.set_new_current_agent(callsign)
 
