@@ -3,10 +3,14 @@ from src.ship_operator import *
 from src.utilities.basic_utilities import dedup_list
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
+from common_cmds import list_contracts
 from art.ascii_art import border_med_dash,border_mine_menu
 from art.str_formatting import (format_survey_template,
                                 format_surveyMenu_template,
-                                format_base_hud_template
+                                format_base_hud_template,
+                                format_ship_info_template,
+                                format_cargo_info_template,
+                                format_ship_mount_info_template
 )
 
 #==========
@@ -18,7 +22,7 @@ mine_menu_color = "medium_purple2" #Color used by default in cli_print
 #==========
 def print_mine_menu_header() -> str:
     print_mine_hud()
-    cli_print(border_nav_menu,mine_menu_color)
+    cli_print(border_mine_menu,mine_menu_color)
 
 #==========
 def print_mine_hud() -> str:
@@ -38,7 +42,7 @@ def mine_loop(ship:ShipOperator) -> bool:
     global ship_operator
     ship_operator = ship
 
-    cli_print(border_mine_menu,mine_menu_color)
+    print_mine_menu_header()
     cli_print("Choose to mine, survey or refine resources, Captain",mine_menu_color)
 
     exit = command_loop(mine_menu,loop_func=print_mine_menu_header)
@@ -62,6 +66,10 @@ mine_menu = {
     "refine": {
         "func": lambda: refine(),
         "desc": "Create a new resource from raw resources in cargo.\nRequires refining module."
+    },
+    "info": {
+        "func": lambda: get_info_mine(),
+        "desc": "Show information about the ship related to mining!"
     },
     "list": {
         "func": lambda: list_cmds(mine_menu),
@@ -222,3 +230,15 @@ def refine():
 
     refine_yield = ship_operator.refine(chosen_resource)
     cli_print(f"Refined {refine_yield['units']} units of {refine_yield['tradeSymbol']}",mine_menu_color)
+
+#==========
+def get_info_mine():
+    """Print out HUD relevant to mining on the CLI"""
+    string = format_ship_info_template(ship_operator.spaceship_name,
+                              ship_operator.curr_waypoint,
+                              ship_operator.credits
+                              )
+    cli_print(string,mine_menu_color)
+    cli_print(format_cargo_info_template(ship_operator.cargo))
+    list_contracts(mine_menu_color)
+    cli_print(format_ship_mount_info_template(ship_operator.shipMounts))
