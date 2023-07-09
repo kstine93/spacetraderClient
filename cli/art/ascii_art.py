@@ -19,11 +19,9 @@ border_cmd_menu   =  """ <><><><><><><><><><><><> COMMAND SHIP <><><><><><><><><
 border_nav_menu  =   """  ----------------------- NAVIGATE SHIP -----------------------"""
 border_mine_menu  =  """  ~~~~~~~~~~~~~~~~~~~~~~ MINE RESOURCES ~~~~~~~~~~~~~~~~~~~~~~"""
 
-border_contract_section = """============ CONTRACTS ============"""
 border_module_section =   """============= MODULES ============="""
 border_mounts_section =   """============== MOUNTS =============="""
 border_crew_section =     """=============== CREW ==============="""
-border_cargo_section =    """========== CARGO [59/60] ==========""" #TODO: make this adaptive
 
 border_menu_item =  """============================="""
 

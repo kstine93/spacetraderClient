@@ -2,7 +2,9 @@
 
 from src.utilities.basic_utilities import get_time_diff_UTC, dedup_list, halve_into_two_ints
 
-#---------------
+#------------------------
+#-- GENERIC FORMATTING --
+#------------------------
 def remove_list_formatting(user_list:str):
     user_list = str(user_list)[1:-1]
     return user_list.replace("'","")
@@ -14,9 +16,6 @@ def pad_string(string:str,target_len:int,pad_char:str=" ",prefix:bool=True,affix
     note that 'prefix' and 'affix' denote whether the padding should come before or after the string
     (or both if both are True).
     '''
-    pre_str = ""
-    aff_str = ""
-
     buffer_len = target_len - len(string)
 
     if prefix and affix:
@@ -30,26 +29,63 @@ def pad_string(string:str,target_len:int,pad_char:str=" ",prefix:bool=True,affix
 
     return pre_str + string + aff_str
 
+#---------------
+def dict_to_formatted_string(obj:dict|list,prefix:str=" | ",indent:int=0,keys_to_ignore:list[str]=[]):
+    """
+    Function to custom format a dictionary as a string that can then be printed as an indented list
+    """
+    string = ""
+    indent_add = 3
+
+    if isinstance(obj,dict):
+        for (key,val) in obj.items():
+            if key in keys_to_ignore:
+                continue
+            string += f"{prefix}{indent * ' '}{key}:"
+            #where value is not another nested object, just add "key: value" with no extra indents.
+            if not isinstance(val,dict) and not isinstance(val,list):
+                string += f" {val}"
+                string += "\n"
+            else:
+                string += "\n"
+                string += dict_to_formatted_string(val,prefix,indent + indent_add,keys_to_ignore)
+    elif isinstance(obj,list):
+        for elem in obj:
+            string += dict_to_formatted_string(elem,prefix,indent,keys_to_ignore)
+    else:
+        string += f"{prefix}{indent * ' '}{obj}"
+        string += "\n"
+    return string
 
 #---------------
 #-- CONTRACTS --
 #---------------
+contract_header = """============ CONTRACTS ============"""
+
 contract_template = """\
-| ID: {contract_id}
-|
-| Destination: {dest_symbol}
-| Pay up front: {first_pay}
-| Pay on complete: {deliver_pay}
-|
-| Type: {type}
-| Item: {item}
-| Quantity: {quantity_division}
-|
-| Accepted: {accepted}
-| Time to accept: {accept_deadline}
-| Time to fulfill: {fulfill_deadline}
-|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
+ | > ID: {contract_id} <
+ |
+ | Destination: {dest_symbol}
+ | Pay up front: {first_pay}
+ | Pay on complete: {deliver_pay}
+ |
+ | Type: {type}
+ | Item: {item}
+ | Quantity: {quantity_division}
+ |
+ | Accepted: {accepted}
+ | Time to accept: {accept_deadline}
+ | Time to fulfill: {fulfill_deadline}
+ |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
 """
+
+#---------------
+def format_contract_list(contract_list:list[dict]) -> str:
+    string = contract_header
+    for contract in contract_list.values():
+        string += "\n"
+        string += format_contract_template(contract)
+    return string
 
 #---------------
 def format_contract_template(contract:dict) -> str:
@@ -150,9 +186,9 @@ def format_surveyMenu_template(number:int,survey:dict) -> str:
     }
     return surveyMenu_template.format(**format_dict)
 
-#----------------------
-#-- HEADS-UP DISPLAY --
-#----------------------
+#----------------------------
+#-- HEADS-UP DISPLAY (HUD) --
+#----------------------------
 '''
 // concept //
 ___________________________________________________________________
@@ -213,18 +249,18 @@ ___________________________________________________________________
  | power: 1
  | description: A basic mining laser that can be used to extract
  | valuable minerals from asteroids and other space objects.
- | 'deposits':
- | 'QUARTZ_SAND',
- | 'SILICON_CRYSTALS',
- | 'PRECIOUS_STONES',
- | 'ICE_WATER',
- | 'AMMONIA_ICE',
- | 'IRON_ORE',
- | 'COPPER_ORE',
- | 'SILVER_ORE',
- | 'ALUMINUM_ORE',
- | 'GOLD_ORE',
- | 'PLATINUM_ORE'
+ | deposits:
+ |    'QUARTZ_SAND',
+ |    'SILICON_CRYSTALS',
+ |    'PRECIOUS_STONES',
+ |    'ICE_WATER',
+ |    'AMMONIA_ICE',
+ |    'IRON_ORE',
+ |    'COPPER_ORE',
+ |    'SILVER_ORE',
+ |    'ALUMINUM_ORE',
+ |    'GOLD_ORE',
+ |    'PLATINUM_ORE'
  ============= MODULES =============
  | ** MODULE_MINERAL_PROCESSOR_I **
  | slots: 1
@@ -241,9 +277,6 @@ ___________________________________________________________________
  | description: Crushes and processes extracted minerals and ores
  | into their component parts, filters out impurities, and
  | containerizes them into raw storage units.
- ============= REACTOR =============
- |
- |
 
 '''
 
@@ -259,8 +292,7 @@ base_hud_template = """\
       \|\_______________________________________________/|/
       /  [   System:   ] o  __      __  +  [   Fuel:   ]  \\
      /   [{system}] +  \_\____/_/  o  [{fuel}]   \\
-  __/___________________________||__________________________\__
-  -------------------------------------------------------------\
+  __/___________________________||__________________________\__\
 """
 #---------------
 #How many characters should be inputted for the placeholder values so that the ASCII
@@ -270,6 +302,7 @@ base_hud_str_lens = {
     'system':13,
     'fuel':11
 }
+
 
 #---------------
 def format_base_hud_template(flightMode:str,system:dict,fuel:dict) -> str:
@@ -287,3 +320,63 @@ def format_base_hud_template(flightMode:str,system:dict,fuel:dict) -> str:
         "fuel": pad_string(fuel_str,base_hud_str_lens["fuel"])
     }
     return base_hud_template.format(**format_dict)
+
+#------------------------
+#-- SHIP INFO: GENERAL --
+#------------------------
+ship_info_template = '''\
+============ SHIP INFO ============
+ | Ship: {ship_name}
+ | Waypoint: {wp_symbol}
+ | Credits: {credits}\
+'''
+
+#---------------
+def format_ship_info_template(ship_name:str,waypoint:dict,credits:int) -> str:
+    format_dict = {
+        "ship_name": ship_name,
+        "wp_symbol": waypoint['symbol'],
+        "credits": f'{credits:,}', #formatted with commas
+    }
+    return ship_info_template.format(**format_dict)
+
+#----------------------
+#-- SHIP INFO: CARGO --
+#----------------------
+cargo_info_template = '''\
+===={cargo_header}====
+{formatted_cargo_list}\
+'''
+
+cargo_info_str_lens = {
+    'cargo_header':27,
+}
+
+#---------------
+def format_cargo_info_template(cargo:dict) -> str:
+    header_str = f" CARGO [{cargo['units']}/{cargo['capacity']}] "
+
+    cargo_dict = {item['symbol']:item['units'] for item in cargo['inventory']}
+    cargo_list = [f" | {key} = {val}" for (key,val) in cargo_dict.items()]
+    format_dict = {
+        "cargo_header": pad_string(header_str,cargo_info_str_lens['cargo_header'],pad_char="="),
+        "formatted_cargo_list": "\n".join(cargo_list)
+    }
+    return cargo_info_template.format(**format_dict)
+
+#-----------------------
+#-- SHIP INFO: MOUNTS --
+#-----------------------
+ship_mount_info_header = """============= MOUNTS ============="""
+
+#---------------
+def format_ship_mount_info_template(mounts:list[dict]) -> str:
+    string = f"{ship_mount_info_header}\n"
+    for mnt in mounts:
+        title = mnt.pop('symbol')
+        string += f" | > {title} <\n"
+        string += dict_to_formatted_string(mnt,keys_to_ignore=['name'])
+        string +=  " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+    return string
+
+
