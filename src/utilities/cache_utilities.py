@@ -19,7 +19,7 @@ def dict_cache_wrapper(file_path,key):
             else:
                 data = user_function(*args,**kwargs)
                 update_cache_dict(data,file_path)
-                return data[key]
+                return data
         return wrapper
     return decorator
 
