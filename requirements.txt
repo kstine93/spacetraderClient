@@ -3,6 +3,7 @@ cryptography==41.0.1
 requests==2.28.1
 DateTime==5.1
 PyYAML==6.0
+pwinput==1.0.3
 
 #For Command-line-interface:
 typer==0.7.0

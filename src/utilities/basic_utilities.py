@@ -4,7 +4,7 @@ Basic functional programming utilities portable across applications
 
 # ==========
 import json
-import getpass
+import pwinput
 from math import floor, ceil
 from datetime import datetime,timedelta
 from typing import Iterator
@@ -17,7 +17,7 @@ def get_user_password(prompt: str, password_name: str) -> str:
     doesn't exist yet."""
     pw = getenv(password_name)
     if pw is None:
-        pw = getpass.getpass(prompt)
+        pw = pwinput.pwinput(prompt=prompt,mask="*")
         environ[password_name] = pw
     return pw
 

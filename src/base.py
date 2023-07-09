@@ -134,7 +134,7 @@ class SpaceTraderConnection:
     def load_api_key(self) -> None:
         """Purpose: Decrypt API key and store it locally so that we can use it
         for future API calls"""
-        password = get_user_password(prompt="Please enter password to decrypt your API key:"
+        password = get_user_password(prompt="Please enter password to decrypt your API key: "
                                      ,password_name="SPACETRADER_PASSWORD")
         bytes_key = self.encrypted_key.encode("utf-8")
         decrypted_key_bytes = password_decrypt(bytes_key, password)
@@ -252,7 +252,7 @@ class RegisterNewAgent:
         and encrypted API key in a local file. This local file is the basis for which player
         is playing the game.
         """
-        prompt = "Please enter password to encrypt your API key:"
+        prompt = "Please enter password to encrypt your API key: "
         password = get_user_password(prompt=prompt,password_name="SPACETRADER_PASSWORD")
 
         bytes_token = dict_to_bytes(new_agent_response['data']['token'])
