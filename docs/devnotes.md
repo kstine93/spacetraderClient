@@ -10,7 +10,13 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
-### Jul 5, 2023:
+### Jul 9, 2023:
+**Minor issue with 'contract' information:**
+Contracts expire, and after they expire they're arguably not worth keeping around as persistent data.
+Does it make sense to still store contract information persistently? Or rather, should I just query it from the API so that it doesn't imply that a very expired contract is still somehow relevant.
+The alternative would be to clean up my own contract data (i.e., detect that contracts are expired and remove them from persistent storage).
+
+TODO: Solve this.
 
 ---
 
@@ -50,7 +56,15 @@ After that is complete, here are my priorities:
    2. ~~see all of the relevant information to make decisions (e.g., for mining, I see current cargo and maybe current contract details...)~~
 2. Implement HUD
    1. ~~Basic HUD~~
-   2. Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art)
+   2. Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art):
+      1. General info HUD
+      2. Contracts HUD
+      3. Ship info HUD
+      4. Ship reactor HUD
+      5. Crew HUD
+      6. Cargo HUD
+      7. Ship mounts HUD
+      8. Ship modules HUD
 3. Finish navigation endpoints:
    1. jump ship
    2. warp ship

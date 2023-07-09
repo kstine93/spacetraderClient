@@ -6,8 +6,15 @@ Can also be done manually (less fun) in the gameinfo.yaml file
 from simple_term_menu import TerminalMenu
 from src.base import SpaceTraderConfigSetup, RegisterNewAgent
 from src.utilities.custom_types import SpaceFactions
+from cli.art.ascii_art import border_long_carat,bootup_image
+from rich import print as rprint
 import subprocess
 
+#----------
+def print_greeting() -> None:
+    rprint(f"[cornflower_blue]{border_long_carat}[/cornflower_blue]")
+    rprint(f"[yellow]{bootup_image}[/yellow]")
+    rprint(f"[cornflower_blue]{border_long_carat}[/cornflower_blue]")
 
 #----------
 def set_player() -> None:
@@ -21,6 +28,7 @@ def set_player() -> None:
 
 #----------
 def prompt_player_select(callsigns:list[str],title:str) -> str:
+    print_greeting()
     terminal_menu = TerminalMenu(callsigns,
                                  title=title,
                                  menu_cursor_style=("fg_green","bold"),
