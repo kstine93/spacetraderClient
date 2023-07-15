@@ -1,6 +1,7 @@
 """Code to format data from the spacetrader client in ASCII (pretty printing)"""
 
 from src.utilities.basic_utilities import get_time_diff_UTC, dedup_list, halve_into_two_ints
+from textwrap import fill
 
 #------------------------
 #-- GENERIC FORMATTING --
@@ -16,6 +17,9 @@ def pad_string(string:str,target_len:int,pad_char:str=" ",prefix:bool=True,affix
     note that 'prefix' and 'affix' denote whether the padding should come before or after the string
     (or both if both are True).
     '''
+    pre_str = ""
+    aff_str = ""
+
     buffer_len = target_len - len(string)
 
     if prefix and affix:
@@ -30,30 +34,44 @@ def pad_string(string:str,target_len:int,pad_char:str=" ",prefix:bool=True,affix
     return pre_str + string + aff_str
 
 #---------------
-def dict_to_formatted_string(obj:dict|list,prefix:str=" | ",indent:int=0,keys_to_ignore:list[str]=[]):
+def dict_to_formatted_string(obj:dict|list,
+                             prefix:str=" | ",
+                             indent:int=0,
+                             keys_to_ignore:list[str]=[],
+                             len_limit=70):
     """
     Function to custom format a dictionary as a string that can then be printed as an indented list
     """
     string = ""
     indent_add = 3
+    indent_str = ' '
 
     if isinstance(obj,dict):
         for (key,val) in obj.items():
             if key in keys_to_ignore:
                 continue
-            string += f"{prefix}{indent * ' '}{key}:"
+            curr_prefix = f"{prefix}{indent * indent_str}"
             #where value is not another nested object, just add "key: value" with no extra indents.
             if not isinstance(val,dict) and not isinstance(val,list):
-                string += f" {val}"
+                #If string will be longer than given len_limit, then split onto multiple lines
+                string += fill(text=f"{key}: {val}",
+                               width=len_limit,
+                               initial_indent=curr_prefix,
+                               subsequent_indent=curr_prefix + (indent_str * indent_add))
                 string += "\n"
             else:
-                string += "\n"
+                string += f"{curr_prefix}{key}:\n"
                 string += dict_to_formatted_string(val,prefix,indent + indent_add,keys_to_ignore)
     elif isinstance(obj,list):
         for elem in obj:
             string += dict_to_formatted_string(elem,prefix,indent,keys_to_ignore)
     else:
-        string += f"{prefix}{indent * ' '}{obj}"
+        curr_prefix = f"{prefix}{indent * indent_str}"
+        #If string will be longer than given len_limit, then split onto multiple lines
+        string += fill(text=obj,
+             width=len_limit,
+             initial_indent=curr_prefix,
+             subsequent_indent=curr_prefix + (indent_str * indent_add))
         string += "\n"
     return string
 
@@ -191,17 +209,17 @@ def format_surveyMenu_template(number:int,survey:dict) -> str:
 #----------------------------
 '''
 // concept //
-___________________________________________________________________
- \      |/                 [STEALTH MODE]                \|      /
-  \     |`                 .                      *       |     /
-   \    |         *                    o                  |    /
-    \   | .                   *                         . |   /
-     \  |               `                     '           |  /
-      \ |       .        o        '                    *  | /
-       \|\_______________________________________________/|/
-       /  [   System:   ] o  __      __  +  [   Fuel:   ]  \
-      /   [ X1-KS52 (8) ] +  \_\____/_/  o  [ 1200/1200 ]   \
-  ___/___________________________||__________________________\___
+================================================================
+ | [   Mode:   ]   `    '     . *          `  [   System:   ] |
+ | [  CRUISE   ]   '   ____   .    '    *     [ X1-YX2 (10) ] |
+ | .        *     . ~-~)___)>       .     `         *       . |
+ |     '   .          __\_ \_______________   '  .            |
+ |   o       *    '    \_  o  o  o  o ~~ \_\_      .    '     |
+ |              .    `   \__._  .____[]_.___/         *    `  |
+ |         `        .    ~-~)___)>        '    .              |
+ | [   Fuel:   ]         .         *          `         o     |
+ | [ 1200/1200 ]   ,              .        `             .    |
+================================================================
  | Ship: AMBROSIUS-RITZ-1
  | Waypoint: X1-KS52-23717D
  | Credits: 15.000.000
@@ -282,23 +300,23 @@ ___________________________________________________________________
 
 #---------------
 base_hud_template = """\
-  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  |    |/               {flightMode}              \|    |
-  |    |`                 .                      *       |    |
-  |    |         *                    o                  |    |
-   \   | .                   *                         . |   /
-    \  |               `                     '           |  /
-     \ |       .        o        '                    *  | /
-      \|\_______________________________________________/|/
-      /  [   System:   ] o  __      __  +  [   Fuel:   ]  \\
-     /   [{system}] +  \_\____/_/  o  [{fuel}]   \\
-  __/___________________________||__________________________\__\
+================================================================
+ | [   Mode:   ]   `    '     . *          `  [   System:   ] |
+ | [{flightMode}]   '   ____   .    '    *     [{system}] |
+ | .        *     . ~-~)___)>       .     `         *       . |
+ |     '   .          __\_ \_______________   '  .            |
+ |   o       *    '    \_  o  o  o  o ~~ \_\_      .    '     |
+ |              .    `   \__._  .____[]_.___/         *    `  |
+ |         `        .    ~-~)___)>        '    .              |
+ | [   Fuel:   ]         .         *          `         o     |
+ | [{fuel}]   ,              .        `             .    |
+================================================================\
 """
 #---------------
 #How many characters should be inputted for the placeholder values so that the ASCII
 #art is correctly rendered (spacing matters with ASCII)
 base_hud_str_lens = {
-    'flightMode':18,
+    'flightMode':11,
     'system':13,
     'fuel':11
 }
@@ -307,7 +325,6 @@ base_hud_str_lens = {
 #---------------
 def format_base_hud_template(flightMode:str,system:dict,fuel:dict) -> str:
     """Format the HUD template with data from the ship's information"""
-    flight_mode_str = "[" + flightMode + " MODE]"
 
     num_waypoints = len(system['waypoints'])
     sys_str = system['symbol'] + " (" + str(num_waypoints) + ")"
@@ -315,7 +332,7 @@ def format_base_hud_template(flightMode:str,system:dict,fuel:dict) -> str:
     fuel_str = str(fuel['current']) + "/" + str(fuel['capacity'])
 
     format_dict = {
-        "flightMode": pad_string(flight_mode_str,base_hud_str_lens['flightMode']),
+        "flightMode": pad_string(flightMode,base_hud_str_lens['flightMode']),
         "system": pad_string(sys_str,base_hud_str_lens['system']),
         "fuel": pad_string(fuel_str,base_hud_str_lens["fuel"])
     }
@@ -372,10 +389,11 @@ ship_mount_info_header = """============= MOUNTS ============="""
 #---------------
 def format_ship_mount_info_template(mounts:list[dict]) -> str:
     string = f"{ship_mount_info_header}\n"
+    len_limit = 64 #maximum line width for information printed out
     for mnt in mounts:
         title = mnt.pop('symbol')
         string += f" | > {title} <\n"
-        string += dict_to_formatted_string(mnt,keys_to_ignore=['name'])
+        string += dict_to_formatted_string(mnt,keys_to_ignore=['name'],len_limit=len_limit)
         string +=  " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
     return string
 
