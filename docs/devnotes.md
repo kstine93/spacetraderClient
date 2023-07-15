@@ -8,6 +8,11 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+### Jul 13, 2023
+TODO:
+1. Commit changes to cli module
+2. Remove contract caching as discussed in Jul 9th notes and commit
+
 ---
 
 ### Jul 9, 2023:
@@ -16,7 +21,13 @@ Contracts expire, and after they expire they're arguably not worth keeping aroun
 Does it make sense to still store contract information persistently? Or rather, should I just query it from the API so that it doesn't imply that a very expired contract is still somehow relevant.
 The alternative would be to clean up my own contract data (i.e., detect that contracts are expired and remove them from persistent storage).
 
-TODO: Solve this.
+**Decision:**
+Contract data is too volatile to cache - remove caching for contracts.
+Considerations:
+1. Contract data is player-specific; it has no use except when a given player is playing
+2. Contracts expire - so cached data becomes invalid after a relatively short amount of time. This is in contrast to other cached data such as `systems` or `factions` which do not become invalid except in the case of game updates or a game reset - which are unpredictable.
+3. Contract data is relatively small (currently players only have 1 contract at a time), so the cost of re-downloading this data is very small
+4. Data for a given contract is cached in the 'ship_operator' during runtime, preventing some re-querying.
 
 ---
 
