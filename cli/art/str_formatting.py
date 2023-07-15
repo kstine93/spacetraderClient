@@ -100,7 +100,7 @@ contract_template = """\
 #---------------
 def format_contract_list(contract_list:list[dict]) -> str:
     string = contract_header
-    for contract in contract_list.values():
+    for contract in contract_list[0].values():
         string += "\n"
         string += format_contract_template(contract)
     return string
