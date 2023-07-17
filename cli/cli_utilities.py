@@ -64,7 +64,6 @@ def command_loop(cmd_list:dict,prompt:str|None=None,loop_func:Callable=print_gen
     above prompts (e.g., a heads-up display)
     """
     while True:
-        # loop_func()
         command = command_prompt(prompt) if prompt else command_prompt()
         if command == "<-back": #Return to previous command loop
             break

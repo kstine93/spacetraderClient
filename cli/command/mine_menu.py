@@ -1,17 +1,13 @@
 
-from copy import deepcopy
 from src.ship_operator import *
 from src.utilities.basic_utilities import dedup_list
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
-from common_cmds import list_contracts
-from art.ascii_art import border_med_dash,border_mine_menu
+from common_cmds import print_contracts_info,print_ship_info,print_ship_mount_info,print_cargo_info
+from art.ascii_art import border_mine_menu
 from art.str_formatting import (format_survey_template,
                                 format_surveyMenu_template,
-                                format_base_hud_template,
-                                format_ship_info_template,
-                                format_cargo_info_template,
-                                format_ship_mount_info_template
+                                format_base_hud_template
 )
 
 #==========
@@ -235,11 +231,7 @@ def refine():
 #==========
 def get_info_mine():
     """Print out HUD relevant to mining on the CLI"""
-    string = format_ship_info_template(ship_operator.spaceship_name,
-                              deepcopy(ship_operator.curr_waypoint),
-                              ship_operator.credits
-                              )
-    cli_print(string,mine_menu_color)
-    cli_print(format_cargo_info_template(deepcopy(ship_operator.cargo)))
-    list_contracts(mine_menu_color)
-    cli_print(format_ship_mount_info_template(deepcopy(ship_operator.shipMounts)))
+    print_ship_info(ship_operator)
+    print_cargo_info(ship_operator,mine_menu_color)
+    print_contracts_info()
+    print_ship_mount_info(ship_operator)

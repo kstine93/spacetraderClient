@@ -21,7 +21,7 @@ from src.contracts import Contracts
 from command_menu import ship_command_loop
 from cli_utilities import *
 from command_menu import ship_command_loop
-from common_cmds import list_contracts
+from common_cmds import print_contracts_info
 
 #==========
 app = typer.Typer()
@@ -60,7 +60,7 @@ def shutdown() -> None:
 #==========
 main_menu = {
     "contracts": {
-        "func": lambda: list_contracts(),
+        "func": lambda: print_contracts_info(),
         "desc": "List all active contracts."
     },
     "command": {
