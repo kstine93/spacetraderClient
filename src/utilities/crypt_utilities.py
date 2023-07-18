@@ -37,7 +37,7 @@ def password_encrypt(message: bytes, password: str, iterations: int = iterations
         )
     )
 
-def password_decrypt(token: bytes, password: str) -> bytes:
+def password_decrypt(token: bytes, password: str) -> bytes | None:
     try:
         decoded = b64d(token)
         salt, iter, token = decoded[:16], decoded[16:20], b64e(decoded[20:])
@@ -45,11 +45,4 @@ def password_decrypt(token: bytes, password: str) -> bytes:
         key = _derive_key(password.encode(), salt, iterations)
         return Fernet(key).decrypt(token)
     except (InvalidSignature, InvalidToken):
-        print("Key decryption failed. Please check the password you entered and try again.")
-
-
-
-# message = 'John Doe'
-# password = 'mypass'
-# token = password_encrypt(message.encode(), password)
-# print(password_decrypt(token, password).decode())
+        raise SystemExit("Key decryption failed. Exiting game. Please check the password you entered and try again.")
