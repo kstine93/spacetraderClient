@@ -2,7 +2,7 @@
 from src.ship_operator import *
 from src.ships import Ships
 from cli_utilities import *
-from art.str_formatting import format_base_hud_template
+from cli.common_cmds import print_hud
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
 
@@ -14,17 +14,8 @@ cmd_menu_color = "deep_pink4"
 
 #==========
 def print_cmd_menu_header() -> str:
-    print_cmd_hud()
+    print_hud(ship_operator)
     cli_print(border_cmd_menu,cmd_menu_color)
-
-#==========
-def print_cmd_hud() -> str:
-    flightMode = ship_operator.flightMode
-    fuel = ship_operator.fuel
-    system = ship_operator.curr_system
-    hud = format_base_hud_template(flightMode,system,fuel)
-    cli_print(hud)
-
 
 #==========
 def pick_ship():

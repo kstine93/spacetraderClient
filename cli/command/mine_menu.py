@@ -1,14 +1,18 @@
 
 from src.ship_operator import *
-from src.utilities.basic_utilities import dedup_list
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
-from common_cmds import print_contracts_info,print_ship_info,print_ship_mount_info,print_cargo_info
-from art.ascii_art import border_mine_menu
-from art.str_formatting import (format_survey_template,
-                                format_surveyMenu_template,
-                                format_base_hud_template
+from common_cmds import (print_hud,
+                         print_contracts_info,
+                         print_general_info,
+                         print_ship_info,
+                         print_ship_mount_info,
+                         print_ship_module_info,
+                         print_cargo_info,
+                         print_crew_info
 )
+from art.ascii_art import border_mine_menu
+from art.str_formatting import format_survey_template, format_surveyMenu_template
 
 #==========
 ship_operator:ShipOperator
@@ -18,16 +22,8 @@ mine_menu_color = "medium_purple2" #Color used by default in cli_print
 
 #==========
 def print_mine_menu_header() -> str:
-    print_mine_hud()
+    print_hud(ship_operator)
     cli_print(border_mine_menu,mine_menu_color)
-
-#==========
-def print_mine_hud() -> str:
-    flightMode = ship_operator.flightMode
-    fuel = ship_operator.fuel
-    system = ship_operator.curr_system
-    hud = format_base_hud_template(flightMode,system,fuel)
-    cli_print(hud)
 
 #==========
 def mine_loop(ship:ShipOperator) -> bool:
@@ -231,7 +227,11 @@ def refine():
 #==========
 def get_info_mine():
     """Print out HUD relevant to mining on the CLI"""
+    print_general_info(ship_operator)
     print_ship_info(ship_operator)
     print_cargo_info(ship_operator,mine_menu_color)
+    print_crew_info(ship_operator)
     print_contracts_info()
     print_ship_mount_info(ship_operator)
+    print_ship_module_info(ship_operator)
+    print_contracts_info()
