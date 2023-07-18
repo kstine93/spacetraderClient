@@ -5,7 +5,6 @@ from src.ships import Ships
 from src.ship_operator import ShipOperator
 from art.str_formatting import (format_base_hud_template,
                                 format_contract_list,
-                                format_general_info_template,
                                 format_frame_info_template,
                                 format_reactor_info_template,
                                 format_engine_info_template,

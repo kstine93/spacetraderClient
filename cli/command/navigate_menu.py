@@ -2,9 +2,16 @@
 from src.ship_operator import *
 from src.utilities.basic_utilities import time_diff_seconds
 from cli_utilities import *
-from art.str_formatting import format_waypoint_template, format_base_hud_template
+from art.str_formatting import format_waypoint_template
 from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
+from common_cmds import (print_hud,
+                         print_contracts_info,
+                         print_ship_info,
+                         print_ship_mount_info,
+                         print_ship_module_info,
+                         print_crew_info
+)
 
 #==========
 ship_operator:ShipOperator
@@ -14,16 +21,8 @@ nav_menu_color = "orange3" #Color used by default in cli_print
 
 #==========
 def print_nav_menu_header() -> str:
-    print_nav_hud()
+    print_hud(ship_operator)
     cli_print(border_nav_menu,nav_menu_color)
-
-#==========
-def print_nav_hud() -> str:
-    flightMode = ship_operator.flightMode
-    fuel = ship_operator.fuel
-    system = ship_operator.curr_system
-    hud = format_base_hud_template(flightMode,system,fuel)
-    cli_print(hud)
 
 #==========
 def navigate_loop(ship:ShipOperator) -> bool:
@@ -63,6 +62,10 @@ navigate_menu = {
     "speed": {
         "func": lambda: set_speed(),
         "desc": "Learn more about surrounding ships, waypoints and systems."
+    },
+    "info": {
+        "func": lambda: get_info_navigate(),
+        "desc": "Show information about the ship related to mining!"
     },
     "list": {
         "func": lambda: list_cmds(navigate_menu),
@@ -146,3 +149,12 @@ def print_location() -> None:
     cli_print(border_med_dash,nav_menu_color)
     cli_print(f"Current Waypoint: {wp['symbol']} ({wp['type']})",nav_menu_color)
     cli_print(border_med_dash,nav_menu_color)
+
+#==========
+def get_info_navigate():
+    """Print out HUD relevant to mining on the CLI"""
+    print_crew_info(ship_operator)
+    print_ship_info(ship_operator)
+    print_ship_mount_info(ship_operator)
+    print_ship_module_info(ship_operator)
+    print_contracts_info()
