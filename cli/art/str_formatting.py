@@ -1,83 +1,11 @@
 """Code to format data from the spacetrader client in ASCII (pretty printing)"""
 
-from src.utilities.basic_utilities import get_time_diff_UTC, dedup_list, halve_into_two_ints
-from textwrap import fill
+from src.utilities.basic_utilities import get_time_diff_UTC, dedup_list
+from .str_utilities import *
 
-#------------------------
-#-- GENERIC FORMATTING --
-#------------------------
-def remove_list_formatting(user_list:str):
-    user_list = str(user_list)[1:-1]
-    return user_list.replace("'","")
-
-#---------------
-def pad_string(string:str,target_len:int,pad_char:str=" ",prefix:bool=True,affix:bool=True) -> str:
-    '''utility function to pad strings to make them a desired length. Used primarily for keeping
-    ASCII art correct while still allowing string formatting.
-    note that 'prefix' and 'affix' denote whether the padding should come before or after the string
-    (or both if both are True).
-    '''
-    pre_str = ""
-    aff_str = ""
-
-    buffer_len = target_len - len(string)
-
-    if prefix and affix:
-        pre_len, aff_len = halve_into_two_ints(buffer_len)
-        pre_str = pre_len * pad_char
-        aff_str = aff_len * pad_char
-    elif prefix:
-        pre_str = buffer_len * pad_char
-    elif affix:
-        aff_str = buffer_len * pad_char
-
-    return pre_str + string + aff_str
-
-#---------------
-def dict_to_formatted_string(obj:dict|list,
-                             prefix:str=" | ",
-                             indent:int=0,
-                             keys_to_ignore:list[str]=[],
-                             len_limit=70):
-    """
-    Function to custom format a dictionary as a string that can then be printed as an indented list
-    """
-    string = ""
-    indent_add = 3
-    indent_str = ' '
-
-    if isinstance(obj,dict):
-        for (key,val) in obj.items():
-            if key in keys_to_ignore:
-                continue
-            curr_prefix = f"{prefix}{indent * indent_str}"
-            #where value is not another nested object, just add "key: value" with no extra indents.
-            if not isinstance(val,dict) and not isinstance(val,list):
-                #If string will be longer than given len_limit, then split onto multiple lines
-                string += fill(text=f"{key}: {val}",
-                               width=len_limit,
-                               initial_indent=curr_prefix,
-                               subsequent_indent=curr_prefix + (indent_str * indent_add))
-                string += "\n"
-            else:
-                string += f"{curr_prefix}{key}:\n"
-                string += dict_to_formatted_string(val,prefix,indent + indent_add,keys_to_ignore)
-    elif isinstance(obj,list):
-        for elem in obj:
-            string += dict_to_formatted_string(elem,prefix,indent,keys_to_ignore)
-    else:
-        curr_prefix = f"{prefix}{indent * indent_str}"
-        #If string will be longer than given len_limit, then split onto multiple lines
-        string += fill(text=obj,
-             width=len_limit,
-             initial_indent=curr_prefix,
-             subsequent_indent=curr_prefix + (indent_str * indent_add))
-        string += "\n"
-    return string
-
-#---------------
-#-- CONTRACTS --
-#---------------
+# ---------------
+# -- CONTRACTS --
+# ---------------
 contract_header = """============ CONTRACTS ============"""
 
 contract_template = """\
@@ -97,19 +25,24 @@ contract_template = """\
  |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\
 """
 
-#---------------
-def format_contract_list(contract_list:list[dict]) -> str:
+
+# ---------------
+def format_contract_list(contract_list: list[dict]) -> str:
     string = contract_header
+    if len(contract_list) <= 0:
+        string += "\n | (No contracts yet negotiated)"
+        return string
     for contract in contract_list[0].values():
         string += "\n"
         string += format_contract_template(contract)
     return string
 
-#---------------
-def format_contract_template(contract:dict) -> str:
+
+# ---------------
+def format_contract_template(contract: dict) -> str:
     """Format the contract template with data returned from the 'Contracts' class"""
-    terms = contract['terms']
-    deliver = terms['deliver'][0]
+    terms = contract["terms"]
+    deliver = terms["deliver"][0]
 
     first_pay = terms["payment"]["onAccepted"]
     deliver_pay = terms["payment"]["onFulfilled"]
@@ -123,43 +56,46 @@ def format_contract_template(contract:dict) -> str:
     format_dict = {
         "contract_id": contract["id"],
         "dest_symbol": deliver["destinationSymbol"],
-        "first_pay": f'{first_pay:,}', #formatted with commas
-        "deliver_pay": f'{deliver_pay:,}', #formatted with commas
+        "first_pay": f"{first_pay:,}",  # formatted with commas
+        "deliver_pay": f"{deliver_pay:,}",  # formatted with commas
         "type": contract["type"],
         "item": deliver["tradeSymbol"],
         "quantity_division": quantity_division,
         "accepted": accepted,
         "accept_deadline": str(accept_timedelta),
-        "fulfill_deadline": str(fulfill_timedelta)
+        "fulfill_deadline": str(fulfill_timedelta),
     }
 
     return contract_template.format(**format_dict)
 
-#---------------
-#-- WAYPOINTS --
-#---------------
 
-#NOTE: the bar | in this template signals to simple_term_menu module that what comes after the bar
-#should be sent to the 'preview' window instead.
+# ---------------
+# -- WAYPOINTS --
+# ---------------
+
+# NOTE: the bar | in this template signals to simple_term_menu module that what comes after the bar
+# should be sent to the 'preview' window instead.
 waypoint_template = """{num}. {symbol} ({type}) | {trait_list}"""
 
-#---------------
-def format_waypoint_template(number:int,waypoint:dict) -> str:
+
+# ---------------
+def format_waypoint_template(number: int, waypoint: dict) -> str:
     """Format the waypoint template with data returned from the current system
     Designed to be part of a list of waypoints with 'number' giving index in list"""
     format_dict = {
-    "num": number,
-    "symbol": waypoint["symbol"],
-    "type": waypoint["type"],
-    "trait_list": "(Traits unknown - waypoint not yet scanned)"
+        "num": number,
+        "symbol": waypoint["symbol"],
+        "type": waypoint["type"],
+        "trait_list": "(Traits unknown - waypoint not yet scanned)",
     }
-    if 'traits' in waypoint.keys():
-        format_dict['trait_list'] = remove_list_formatting(waypoint['traits'])
+    if "traits" in waypoint.keys():
+        format_dict["trait_list"] = remove_list_formatting(waypoint["traits"])
     return waypoint_template.format(**format_dict)
 
-#-------------
-#-- SURVEYS --
-#-------------
+
+# -------------
+# -- SURVEYS --
+# -------------
 survey_template = """\
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~ SURVEY ~~~~~~~~~~~~~~
@@ -171,43 +107,46 @@ Deposits:
 {deposits}
 """
 
-#---------------
-def format_survey_template(survey:dict) -> str:
+
+# ---------------
+def format_survey_template(survey: dict) -> str:
     """Format the survey template with data from the collected survey data."""
-    dep_list = [item['symbol'] for item in survey['deposits']]
+    dep_list = [item["symbol"] for item in survey["deposits"]]
     dep_list = dedup_list(dep_list)
-    dep_list = [f"> {dep}" for dep in dep_list] #Prefixing strings
+    dep_list = [f"> {dep}" for dep in dep_list]  # Prefixing strings
 
     format_dict = {
-    "symbol": survey["symbol"],
-    "size": survey["size"],
-    "deposits": "\n".join(dep_list)
+        "symbol": survey["symbol"],
+        "size": survey["size"],
+        "deposits": "\n".join(dep_list),
     }
     return survey_template.format(**format_dict)
 
 
-#---------------
+# ---------------
 surveyMenu_template = """{num}. {signature} | (Size: {size})\n{deposits}"""
 
-#---------------
-def format_surveyMenu_template(number:int,survey:dict) -> str:
+
+# ---------------
+def format_surveyMenu_template(number: int, survey: dict) -> str:
     """Format the survey template with data from the collected survey data."""
-    dep_list = [item['symbol'] for item in survey['deposits']]
+    dep_list = [item["symbol"] for item in survey["deposits"]]
     dep_list = dedup_list(dep_list)
-    dep_list = [f"- {dep}" for dep in dep_list] #Prefixing strings
+    dep_list = [f"- {dep}" for dep in dep_list]  # Prefixing strings
 
     format_dict = {
-    "num": number,
-    "signature": survey["signature"],
-    "size": survey["size"],
-    "deposits": "\n".join(dep_list)
+        "num": number,
+        "signature": survey["signature"],
+        "size": survey["size"],
+        "deposits": "\n".join(dep_list),
     }
     return surveyMenu_template.format(**format_dict)
 
-#----------------------------
-#-- HEADS-UP DISPLAY (HUD) --
-#----------------------------
-'''
+
+# ----------------------------
+# -- HEADS-UP DISPLAY (HUD) --
+# ----------------------------
+"""
 // concept //
 ================================================================
  | [   Mode:   ]   `    '     . *          `  [   System:   ] |
@@ -296,105 +235,211 @@ def format_surveyMenu_template(number:int,survey:dict) -> str:
  | into their component parts, filters out impurities, and
  | containerizes them into raw storage units.
 
-'''
+"""
 
-#---------------
+# ---------------
 base_hud_template = """\
 ================================================================
- | [   Mode:   ]   `    '     . *          `  [   System:   ] |
- | [{flightMode}]   '   ____   .    '    *     [{system}] |
+ | [   Mode:   ]   `    '     . *          ` [    System    ] |
+ | [{flightMode}]   '   ____   .    '    *    [{system}] |
  | .        *     . ~-~)___)>       .     `         *       . |
  |     '   .          __\_ \_______________   '  .            |
  |   o       *    '    \_  o  o  o  o ~~ \_\_      .    '     |
  |              .    `   \__._  .____[]_.___/         *    `  |
  |         `        .    ~-~)___)>        '    .              |
- | [   Fuel:   ]         .         *          `         o     |
- | [{fuel}]   ,              .        `             .    |
-================================================================\
+ | [   Fuel:   ]         .         *         [   Credits:   ] |
+ | [{fuel}]   ,              .        ` [{credits}] |
+================================================================
+~~{currentLocation}~~\
 """
-#---------------
-#How many characters should be inputted for the placeholder values so that the ASCII
-#art is correctly rendered (spacing matters with ASCII)
+# ---------------
+# How many characters should be inputted for the placeholder values so that the ASCII
+# art is correctly rendered (spacing matters with ASCII)
 base_hud_str_lens = {
-    'flightMode':11,
-    'system':13,
-    'fuel':11
+    "flightMode": 11,
+    "system": 14,
+    "fuel": 11,
+    "credits":14,
+    "currentLocation":60
 }
 
 
-#---------------
-def format_base_hud_template(flightMode:str,system:dict,fuel:dict) -> str:
+# ---------------
+def format_base_hud_template(flightMode: str, system: dict, waypoint: dict, fuel: dict, credits: int) -> str:
     """Format the HUD template with data from the ship's information"""
 
-    num_waypoints = len(system['waypoints'])
-    sys_str = system['symbol'] + " (" + str(num_waypoints) + ")"
+    num_waypoints = len(system["waypoints"])
+    sys_str = system["symbol"] + " (" + str(num_waypoints) + ")"
 
-    fuel_str = str(fuel['current']) + "/" + str(fuel['capacity'])
+    fuel_str = str(fuel["current"]) + "/" + str(fuel["capacity"])
+
+    credits_str = f"{credits:,}"
+
+    waypoint_str = f" Location: {waypoint['symbol']} ({waypoint['type']}) "
 
     format_dict = {
-        "flightMode": pad_string(flightMode,base_hud_str_lens['flightMode']),
-        "system": pad_string(sys_str,base_hud_str_lens['system']),
-        "fuel": pad_string(fuel_str,base_hud_str_lens["fuel"])
+        "flightMode": pad_string(flightMode, base_hud_str_lens["flightMode"]),
+        "system": pad_string(sys_str, base_hud_str_lens["system"]),
+        "fuel": pad_string(fuel_str, base_hud_str_lens["fuel"]),
+        "credits": pad_string(credits_str, base_hud_str_lens["credits"]),
+        "currentLocation":pad_string(waypoint_str,base_hud_str_lens["currentLocation"],pad_char="~")
     }
     return base_hud_template.format(**format_dict)
 
-#------------------------
-#-- SHIP INFO: GENERAL --
-#------------------------
-ship_info_template = '''\
-============ SHIP INFO ============
- | Ship: {ship_name}
- | Waypoint: {wp_symbol}
- | Credits: {credits}\
-'''
+# ----------------------
+# -- SHIP INFO: FRAME --
+# ----------------------
+ship_frame_header = """=========== FRAME INFO ==========="""
 
-#---------------
-def format_ship_info_template(ship_name:str,waypoint:dict,credits:int) -> str:
-    format_dict = {
-        "ship_name": ship_name,
-        "wp_symbol": waypoint['symbol'],
-        "credits": f'{credits:,}', #formatted with commas
-    }
-    return ship_info_template.format(**format_dict)
 
-#----------------------
-#-- SHIP INFO: CARGO --
-#----------------------
-cargo_info_template = '''\
-===={cargo_header}====
-{formatted_cargo_list}\
-'''
-
-cargo_info_str_lens = {
-    'cargo_header':27,
-}
-
-#---------------
-def format_cargo_info_template(cargo:dict) -> str:
-    header_str = f" CARGO [{cargo['units']}/{cargo['capacity']}] "
-
-    cargo_dict = {item['symbol']:item['units'] for item in cargo['inventory']}
-    cargo_list = [f" | {key} = {val}" for (key,val) in cargo_dict.items()]
-    format_dict = {
-        "cargo_header": pad_string(header_str,cargo_info_str_lens['cargo_header'],pad_char="="),
-        "formatted_cargo_list": "\n".join(cargo_list)
-    }
-    return cargo_info_template.format(**format_dict)
-
-#-----------------------
-#-- SHIP INFO: MOUNTS --
-#-----------------------
-ship_mount_info_header = """============= MOUNTS ============="""
-
-#---------------
-def format_ship_mount_info_template(mounts:list[dict]) -> str:
-    string = f"{ship_mount_info_header}\n"
-    len_limit = 64 #maximum line width for information printed out
-    for mnt in mounts:
-        title = mnt.pop('symbol')
-        string += f" | > {title} <\n"
-        string += dict_to_formatted_string(mnt,keys_to_ignore=['name'],len_limit=len_limit)
-        string +=  " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+# ---------------
+def format_frame_info_template(frame_info: dict) -> str:
+    string = f"{ship_frame_header}\n"
+    len_limit = 64  # maximum line width for information printed out
+    string += dict_to_formatted_string(frame_info, len_limit=len_limit)
     return string
 
 
+# ------------------------
+# -- SHIP INFO: REACTOR --
+# ------------------------
+ship_reactor_header = """========== REACTOR INFO =========="""
+
+
+# ---------------
+def format_reactor_info_template(reactor_info: dict) -> str:
+    string = f"{ship_reactor_header}\n"
+    len_limit = 64  # maximum line width for information printed out
+    string += dict_to_formatted_string(reactor_info, len_limit=len_limit)
+    return string
+
+
+# -----------------------
+# -- SHIP INFO: ENGINE --
+# -----------------------
+ship_engine_header = """=========== ENGINE INFO ==========="""
+
+
+# ---------------
+def format_engine_info_template(engine_info: dict) -> str:
+    string = f"{ship_engine_header}\n"
+    len_limit = 64  # maximum line width for information printed out
+    string += dict_to_formatted_string(engine_info, len_limit=len_limit)
+    return string
+
+
+# ----------------------
+# -- SHIP INFO: CARGO --
+# ----------------------
+cargo_info_template = """\
+===={cargo_header}====
+{formatted_cargo_list}\
+"""
+
+cargo_info_str_lens = {
+    "cargo_header": 27,
+}
+
+
+# ---------------
+def format_cargo_info_template(cargo: dict) -> str:
+    header_str = f" CARGO [{cargo['units']}/{cargo['capacity']}] "
+    cargo_dict = {item["symbol"]: item["units"] for item in cargo["inventory"]}
+    if len(cargo_dict.items()) < 1:
+        cargo_list_str = " | (No cargo in ship)"
+    else:
+        cargo_list = [f" | {key} = {val}" for (key, val) in cargo_dict.items()]
+        cargo_list_str = "\n".join(cargo_list)
+
+    format_dict = {
+        "cargo_header": pad_string(
+            header_str, cargo_info_str_lens["cargo_header"], pad_char="="
+        ),
+        "formatted_cargo_list": cargo_list_str,
+    }
+    return cargo_info_template.format(**format_dict)
+
+
+# -----------------------
+# -- SHIP INFO: MOUNTS --
+# -----------------------
+ship_mount_info_header = """>>>>>>> MOUNTS {} >>>>>>>"""
+
+# ---------------
+mount_info_str_lens = {
+    "mount_header": 34,
+}
+
+# ---------------
+def format_ship_mount_info_template(mounts: list[dict],mountingPoints:int) -> str:
+    #Format header with # of occupied mount slots over total capacity
+    header = ship_mount_info_header.format(f"[{len(mounts)}/{mountingPoints}]")
+    string = pad_string(header,mount_info_str_lens['mount_header'],pad_char=">")
+
+    len_limit = 64  # maximum line width for information printed out
+    for mnt in mounts:
+        title = mnt.pop("symbol")
+        string += f"\n | > {title} <\n"
+        string += dict_to_formatted_string(
+            mnt, keys_to_ignore=["name"], len_limit=len_limit
+        )
+        string += " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    return string
+
+
+# ------------------------
+# -- SHIP INFO: MODULES --
+# ------------------------
+ship_modules_info_header = """******* MODULES {} *******"""
+
+modules_info_str_lens = {
+    'module_header':34
+}
+
+# ---------------
+def format_ship_modules_info_template(modules: list[dict],moduleSlots:int) -> str:
+    #Format header with # of occupied mount slots over total capacity
+    header = ship_modules_info_header.format(f"[{len(modules)}/{moduleSlots}]")
+    string = pad_string(header,modules_info_str_lens['module_header'],pad_char="*")
+    len_limit = 64  # maximum line width for information printed out
+    # for mod in modules:
+    for mod in modules:
+        title = mod.pop("symbol")
+        string += f"\n | ** {title} **\n"
+        string += dict_to_formatted_string(
+            mod, keys_to_ignore=["name"], len_limit=len_limit
+        )
+        string += " |~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+    return string
+
+
+# ---------------------
+# -- SHIP INFO: CREW --
+# ---------------------
+crew_info_template = """\
+===={crew_header}====
+ | Required: {required}
+ | Rotation: {rotation}
+ | Morale: {morale}
+ | Wages: {wages}\
+"""
+
+crew_info_str_lens = {
+    "crew_header": 27,
+}
+
+
+# ---------------
+def format_crew_info_template(crew: dict) -> str:
+    header_str = f" CREW [{crew['current']}/{crew['capacity']}] "
+
+    format_dict = {
+        "crew_header": pad_string(
+            header_str, crew_info_str_lens["crew_header"], pad_char="="
+        ),
+        "required": crew["required"],
+        "rotation": crew["rotation"],
+        "morale": crew["morale"],
+        "wages": crew["wages"],
+    }
+    return crew_info_template.format(**format_dict)
