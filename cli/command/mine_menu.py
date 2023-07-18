@@ -136,66 +136,6 @@ def extract_choose_survey() -> None:
         return None
     cli_print(f"Extracted {rsc_yield['units']} units of {rsc_yield['symbol']}",mine_menu_color)
 
-
-"""
-NOTE: I have commented out the function below because it represents an alternate version of
-resource-extraction that I'm not sure I want to fully get rid of yet...
-This version allows the user to just select a certain resource to mine for (from a list of
-resources in the collected 'surveys'). However, this often resulted in the player choosing 1
-resource, but collecting another since the survey that was eventually used had multiple resources
-possible. This was determined to be too counter-intuitive, so now the player just chooses the survey
-they want to apply to extraction (or none).
-"""
-# #==========
-# def extract_target_resource() -> None:
-#     #QUESTION: Should I filter surveys based on whether they are from the current location?
-#     #Code will work either way, but we might offer player a surveyed resource not possible at
-#     #current location...
-#     #NOTE: It is a bit odd to have the player choose a resource to 'target' and then they get a
-#     #totally different resource (if another resource in survey). I'm not sure of the best way to
-#     #solve this though. Make it more clear that we're using a particular survey?
-#     #I'm actually considering maybe removing my 'optimal survey' code and just prompting
-#     #the user to select a survey. It's less sophisticated, but it gives some agency back to the
-#     #user and lets them make some decisions...
-
-#     cooldown_secs = ship_operator.get_cooldown_seconds()
-#     if cooldown_secs > 0:
-#         cli_print(f"Cannot extract until cooldown expires in {cooldown_secs} seconds",mine_menu_color)
-#         return None
-
-#     menu_items = get_items_in_surveys()
-
-#     no_preference_option = "Do not target a resource"
-#     cancel_option = "Cancel mining"
-#     menu_items.append(no_preference_option)
-#     menu_items.append(cancel_option)
-
-#     #Prompt user to select item to target in mining:
-#     survey_menu = create_menu(menu_items,prompt="Try to target a particular surveyed resource?")
-
-#     chosen_resource = menu_prompt(survey_menu)
-#     if chosen_resource == cancel_option:
-#         return None
-#     if chosen_resource == no_preference_option:
-#         chosen_resource = None
-
-#     cli_print(f"Using optimal existing survey to extract {chosen_resource}...")
-
-#     #Extract:
-#     rsc_yield = ship_operator.extract(chosen_resource)
-#     if rsc_yield is None:
-#         return None
-#     cli_print(f"Extracted {rsc_yield['units']} units of {rsc_yield['symbol']}",mine_menu_color)
-
-# #==========
-# def get_items_in_surveys() -> list[str]:
-#     survey_list = ship_operator.surveys
-#     rsc_list = []
-#     for survey in survey_list:
-#         survey_rscs = [dep['symbol'] for dep in survey['deposits']]
-#         rsc_list.extend(survey_rscs)
-#     return dedup_list(rsc_list)
-
 #==========
 def refine():
     cooldown_secs = ship_operator.get_cooldown_seconds()
