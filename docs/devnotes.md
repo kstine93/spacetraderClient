@@ -8,10 +8,26 @@ Notes on tricky problems, decisions, etc.
 
 ## Notes
 
+---
+
+### Jul 17, 2023
+**To finish:**
+- ~~I need to test the newly-named 'general info' template (this was previously poorly named 'ship info template' even though it's not that). I also want to add mountingSlots and moduleSlots to headers in 'MOUNTS' and 'MODULES' HUDs respectively.~~
+- COMMIT CHANGES!!
+
+---
+
+### Jul 15, 2023
+Next steps:
+1. Finish HUD for different menus.
+See notes from Jul 3rd for additional priorities.
+
+---
+
 ### Jul 13, 2023
 TODO:
-1. Commit changes to cli module
-2. Remove contract caching as discussed in Jul 9th notes and commit
+1. ~~Commit changes to cli module~~
+2. ~~Remove contract caching as discussed in Jul 9th notes and commit~~
 
 ---
 
@@ -49,8 +65,8 @@ Took a bit of a break to spend my evenings playing Dyson Sphere Program (fantast
 
 Back to this project: the current priority is to finish the 'mine_menu', including:
 1. ~~Creating 'refine' function (should be very easy).~~
-2. Deciding on solution for conundrum in 'extract' function where some game happenings are hidden from the player, which makes some things confusing. Specifically, the 'extract' function allows the player to choose an item to try to refine, but the extracted item will often be different from that item (but the extracted item is often part of a SURVEY). See more notes next to the function in mine_menu.
-   1. I decided in the end to give the player control over which survey to use (from a list of surveys relevant for the current waypoint + not yet expired)
+2. ~~Deciding on solution for conundrum in 'extract' function where some game happenings are hidden from the player, which makes some things confusing. Specifically, the 'extract' function allows the player to choose an item to try to refine, but the extracted item will often be different from that item (but the extracted item is often part of a SURVEY). See more notes next to the function in mine_menu.~~
+   1. ~~I decided in the end to give the player control over which survey to use (from a list of surveys relevant for the current waypoint + not yet expired)~~
 3.~~ Deciding whether I want to keep cooldown-checking as part of ship_operator class~~
    1. ~~It's convenient to be notified that I can't do X action because cooldown is still in effect, but I want to be able to control this message myself...~~
       1. ~~What if I just pulled the logic to check cooldown out of the wrapper function in ship_operator class? Then I could use that function separately, but if I failed, the wrapper would still catch the cooldown violation and spit out the generic warning!~~
@@ -69,13 +85,13 @@ After that is complete, here are my priorities:
    1. ~~Basic HUD~~
    2. Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art):
       1. General info HUD
-      2. Contracts HUD
-      3. Ship info HUD
+      2. ~~Contracts HUD~~
+      3. ~~Ship info HUD~~
       4. Ship reactor HUD
-      5. Crew HUD
-      6. Cargo HUD
-      7. Ship mounts HUD
-      8. Ship modules HUD
+      5. ~~Crew HUD~~
+      6. ~~Cargo HUD~~
+      7. ~~Ship mounts HUD~~
+      8. ~~Ship modules HUD~~
 3. Finish navigation endpoints:
    1. jump ship
    2. warp ship

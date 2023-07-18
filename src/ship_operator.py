@@ -51,6 +51,7 @@ class ShipOperator():
     shipCrew:dict
     shipFrame:dict
     shipReactor:dict
+    shipEngine:dict
     shipModules:list[dict]
     shipMounts:list[dict]
 
@@ -123,6 +124,7 @@ class ShipOperator():
         self.__set_modules(data['modules'])
         self.__set_frame(data['frame'])
         self.__set_reactor(data['reactor'])
+        self.__set_engine(data['engine'])
 
         #setting Inventory attributes
         self.__set_cargo(data['cargo'])
@@ -183,6 +185,10 @@ class ShipOperator():
     #----------
     def __set_frame(self,frame_details:dict) -> None:
         self.shipFrame = frame_details
+
+    #----------
+    def __set_engine(self,engine_details:dict) -> None:
+        self.shipEngine = engine_details
 
     #----------
     def __set_crew(self,crew_details:dict) -> None:
