@@ -6,7 +6,7 @@ from typing import Callable
 from art.str_formatting import format_waypoint_template
 from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
-from common_cmds import print_hud, info_loop
+from info_menu import print_hud, info_loop
 
 #==========
 ship_operator:ShipOperator

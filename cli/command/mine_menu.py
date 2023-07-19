@@ -5,7 +5,7 @@ from src.ship_operator import *
 from typing import Callable
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
-from common_cmds import print_hud, info_loop
+from info_menu import print_hud, info_loop
 from art.ascii_art import border_mine_menu
 from art.str_formatting import format_survey_template, format_surveyMenu_template
 

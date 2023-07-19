@@ -21,7 +21,7 @@ from src.contracts import Contracts
 from command_menu import ship_command_loop
 from cli_utilities import *
 from command_menu import ship_command_loop
-from common_cmds import print_contracts_info
+from contracts_menu import print_contracts_info
 
 #==========
 app = typer.Typer()

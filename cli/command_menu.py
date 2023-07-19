@@ -3,7 +3,7 @@ from src.ship_operator import *
 from typing import Callable
 from src.ships import Ships
 from cli_utilities import *
-from cli.common_cmds import print_hud
+from cli.info_menu import print_hud
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
 
