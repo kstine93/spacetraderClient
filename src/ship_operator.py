@@ -461,26 +461,30 @@ class ShipOperator():
         return self.contracts.list_all_contracts()
 
     #----------
-    def __pick_first_contract(self) -> str:
+    def __pick_first_contract(self) -> str | None:
         """Returns first contract in list_contracts. Ensures contract methods always reference a
         contract without requiring user to provide it every time."""
         cons = self.list_contracts()
-        return list(cons.keys())[0]
+        return list(cons.keys())[0] if len(cons) > 0 else None
 
     #----------
     def accept_contract(self,contract:str|None=pursued_contract) -> None:
         """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
         if not contract:
             contract = self.__pick_first_contract()
-        self.contracts.accept_contract(contract)
+        if contract:
+            self.contracts.accept_contract(contract)
 
     #----------
-    def check_contract(self,contract:str|None=pursued_contract) -> dict:
+    def check_contract(self,contract:str|None=pursued_contract) -> dict | None:
         """Return currently-pursued contract data - so player doesn't need contract ID always"""
         if not contract:
             contract = self.__pick_first_contract()
-        self.pursued_contract = contract
-        return self.contracts.get_contract(contract)
+        if contract:
+            self.pursued_contract = contract
+            return self.contracts.get_contract(contract)
+        else:
+            return None
 
     #----------
     def deliver_contract(self,item:str,quantity:int|None=None,contract:str|None=pursued_contract) -> None:
@@ -488,16 +492,18 @@ class ShipOperator():
         self.dock()
         if not contract:
             contract = self.__pick_first_contract()
-        if not quantity:
-            quantity = self.get_cargo_quantity(item)
-        self.contracts.deliver_contract(contract,self.spaceship_name,item,quantity)
+        if contract:
+            if not quantity:
+                quantity = self.get_cargo_quantity(item)
+            self.contracts.deliver_contract(contract,self.spaceship_name,item,quantity)
 
     #----------
     def fulfill_contract(self,contract:str|None=pursued_contract) -> None:
         if not contract:
             contract = self.__pick_first_contract()
-        self.contracts.fulfill_contract(contract)
-        self.reload_agent_details() #Reloading credits
+        if contract:
+            self.contracts.fulfill_contract(contract)
+            self.reload_agent_details() #Reloading credits
 
     #----------
     def negotiate_contract(self) -> None:
