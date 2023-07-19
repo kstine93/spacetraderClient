@@ -82,7 +82,7 @@ def nav_ship() -> None:
     # print_location()
 
     #Load data
-    data = ship_operator.curr_system
+    data = ship_operator.currSystem
     wp_list = [wp for wp in data['waypoints']]
 
     menu_items = [format_waypoint_template(num,wp) for num,wp in enumerate(wp_list)]
@@ -144,7 +144,7 @@ def set_speed():
 
 #==========
 def print_location() -> None:
-    wp = ship_operator.curr_waypoint
+    wp = ship_operator.currWaypoint
     cli_print(border_med_dash,nav_menu_color)
     cli_print(f"Current Waypoint: {wp['symbol']} ({wp['type']})",nav_menu_color)
     cli_print(border_med_dash,nav_menu_color)

@@ -43,12 +43,12 @@ def info_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
 #== HUD ==
 #=========
 def print_hud(ship_operator:ShipOperator) -> str:
-    shipName = deepcopy(ship_operator.spaceship_name)
+    shipName = deepcopy(ship_operator.spaceshipName)
     flightMode = deepcopy(ship_operator.flightMode)
     fuel = deepcopy(ship_operator.fuel)
-    system = deepcopy(ship_operator.curr_system)
+    system = deepcopy(ship_operator.currSystem)
     credits = deepcopy(ship_operator.credits)
-    waypoint = deepcopy(ship_operator.curr_waypoint)
+    waypoint = deepcopy(ship_operator.currWaypoint)
     hud = format_base_hud_template(shipName,flightMode,system,waypoint,fuel,credits)
     cli_print(hud)
 
