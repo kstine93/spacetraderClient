@@ -19,7 +19,7 @@ from art.str_formatting import (format_base_hud_template,
 ship_operator:ShipOperator
 
 #==========
-info_menu_color = "medium_purple2" #Color used by default in cli_print
+info_menu_color = "white" #Color used by default in cli_print
 
 #==========
 def info_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
@@ -57,55 +57,33 @@ def print_ship_info():
     string = format_frame_info_template(deepcopy(ship_operator.shipFrame))
     string += format_reactor_info_template(deepcopy(ship_operator.shipReactor))
     string += format_engine_info_template(deepcopy(ship_operator.shipEngine))
-    cli_print(string,color="white")
+    cli_print(string,color=info_menu_color)
 
 #=========
 def print_cargo_info():
     """Print information about ship cargo using stateful information in provided ShipOperator"""
     string = format_cargo_info_template(deepcopy(ship_operator.cargo))
-    cli_print(string,"white")
+    cli_print(string,color=info_menu_color)
 
 #=========
 def print_crew_info():
     """Print information about ship cargo using stateful information in provided ShipOperator"""
     string = format_crew_info_template(deepcopy(ship_operator.shipCrew))
-    cli_print(string,color="white")
+    cli_print(string,color=info_menu_color)
 
 #=========
 def print_ship_mount_info():
     """Print information about ship mounts using stateful information in provided ShipOperator"""
     mountPoints = ship_operator.shipFrame['mountingPoints']
     string = format_ship_mount_info_template(deepcopy(ship_operator.shipMounts),mountPoints)
-    cli_print(string,color="white")
+    cli_print(string,color=info_menu_color)
 
 #=========
 def print_ship_module_info():
     """Print information about ship mounts using stateful information in provided ShipOperator"""
     moduleSlots = ship_operator.shipFrame['moduleSlots']
     string = format_ship_modules_info_template(deepcopy(ship_operator.shipModules),moduleSlots)
-    cli_print(string,color="white")
-
-#==========
-contracts_color = "chartreuse2"
-
-#==========
-def print_contracts_info() -> None:
-    """Print information about player contracts"""
-    contracts = Contracts()
-    data = contracts.list_all_contracts()
-    if len(data) > 0:
-        cli_print(format_contract_list(data),color=contracts_color)
-    else:
-        cli_print("(No contracts yet negotiated)",color=contracts_color)
-
-#==========
-def print_current_contract_info() -> None:
-    """Print information about player contracts"""
-    data = ship_operator.check_contract()
-    if data:
-        cli_print(format_contract_template(data),color=contracts_color)
-    else:
-        cli_print("(No contracts yet negotiated)",color=contracts_color)
+    cli_print(string,color=info_menu_color)
 
 #==========
 def print_cargo_and_crew() -> None:
@@ -121,10 +99,6 @@ def print_all() -> None:
 
 #==========
 info_menu = {
-    "show current contract": {
-        "func": lambda: print_current_contract_info(),
-        "desc": "Print information about your current ship's cargo and crew."
-    },
     "show ship cargo and crew": {
         "func": lambda: print_cargo_and_crew(),
         "desc": "Print information about your current ship's cargo and crew."

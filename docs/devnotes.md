@@ -10,16 +10,87 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### Jul 19, 2023
+TODO:
+1. ~~Commit changes~~
+2. ~~Remove 'list' commands - instead, use the 'preview' feature of 'menu' to show description of each command (negates need for 'list' and is easier to use).~~
+3. Finish contract to-do from July 18 below.
+4. Look at July 3rd notes for additional priorities.
+
+> **Important reflection on my commits:**
+> I have a tendency to start coding and refactoring - and then *continue* doing that until I'm done with all the issues I've found.
+> This results, however, in a set of HUGE and varying changes across my codebase, which I then struggle to chunk into reasonable commits (see commit `323f4e580f508847adb7bd1deb73f216e3f8834e` for an example). Inevitably, I end up commiting a lot of different changes at once - and make these gargantuan, complex commits which will be more-or-less impossible to roll back to.
+> This is not tenable long-term. I need to find a way to make my commits smaller and only address a single topic.
+> There are 2 strategies I could use to do this:
+> 1. **Only work on 1 change at a time**
+>     a. I can do this by using my notes more. Instead of thinking 'oh, I'll just change that too...', I can make notes of what needs changing and implement those changes sequentially in different commits
+>     b. I can use `git stash` to stash current big changes and then quickly patch a problem I find. This will allow me to still fix and commit small issues that I find without including these minor changes as part of a sweeping feature update or something similar.
+> 2. **Use Git's 'patch' or 'interactive add' features to choose chunks from each file to commit**
+>     a. [Read more here](https://stackoverflow.com/questions/1085162/commit-only-part-of-a-files-changes-in-git).
+>     b. This is a way to actually CHOOSE parts of my files which belong to certain commits and not commit the entire file (which might contain pieces that should really be different commits)
+>
+> **CONCLUSION:**
+> I think I need both of these strategies. #2 is cool, but could also become complicated. Let's try to do this, and in my next commit (even if it's minor), let's try to use the git interactive add commands to test out how it works.
+
+---
+
+### Jul 18, 2023
+**To Decide:**
+The way that I'm dealing with contracts data during gameplay is a bit inconsistent.
+The ShipOperator class stores a "current contract" that the player is (presumably) pursuing during gameplay. However, I'm not accessing this in the CLI. Instead, I'm printing out ALL contracts. There are 2 options for how to proceed:
+1. Forget 'current contract' - remove this attribute from ShipOperator and just use contracts class to access contracts.
+   1. This option does not really work because I need to do certain commands related to a certain contract (see list below). These commands require a contract ID - so it needs to be stored somehow
+      1. accept contract
+      2. deliver contract
+      3. fulfill contract
+2. Use 'current contract' when in the ship menu to more easily access information about one contract
+   1. Probably requires way to 'switch' current contract
+
+I'm leaning toward #2, but it will take more work to implement.
+
+---
+
+Update: I need to have a more centralized way to manage contracts. Specifically, I need to do the following:
+1. Contract meta actions:
+   1. list all contracts
+   2. check contract status
+   3. Switch active contract
+2. Contract game actions:
+   1. negotiate new contract
+   2. accept contract
+   3. deliver for contract
+   4. fulfill contract
+
+I think these actions speak to a 'contract' submenu. The two weird commands are `deliver for contract` and `negotiate new contract` because these are related to a specific ship being at a specific location and so need to be done when a player is already commanding a ship.
+> Decision: Make this 'contracts' submenu similar to info_menu and allow it to be accessed at least from the 'command menu' (possibly also from 'mine menu')
+
+---
+
+Additionally, I can see 2 ways forward with showing ship information to the player:
+1. At each menu ('navigate', 'mine', etc.), we provide an 'info' command which prints out *only information related to that action* (i.e., related to navigating, mining, etc.)
+   1. This is how we're currently doing it
+2. ~~We create a new centralized menu accessible from ALL other menus which allows players to choose what information they want. For example, on any ship-related menu, when players enter 'info', they are taken to a screen with these options:~~
+   1. "Ship cargo & crew"
+   2. "Ship mounts"
+   3. "Ship modules"
+   4. "Ship Subsystems"
+   5. "Contracts" (optional)
+
+I need to decide which option I want.
+*NOTE: I like #2 because it doesn't require much thinking or tweaking about what info the player wants... I'm also not convinced that there is an easy answer about what info is relevant at each menu*
+
+---
+
 ### Jul 17, 2023
 **To finish:**
 - ~~I need to test the newly-named 'general info' template (this was previously poorly named 'ship info template' even though it's not that). I also want to add mountingSlots and moduleSlots to headers in 'MOUNTS' and 'MODULES' HUDs respectively.~~
-- COMMIT CHANGES!!
+~~- COMMIT CHANGES!!~~
 
 ---
 
 ### Jul 15, 2023
 Next steps:
-1. Finish HUD for different menus.
+1. ~~Finish HUD for different menus.~~
 See notes from Jul 3rd for additional priorities.
 
 ---
@@ -81,13 +152,13 @@ After that is complete, here are my priorities:
 1. ~~Design HUD interface. I would like one template which I can more-or-less adjust for navigation, trading, contracts, etc... That way, I get a reliable HUD no matter what menu I'm on, it looks very similar, but I can:~~
    1. ~~easily see that I'm on the HUD for 'mining' or 'navigation' or 'trading~~
    2. ~~see all of the relevant information to make decisions (e.g., for mining, I see current cargo and maybe current contract details...)~~
-2. Implement HUD
+2. ~~Implement HUD~~
    1. ~~Basic HUD~~
-   2. Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art):
-      1. General info HUD
+   2. ~~Specific add-ons for 'cargo', 'modules', 'contracts', etc. (see str_formatting.py for concept art):~~
+      1. ~~General info HUD~~
       2. ~~Contracts HUD~~
       3. ~~Ship info HUD~~
-      4. Ship reactor HUD
+      4. ~~Ship reactor HUD~~
       5. ~~Crew HUD~~
       6. ~~Cargo HUD~~
       7. ~~Ship mounts HUD~~
