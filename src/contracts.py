@@ -20,7 +20,6 @@ class Contracts:
 
     def mold_contract_dict(self,response:SpaceTraderResp) -> dict:
         '''Index into response dict from API to get contract data in common format'''
-        if not self.stc.response_ok(response): raise Exception(response)
         data = response['http_data']['data']
         return {data['id']:data}
 
@@ -72,6 +71,7 @@ class Contracts:
         # === UNTESTED ===
         url = f"{self.base_url}/{contract}/fulfill"
         response = self.stc.stc_http_request(method="POST",url=url)
+        if not self.stc.response_ok(response): return {}
         data = self.mold_contract_dict(response)
         return data
 
@@ -79,5 +79,4 @@ class Contracts:
     def negotiate_new_contract(self,ship:str) -> None:
         """Get offered a new contract - provided ship must be at a faction HQ waypoint"""
         url = f"{self.stc.base_url}/my/ships/{ship}/negotiate/contract"
-        response = self.stc.stc_http_request(method="POST",url=url)
-        if not self.stc.response_ok(response): return
+        self.stc.stc_http_request(method="POST",url=url)
