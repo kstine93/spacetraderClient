@@ -239,18 +239,18 @@ def format_surveyMenu_template(number: int, survey: dict) -> str:
 
 # ---------------
 base_hud_template = """\
-================================================================
- | [   Mode:   ]   `    '     . *          ` [    System    ] |
- | [{flightMode}]   '   ____   .    '    *    [{system}] |
- | .        *     . ~-~)___)>       .     `         *       . |
- |     '   .          __\_ \_______________   '  .            |
- |   o       *    '    \_  o  o  o  o ~~ \_\_      .    '     |
- |              .    `   \__._  .____[]_.___/         *    `  |
- |         `        .    ~-~)___)>        '    .              |
+=={spaceshipName}==
+ | [   Mode:   ]   `    '     . *          ` [    System:   ] |
+ | [{flightMode}]  '   ____   .    '    *     [{system}] |
+ | .        *    . ~-~)___)>       .     `         *        . |
+ |     '   .         __\_ \_______________   '   .            |
+ |   o       *   '    \_  o  o  o  o ~~ \_\_      .     '     |
+ |              .   `   \__._  .____[]_.___/         *     `  |
+ |         `        .   ~-~)___)>        '    .               |
  | [   Fuel:   ]         .         *         [   Credits:   ] |
  | [{fuel}]   ,              .        ` [{credits}] |
-================================================================
-~~{currentLocation}~~\
+=={currentLocation}==
+````````````````````````````````````````````````````````````````\
 """
 # ---------------
 # How many characters should be inputted for the placeholder values so that the ASCII
@@ -260,13 +260,20 @@ base_hud_str_lens = {
     "system": 14,
     "fuel": 11,
     "credits":14,
-    "currentLocation":60
+    "currentLocation":60,
+    "spaceshipName":60
 }
 
-
 # ---------------
-def format_base_hud_template(flightMode: str, system: dict, waypoint: dict, fuel: dict, credits: int) -> str:
+def format_base_hud_template(shipName: str,
+                             flightMode: str,
+                             system: dict,
+                             waypoint: dict,
+                             fuel: dict,
+                             credits: int) -> str:
     """Format the HUD template with data from the ship's information"""
+
+    spaceship_str = f" {shipName} "
 
     num_waypoints = len(system["waypoints"])
     sys_str = system["symbol"] + " (" + str(num_waypoints) + ")"
@@ -278,11 +285,12 @@ def format_base_hud_template(flightMode: str, system: dict, waypoint: dict, fuel
     waypoint_str = f" Location: {waypoint['symbol']} ({waypoint['type']}) "
 
     format_dict = {
+        "spaceshipName": pad_string(spaceship_str, base_hud_str_lens["spaceshipName"],pad_char="="),
         "flightMode": pad_string(flightMode, base_hud_str_lens["flightMode"]),
         "system": pad_string(sys_str, base_hud_str_lens["system"]),
         "fuel": pad_string(fuel_str, base_hud_str_lens["fuel"]),
         "credits": pad_string(credits_str, base_hud_str_lens["credits"]),
-        "currentLocation":pad_string(waypoint_str,base_hud_str_lens["currentLocation"],pad_char="~")
+        "currentLocation":pad_string(waypoint_str,base_hud_str_lens["currentLocation"],pad_char="=")
     }
     return base_hud_template.format(**format_dict)
 
@@ -296,7 +304,7 @@ ship_frame_header = """=========== FRAME INFO ==========="""
 def format_frame_info_template(frame_info: dict) -> str:
     string = f"{ship_frame_header}\n"
     len_limit = 64  # maximum line width for information printed out
-    string += dict_to_formatted_string(frame_info, len_limit=len_limit)
+    string += dict_to_formatted_string(frame_info,keys_to_ignore=['name'],len_limit=len_limit)
     return string
 
 
@@ -310,7 +318,7 @@ ship_reactor_header = """========== REACTOR INFO =========="""
 def format_reactor_info_template(reactor_info: dict) -> str:
     string = f"{ship_reactor_header}\n"
     len_limit = 64  # maximum line width for information printed out
-    string += dict_to_formatted_string(reactor_info, len_limit=len_limit)
+    string += dict_to_formatted_string(reactor_info,keys_to_ignore=['name'],len_limit=len_limit)
     return string
 
 
@@ -324,7 +332,7 @@ ship_engine_header = """=========== ENGINE INFO ==========="""
 def format_engine_info_template(engine_info: dict) -> str:
     string = f"{ship_engine_header}\n"
     len_limit = 64  # maximum line width for information printed out
-    string += dict_to_formatted_string(engine_info, len_limit=len_limit)
+    string += dict_to_formatted_string(engine_info,keys_to_ignore=['name'],len_limit=len_limit)
     return string
 
 
