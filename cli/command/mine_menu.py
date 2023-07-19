@@ -1,8 +1,11 @@
 
+"""Menu for mining resources from the current waypoint or refining resources in ship's cargo hold."""
+
 from src.ship_operator import *
+from typing import Callable
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
-from common_cmds import print_hud, print_contracts_info, print_cargo_info
+from common_cmds import print_hud, info_loop
 from art.ascii_art import border_mine_menu
 from art.str_formatting import format_survey_template, format_surveyMenu_template
 
@@ -13,12 +16,12 @@ ship_operator:ShipOperator
 mine_menu_color = "medium_purple2" #Color used by default in cli_print
 
 #==========
-def print_mine_menu_header() -> str:
+def print_mine_menu_header() -> None:
     print_hud(ship_operator)
     cli_print(border_mine_menu,mine_menu_color)
 
 #==========
-def mine_loop(ship:ShipOperator) -> bool:
+def mine_loop(ship:ShipOperator,returnHeaderFunc:Callable) -> CliCommand | None:
     """Wrapper for command_loop. Initializes the ship_operator object to be used in this command
     menu. Returns True if a command was given to exit the game.
     """
@@ -30,13 +33,14 @@ def mine_loop(ship:ShipOperator) -> bool:
     print_mine_menu_header()
     cli_print("Choose to mine, survey or refine resources, Captain",mine_menu_color)
 
-    exit = command_loop(mine_menu,loop_func=print_mine_menu_header)
-    if exit: #If player wants to exit, return True to signal to parent menu
-        return True
+    res = command_loop(mine_menu,loop_func=print_mine_menu_header)
+    if res == "exit": #If player wants to exit, return True to signal to parent menu
+        return res
 
     cli_clear()
     cli_print("Returning to ship command menu...")
-    return False
+    returnHeaderFunc()
+    return None
 
 #==========
 mine_menu = {
@@ -53,7 +57,7 @@ mine_menu = {
         "desc": "Create a new resource from raw resources in cargo.\nRequires refining module."
     },
     "info": {
-        "func": lambda: get_info_mine(),
+        "func": lambda: info_loop(ship_operator,print_mine_menu_header),
         "desc": "Show information about the ship related to mining!"
     },
     "list": {
@@ -63,6 +67,14 @@ mine_menu = {
     "menu": {
         "func": lambda: use_menu(mine_menu),
         "desc": "Provide interactive menu of commands."
+    },
+    "back": {
+        "func": lambda: "back",
+        "desc": "Return to the previous menu"
+    },
+    "exit": {
+        "func": lambda: "exit",
+        "desc": "Quit the game"
     }
 }
 
@@ -137,7 +149,7 @@ def extract_choose_survey() -> None:
     cli_print(f"Extracted {rsc_yield['units']} units of {rsc_yield['symbol']}",mine_menu_color)
 
 #==========
-def refine():
+def refine() -> None:
     cooldown_secs = ship_operator.get_cooldown_seconds()
     if cooldown_secs > 0:
         cli_print(f"Cannot refine until cooldown expires in {cooldown_secs} seconds",mine_menu_color)
@@ -155,9 +167,3 @@ def refine():
 
     refine_yield = ship_operator.refine(chosen_resource)
     cli_print(f"Refined {refine_yield['units']} units of {refine_yield['tradeSymbol']}",mine_menu_color)
-
-#==========
-def get_info_mine():
-    """Print out HUD relevant to mining on the CLI"""
-    print_cargo_info(ship_operator,mine_menu_color)
-    print_contracts_info()

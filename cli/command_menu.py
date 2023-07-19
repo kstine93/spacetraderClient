@@ -1,5 +1,6 @@
 """Holder of most commands for CLI"""
 from src.ship_operator import *
+from typing import Callable
 from src.ships import Ships
 from cli_utilities import *
 from cli.common_cmds import print_hud
@@ -18,10 +19,11 @@ def print_cmd_menu_header() -> str:
     cli_print(border_cmd_menu,cmd_menu_color)
 
 #==========
-def pick_ship():
+def pick_ship(cancel_option:str) -> str:
     ships = Ships()
     data = ships.list_all_ships()
     ship_list = list(data.keys())
+    ship_list.append(cancel_option)
     if len(ship_list) > 1:
         ship_menu = create_menu(ship_list,prompt="Choose a ship to command, Captain:")
         chosen_ship = menu_prompt(ship_menu)
@@ -30,8 +32,12 @@ def pick_ship():
     return chosen_ship
 
 #==========
-def ship_command_loop() -> bool:
-    ship = pick_ship()
+def ship_command_loop(returnHeaderFunc:Callable) -> CliCommand | None:
+    cancel_option = "[cancel and return to main menu]"
+    ship = pick_ship(cancel_option)
+    if ship == cancel_option:
+        return False
+
     cli_clear()
     cli_print("Loading ship details...",cmd_menu_color)
 
@@ -41,18 +47,20 @@ def ship_command_loop() -> bool:
     cli_print(f"Welcome aboard {ship}, Captain")
     print_cmd_menu_header()
 
-    exit = command_loop(command_menu,loop_func=print_cmd_menu_header)
-    if exit: #If player wants to exit, return True to signal to parent menu
-        return True
+    prompt = "Use 'list' or 'menu' to get help, and 'exit' to quit."
+    res = command_loop(command_menu,prompt,loop_func=print_cmd_menu_header)
+    if res == "exit":
+        return res
 
     cli_clear()
     cli_print("Returning to main menu...")
-    return False
+    returnHeaderFunc()
+    return None
 
 #==========
 command_menu = {
     "navigate": {
-        "func": lambda: navigate_loop(ship_operator),
+        "func": lambda: navigate_loop(ship_operator,print_cmd_menu_header),
         "desc": "Navigate your ship to a new location."
     },
     "trade": {
@@ -64,7 +72,7 @@ command_menu = {
         "desc": "Learn more about surrounding ships, waypoints and systems."
     },
     "mine": {
-        "func": lambda: mine_loop(ship_operator),
+        "func": lambda: mine_loop(ship_operator,print_cmd_menu_header),
         "desc": "survey, extract and refine valuable resources."
     },
     "contracts": {
@@ -82,6 +90,14 @@ command_menu = {
     "menu": {
         "func": lambda: use_menu(command_menu),
         "desc": "Provide interactive menu of commands."
+    },
+    "back": {
+        "func": lambda: "back",
+        "desc": "Return to the previous menu"
+    },
+    "exit": {
+        "func": lambda: "exit",
+        "desc": "Quit the game"
     }
 }
 

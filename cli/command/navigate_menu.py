@@ -2,16 +2,11 @@
 from src.ship_operator import *
 from src.utilities.basic_utilities import time_diff_seconds
 from cli_utilities import *
+from typing import Callable
 from art.str_formatting import format_waypoint_template
 from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
-from common_cmds import (print_hud,
-                         print_contracts_info,
-                         print_ship_info,
-                         print_ship_mount_info,
-                         print_ship_module_info,
-                         print_crew_info
-)
+from common_cmds import print_hud, info_loop
 
 #==========
 ship_operator:ShipOperator
@@ -25,8 +20,8 @@ def print_nav_menu_header() -> str:
     cli_print(border_nav_menu,nav_menu_color)
 
 #==========
-def navigate_loop(ship:ShipOperator) -> bool:
-    """Wrapper for command_loop. Initializes the ship_operator object to be used in this command
+def navigate_loop(ship:ShipOperator,returnHeaderFunc:Callable) -> CliCommand | None:
+    """Wrapper for command_loop. Initializes the ship_command_prompt() operator object to be used in this command
     menu. Returns True if a command was given to exit the game.
     """
     cli_clear()
@@ -34,16 +29,17 @@ def navigate_loop(ship:ShipOperator) -> bool:
     global ship_operator
     ship_operator = ship
 
-    cli_print(border_nav_menu,nav_menu_color)
+    print_nav_menu_header()
     cli_print("Choose a navigation option",nav_menu_color)
 
-    exit = command_loop(navigate_menu,loop_func=print_nav_menu_header)
-    if exit: #If player wants to exit, return True to signal to parent menu
-        return True
+    res = command_loop(navigate_menu,loop_func=print_nav_menu_header)
+    if res == "exit":
+        return res
 
     cli_clear()
     cli_print("Returning to ship command menu...")
-    return False
+    returnHeaderFunc()
+    return None
 
 #==========
 navigate_menu = {
@@ -64,7 +60,7 @@ navigate_menu = {
         "desc": "Learn more about surrounding ships, waypoints and systems."
     },
     "info": {
-        "func": lambda: get_info_navigate(),
+        "func": lambda: info_loop(ship_operator,print_nav_menu_header),
         "desc": "Show information about the ship related to mining!"
     },
     "list": {
@@ -74,13 +70,20 @@ navigate_menu = {
     "menu": {
         "func": lambda: use_menu(navigate_menu),
         "desc": "Provide interactive menu of commands."
+    },
+    "back": {
+        "func": lambda: "back",
+        "desc": "Return to the previous menu"
+    },
+    "exit": {
+        "func": lambda: "exit",
+        "desc": "Quit the game"
     }
 }
 
 #==========
-def nav_ship():
-    cli_clear()
-    print_location()
+def nav_ship() -> None:
+    # print_location()
 
     #Load data
     data = ship_operator.curr_system
@@ -150,11 +153,11 @@ def print_location() -> None:
     cli_print(f"Current Waypoint: {wp['symbol']} ({wp['type']})",nav_menu_color)
     cli_print(border_med_dash,nav_menu_color)
 
-#==========
-def get_info_navigate():
-    """Print out HUD relevant to mining on the CLI"""
-    print_crew_info(ship_operator)
-    print_ship_info(ship_operator)
-    print_ship_mount_info(ship_operator)
-    print_ship_module_info(ship_operator)
-    print_contracts_info()
+# #==========
+# def get_info_navigate():
+#     """Print out HUD relevant to mining on the CLI"""
+#     print_crew_info(ship_operator)
+#     print_ship_info(ship_operator)
+#     print_ship_mount_info(ship_operator)
+#     print_ship_module_info(ship_operator)
+#     print_contracts_info()

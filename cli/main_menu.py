@@ -31,7 +31,7 @@ contracts = Contracts()
 main_menu_color = "cornflower_blue" #Color used by default in cli_print
 
 #==========
-def print_main_menu_header() -> str:
+def print_main_menu_header() -> None:
     cli_print(border_main_menu,main_menu_color)
 
 #==========
@@ -78,16 +78,12 @@ main_menu = {
     "menu": {
         "func": lambda: use_menu(main_menu),
         "desc": "Provide interactive menu of commands."
+    },
+    "exit": {
+        "func": lambda: "exit",
+        "desc": "Quit the game"
     }
 }
-
-# #==========
-# def list_contracts(color:str="chartreuse2") -> None:
-#     """Function to print out all contracts for a """
-#     data = contracts.list_all_contracts()
-#     cli_print(border_contract_section,color)
-#     for contract in data.values():
-#         cli_print(format_contract_template(contract),color)
 
 #==========
 def explore_systems() -> None:
