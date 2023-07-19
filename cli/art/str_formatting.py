@@ -29,9 +29,6 @@ contract_template = """\
 # ---------------
 def format_contract_list(contract_list: list[dict]) -> str:
     string = contract_header
-    if len(contract_list) <= 0:
-        string += "\n | (No contracts yet negotiated)"
-        return string
     for contract in contract_list[0].values():
         string += "\n"
         string += format_contract_template(contract)

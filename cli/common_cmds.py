@@ -5,6 +5,7 @@ from src.contracts import Contracts
 from src.ship_operator import ShipOperator
 from art.str_formatting import (format_base_hud_template,
                                 format_contract_list,
+                                format_contract_template,
                                 format_frame_info_template,
                                 format_reactor_info_template,
                                 format_engine_info_template,
@@ -85,11 +86,26 @@ def print_ship_module_info():
     cli_print(string,color="white")
 
 #==========
+contracts_color = "chartreuse2"
+
+#==========
 def print_contracts_info() -> None:
     """Print information about player contracts"""
     contracts = Contracts()
     data = contracts.list_all_contracts()
-    cli_print(format_contract_list(data),color="chartreuse2")
+    if len(data) > 0:
+        cli_print(format_contract_list(data),color=contracts_color)
+    else:
+        cli_print("(No contracts yet negotiated)",color=contracts_color)
+
+#==========
+def print_current_contract_info() -> None:
+    """Print information about player contracts"""
+    data = ship_operator.check_contract()
+    if data:
+        cli_print(format_contract_template(data),color=contracts_color)
+    else:
+        cli_print("(No contracts yet negotiated)",color=contracts_color)
 
 #==========
 def print_cargo_and_crew() -> None:
@@ -105,6 +121,10 @@ def print_all() -> None:
 
 #==========
 info_menu = {
+    "show current contract": {
+        "func": lambda: print_current_contract_info(),
+        "desc": "Print information about your current ship's cargo and crew."
+    },
     "show ship cargo and crew": {
         "func": lambda: print_cargo_and_crew(),
         "desc": "Print information about your current ship's cargo and crew."
