@@ -3,7 +3,8 @@ from os import system
 from rich import print as rprint
 from art.ascii_art import *
 from simple_term_menu import TerminalMenu
-from typing import Callable
+from textwrap import fill
+from typing import Callable, TypedDict
 from enum import Enum
 
 #==========
@@ -11,6 +12,17 @@ class CliCommand(Enum):
     #Commands that are used internally to the command structures of the CLI
     exit = 1
     back = 2
+
+#==========
+class GameMenuItem(TypedDict):
+    '''Menu items are combined into menus which form the basis of choices the player can make.
+    The game is comprised of several menus (main menu, command menu, etc.)'''
+    func:Callable
+    desc:str
+
+#Game menus are comprised of a key which is a typeable command (string) and a value which holds the
+#information about that command and what function to call when invoked.
+GameMenu = dict[str,GameMenuItem]
 
 #==========
 def cli_clear() -> None:
@@ -42,8 +54,22 @@ def create_menu(menu_items:list[str],
     return terminal_menu
 
 #==========
-def use_menu(menu_dict:dict,**kwargs) -> CliCommand | None:
-    menu = create_menu(list(menu_dict.keys()),**kwargs)
+def use_game_menu(menu_dict:GameMenu,
+                  preview_command:Callable=lambda x: x, #print traits to preview box
+                  preview_title:str="Command description",
+                  preview_size:float=0.25,
+                  **kwargs) -> CliCommand | None:
+    '''Takes a game menu and allows the player to choose a command from it interactively.
+    By default, this creates a 'preview' box to show extra information about commands.'''
+
+    #Creating menu items that can be used for the 'preview' option of terminal_menu
+    width = 60 # Maximum width of preview.
+    menu_items = [f"{key}|{fill(val['desc'],width=width)}" for key,val in menu_dict.items()]
+    menu = create_menu(menu_items=menu_items,
+                       preview_command=preview_command,
+                       preview_title=preview_title,
+                       preview_size=preview_size,
+                       **kwargs)
     cmd = menu_prompt(menu)
     return command_switch(cmd,menu_dict)
 
@@ -93,10 +119,3 @@ def command_switch(cmd:str,cmd_map:dict) -> CliCommand | None:
         cli_print(f"Command '{cmd}' not found","red")
         cli_print(border_med_equals,"red")
     return None
-
-#==========
-def list_cmds(menu_dict:dict) -> None:
-    for (key,val) in menu_dict.items():
-        cli_print(f"-> {key}","orange1")
-        cli_print(str(val['desc']))
-    cli_print(border_med_dash,"orange1")

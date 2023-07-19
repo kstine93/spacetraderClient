@@ -1,6 +1,6 @@
 from copy import deepcopy
 from typing import Callable
-from cli_utilities import cli_print, cli_clear, use_menu
+from cli_utilities import cli_print, cli_clear, use_game_menu
 from src.contracts import Contracts
 from src.ship_operator import ShipOperator
 from art.str_formatting import (format_base_hud_template,
@@ -34,7 +34,7 @@ def info_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
     ship_operator = ship
 
     headerFunc()
-    use_menu(info_menu)
+    use_game_menu(info_menu)
 
     return False
 

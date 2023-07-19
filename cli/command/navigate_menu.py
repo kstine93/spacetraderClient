@@ -63,12 +63,8 @@ navigate_menu = {
         "func": lambda: info_loop(ship_operator,print_nav_menu_header),
         "desc": "Show information about the ship related to mining!"
     },
-    "list": {
-        "func": lambda: list_cmds(navigate_menu),
-        "desc": "List the commands in this menu."
-    },
     "menu": {
-        "func": lambda: use_menu(navigate_menu),
+        "func": lambda: use_game_menu(navigate_menu),
         "desc": "Provide interactive menu of commands."
     },
     "back": {

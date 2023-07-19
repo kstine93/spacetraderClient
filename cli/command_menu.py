@@ -47,7 +47,7 @@ def ship_command_loop(returnHeaderFunc:Callable) -> CliCommand | None:
     cli_print(f"Welcome aboard {ship}, Captain")
     print_cmd_menu_header()
 
-    prompt = "Use 'list' or 'menu' to get help, and 'exit' to quit."
+    prompt = "Type a command. Type 'menu' to see a list of commands."
     res = command_loop(command_menu,prompt,loop_func=print_cmd_menu_header)
     if res == "exit":
         return res
@@ -83,12 +83,8 @@ command_menu = {
         "func": lambda: ship_menu(ship_operator),
         "desc": "Study and modify your ship;s cargo, crew and capabilities"
     },
-    "list": {
-        "func": lambda: list_cmds(command_menu),
-        "desc": "List the commands in this menu."
-    },
     "menu": {
-        "func": lambda: use_menu(command_menu),
+        "func": lambda: use_game_menu(command_menu),
         "desc": "Provide interactive menu of commands."
     },
     "back": {

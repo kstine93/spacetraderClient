@@ -41,7 +41,7 @@ def main_menu_loop() -> None:
     cli_clear()
     print_start_screen()
     cli_print(f"Welcome back, Captain.\n","yellow")
-    prompt = "Use 'list' or 'menu' to get help, and 'exit' to quit."
+    prompt = "Type a command. Type 'menu' to see a list of commands."
     command_loop(main_menu,prompt,print_main_menu_header)
     shutdown()
 
@@ -71,12 +71,8 @@ main_menu = {
         "func": lambda: explore_systems(),
         "desc": "Learn more about the galaxy you're playing in."
     },
-    "list": {
-        "func": lambda: list_cmds(main_menu),
-        "desc": "List the commands in this menu."
-    },
     "menu": {
-        "func": lambda: use_menu(main_menu),
+        "func": lambda: use_game_menu(main_menu),
         "desc": "Provide interactive menu of commands."
     },
     "exit": {
