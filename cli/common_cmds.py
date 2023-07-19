@@ -107,26 +107,26 @@ def print_all() -> None:
 info_menu = {
     "show ship cargo and crew": {
         "func": lambda: print_cargo_and_crew(),
-        "desc": "Collect information about resources at your current location."
+        "desc": "Print information about your current ship's cargo and crew."
     },
     "show ship mounts": {
         "func": lambda: print_ship_mount_info(),
-        "desc": "Extract resources from the current location\nwith an optional target resource."
+        "desc": "Show information about ship mounts, which allow interaction with the ship's environment, such as extracting resources."
     },
     "show ship modules": {
         "func": lambda: print_ship_module_info(),
-        "desc": "Create a new resource from raw resources in cargo.\nRequires refining module."
+        "desc": "Show information about ship internal modules, such as warp drives and cargo holds."
     },
     "show ship subsystems": {
         "func": lambda: print_ship_info(),
-        "desc": "Show information about the ship related to mining!"
+        "desc": "Show information on the ship's frame, its engine, and its power reactor."
     },
     "show all ship information": {
         "func": lambda: print_all(),
-        "desc": "Show information about the ship related to mining!"
+        "desc": "Show all available information about the ship."
     },
     "cancel": {
         "func": lambda: None,
-        "desc": "Show information about the ship related to mining!"
+        "desc": "Don't show any information and return to previous menu."
     },
 }

@@ -148,12 +148,3 @@ def print_location() -> None:
     cli_print(border_med_dash,nav_menu_color)
     cli_print(f"Current Waypoint: {wp['symbol']} ({wp['type']})",nav_menu_color)
     cli_print(border_med_dash,nav_menu_color)
-
-# #==========
-# def get_info_navigate():
-#     """Print out HUD relevant to mining on the CLI"""
-#     print_crew_info(ship_operator)
-#     print_ship_info(ship_operator)
-#     print_ship_mount_info(ship_operator)
-#     print_ship_module_info(ship_operator)
-#     print_contracts_info()

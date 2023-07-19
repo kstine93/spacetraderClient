@@ -64,7 +64,7 @@ main_menu = {
         "desc": "List all active contracts."
     },
     "command": {
-        "func": lambda: ship_command_loop(),
+        "func": lambda: ship_command_loop(print_main_menu_header),
         "desc": "Command one of your ships - play the game!"
     },
     "explore": {
