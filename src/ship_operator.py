@@ -465,7 +465,7 @@ class ShipOperator():
         """Returns first contract in list_contracts. Ensures contract methods always reference a
         contract without requiring user to provide it every time."""
         cons = self.list_contracts()
-        return list(cons.keys())[0] if len(cons) > 0 else None
+        return list(cons[0].keys())[0] if len(cons) > 0 else None
 
     #----------
     def accept_contract(self,contract:str|None=pursued_contract) -> None:
