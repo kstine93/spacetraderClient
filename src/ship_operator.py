@@ -64,6 +64,7 @@ class ShipOperator():
     #----------
     def __init__(self,ship_name):
         self.spaceshipName = ship_name
+        self.scan_waypoints()
         self.reload_ship_details()
         self.reload_agent_details()
         self.reload_pursuedContractId()
@@ -93,6 +94,7 @@ class ShipOperator():
         #Reseting variables which are volatile or lose relevance in a new system:
         self.nearbyShips = []
         self.nearbySystems = []
+        self.scan_waypoints()
 
     #----------
     def reload_pursuedContractId(self) -> None:
