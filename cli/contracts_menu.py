@@ -96,20 +96,40 @@ def request_new_contract():
         cli_print(format_contract_template(new_contract),contracts_menu_color)
 
 #==========
-def deliver_for_current_contract():
+def deliver_for_current_contract() -> None:
     '''
-    Functionality:
-    1. Get pursuedContract details.
-    2. Get item(s) that need to be procured from contract details
-        2a. NOTE: This could be just 1 item (it is now), but it could in the future be multiple...
-        2b. NOTE: I don't have any examples of contracts that are NOT acquiring and delivering items,
-            but in the future, this could happen...
-    3. Get 'quantity' of item from cargo
-    4. If quantity more than 0, call 'deliver' function
-    5. Check if total delivered amount exceeds contract requirements
-        5a. If yes, call 'fulfill contract'
+    TODO: This function probably needs tweaking to also check if ship is in the correct location.
+    Test this once I have contracts I could deliver for!
     '''
-    pass
+    contract = ship_operator.get_pursuedContract()
+    if len(contract) == 0:
+        cli_print("No current contract selected - aborting.")
+        return None
+    #Note: The rest of this code currently assumes that this is a 'procurement' contract, as no
+    #other types are seemingly available in the game yet. Once they are, this code must change to
+    #handle these other contract types.
+    deliver_details = contract['terms']['deliver']
+    for item in deliver_details:
+        symbol = item['tradeSymbol']
+        units_req = item['unitsRequired']
+        units_done = item['unitsFulfilled']
+
+        cargo_items = [item for item in ship_operator.cargo['inventory'] if item['symbol'] == symbol]
+        if not cargo_items:
+            cli_print(f"No '{symbol}' units in ship cargo - cannot deliver this item.")
+            break
+        #At this point, we know we have >= 1 unit of item in cargo.
+
+        units_in_cargo = cargo_items[0]['units']
+        #set 'units_in_cargo' to max of what is in cargo - or whatever is needed to
+        #fulfill contract (whatever is lower)
+        target_quant = units_done - units_req
+        if target_quant < units_in_cargo:
+            data = ship_operator.deliver_pursuedContract(symbol,quantity=target_quant)
+            #if we are delivering the last items of a contract, also seek to 'fulfill' contract:
+            data = ship_operator.fulfill_pursuedcontract()
+        else:
+            data = ship_operator.deliver_pursuedContract(symbol,quantity=units_in_cargo)
 
 #==========
 contracts_menu = {
