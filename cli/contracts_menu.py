@@ -44,7 +44,7 @@ def print_contracts_info() -> None:
 #==========
 def print_current_contract_info() -> None:
     """Print information about player contracts"""
-    data = ship_operator.check_contract()
+    data = ship_operator.get_pursuedContract()
     if data:
         cli_print(format_contract_template(data),color=contracts_menu_color)
     else:
