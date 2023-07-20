@@ -7,6 +7,7 @@ from art.str_formatting import format_waypoint_template
 from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
 from info_menu import print_hud, info_loop
+from contracts_menu import contracts_loop
 
 #==========
 ship_operator:ShipOperator
@@ -61,7 +62,11 @@ navigate_menu = {
     },
     "info": {
         "func": lambda: info_loop(ship_operator,print_nav_menu_header),
-        "desc": "Show information about the ship related to mining!"
+        "desc": "Inspect your ship's cargo, crew and capabilities"
+    },
+    "contracts": {
+        "func": lambda: contracts_loop(ship_operator,print_nav_menu_header),
+        "desc": "See available and current contracts - and fulfill them"
     },
     "menu": {
         "func": lambda: use_game_menu(navigate_menu),

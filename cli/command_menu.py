@@ -3,7 +3,7 @@ from src.ship_operator import *
 from typing import Callable
 from src.ships import Ships
 from cli_utilities import *
-from cli.info_menu import print_hud
+from cli.info_menu import info_loop, print_hud
 from cli.contracts_menu import contracts_loop
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
@@ -76,13 +76,17 @@ command_menu = {
         "func": lambda: mine_loop(ship_operator,print_cmd_menu_header),
         "desc": "survey, extract and refine valuable resources."
     },
+    "info": {
+        "func": lambda: info_loop(ship_operator,print_cmd_menu_header),
+        "desc": "Inspect your ship's cargo, crew and capabilities"
+    },
     "contracts": {
         "func": lambda: contracts_loop(ship_operator,print_cmd_menu_header),
-        "desc": "Request new contracts or fulfill your current ones."
+        "desc": "See available and current contracts - and fulfill them"
     },
     "ship": {
         "func": lambda: ship_menu(ship_operator),
-        "desc": "Study and modify your ship;s cargo, crew and capabilities"
+        "desc": "Inspect your ship's cargo, crew and capabilities"
     },
     "menu": {
         "func": lambda: use_game_menu(command_menu),

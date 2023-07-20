@@ -59,11 +59,11 @@ mine_menu = {
     },
     "info": {
         "func": lambda: info_loop(ship_operator,print_mine_menu_header),
-        "desc": "Show information about the ship related to mining!"
+        "desc": "Inspect your ship's cargo, crew and capabilities"
     },
     "contracts": {
         "func": lambda: contracts_loop(ship_operator,print_mine_menu_header),
-        "desc": "Provide interactive menu of commands."
+        "desc": "See available and current contracts - and fulfill them"
     },
     "menu": {
         "func": lambda: use_game_menu(mine_menu),
