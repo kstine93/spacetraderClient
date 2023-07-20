@@ -22,7 +22,7 @@ ship_operator:ShipOperator
 info_menu_color = "white" #Color used by default in cli_print
 
 #==========
-def info_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
+def info_loop(ship:ShipOperator,headerFunc:Callable) -> None:
     """Displays information menu for printing info on ship systems.
     As opposed to other loops in other menus, this menu is not intended to be lingered on - it is
     instead intended to emulate the previous menu that players were on. For that reason, the
@@ -37,10 +37,6 @@ def info_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
     headerFunc()
     use_game_menu(info_menu)
 
-    return False
-
-#=========
-#== HUD ==
 #=========
 def print_hud(ship_operator:ShipOperator) -> str:
     shipName = deepcopy(ship_operator.spaceshipName)

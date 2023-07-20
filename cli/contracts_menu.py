@@ -15,7 +15,7 @@ contracts = Contracts()
 contracts_menu_color = "chartreuse2" #Color used by default in cli_print
 
 #==========
-def contracts_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
+def contracts_loop(ship:ShipOperator,headerFunc:Callable) -> None:
     """Allows printing information about, and interacting with, contract information
     As opposed to other loops in other menus, this menu is not intended to be lingered on - it is
     instead intended to emulate the previous menu that players were on. For that reason, the
@@ -29,8 +29,6 @@ def contracts_loop(ship:ShipOperator,headerFunc:Callable) -> bool:
 
     headerFunc()
     use_game_menu(contracts_menu)
-
-    return False
 
 #==========
 def print_contracts_info() -> None:
@@ -51,7 +49,7 @@ def print_current_contract_info() -> None:
         cli_print("(No contracts yet negotiated)",color=contracts_menu_color)
 
 #==========
-def choose_contract():
+def choose_contract() -> None:
     contract_list = contracts.list_all_contracts()
     chosen_contract = pick_contract_from_menu(contract_list)
 
@@ -88,7 +86,7 @@ def pick_contract_from_menu(contract_list:list[dict]) -> str:
     return menu_prompt(contract_menu)
 
 #==========
-def request_new_contract():
+def request_new_contract() -> None:
     cli_print("Attempting to get new contract...")
     new_contract = ship_operator.negotiate_contract()
     if new_contract:
@@ -135,26 +133,26 @@ def deliver_for_current_contract() -> None:
 contracts_menu = {
     "list all contracts": {
         "func": lambda: print_contracts_info(),
-        "desc": "Print information about your current ship's cargo and crew."
+        "desc": "Print information about all available contracts."
     },
     "show current contract": {
         "func": lambda: print_current_contract_info(),
-        "desc": "Print information about your current ship's cargo and crew."
+        "desc": "Print information about your current contract."
     },
     "choose current contract": {
         "func": lambda: choose_contract(),
-        "desc": "Print information about your current ship's cargo and crew."
+        "desc": "Choose a contract to pursue and fulfill."
     },
     "request new contract": {
         "func": lambda: request_new_contract(),
-        "desc": "Print information about your current ship's cargo and crew."
+        "desc": "Request a new contract from the faction at your current waypoint."
     },
     "deliver goods for current contract": {
         "func": lambda: deliver_for_current_contract(),
-        "desc": "Print information about your current ship's cargo and crew."
+        "desc": "Deliver goods from your cargo to the target contract waypoint."
     },
     "cancel": {
         "func": lambda: None,
-        "desc": "Don't show any information and return to previous menu."
+        "desc": "Cancel and return to previous menu."
     }
 }
