@@ -21,7 +21,7 @@ class Contracts:
     def mold_contract_dict(self,response:SpaceTraderResp) -> dict:
         '''Index into response dict from API to get contract data in common format'''
         data = response['http_data']['data']
-        return {data['id']:data}
+        return data
 
     #----------
     def list_all_contracts(self,page:int=1) -> None:
@@ -29,7 +29,7 @@ class Contracts:
         contracts = []
         for contract_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for con in contract_list["http_data"]["data"]:
-                contracts.append({con['id']:con})
+                contracts.append(con)
         return contracts
 
     #----------
@@ -48,7 +48,6 @@ class Contracts:
         response = self.stc.stc_http_request(method="POST",url=url)
         if not self.stc.response_ok(response): return {}
         data = response['http_data']['data']['contract']
-        data = {data['id']:data}
         return data
 
     #----------
@@ -62,7 +61,6 @@ class Contracts:
         }
         response = self.stc.stc_http_request(method="POST",url=url,json=body)
         data = response['http_data']['data']['contract']
-        data = {data['id']:data}
         return data
 
     #----------

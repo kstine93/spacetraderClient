@@ -99,7 +99,7 @@ class ShipOperator():
         """Reload data on the currently pursuedContract. If none is set,
         set the pursuedContract attribute to the first accepted contract in the list."""
         contract_list = self.contracts.list_all_contracts()
-        accepted_contracts = [con for con in contract_list[0].values() if con['accepted'] == True]
+        accepted_contracts = [con for con in contract_list if con['accepted'] == True]
         if len(accepted_contracts) > 0:
             #In lieu of a better way, selecting the first accepted contract, if any exist:
             self.set_pursuedContractId(accepted_contracts[0]['id'])
