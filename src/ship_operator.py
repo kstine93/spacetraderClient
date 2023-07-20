@@ -479,22 +479,22 @@ class ShipOperator():
         return self.contracts.get_contract(self.pursuedContractId) if self.pursuedContractId else {}
 
     #----------
-    def deliver_pursuedContract(self,item:str,quantity:int|None=None) -> None:
+    def deliver_pursuedContract(self,item:str,quantity:int|None=None) -> dict:
         """Attempt to deliver item for currently-pursued contract"""
         self.dock()
         #If no quantity specified, deliver as many items as possible from cargo.
         if not quantity:
             quantity = self.get_cargo_quantity(item)
-        self.contracts.deliver_contract(self.pursuedContractId,self.spaceshipName,item,quantity)
-        self.reload_pursuedContractId()
+        return self.contracts.deliver_contract(self.pursuedContractId,self.spaceshipName,item,quantity)
 
     #----------
-    def fulfill_pursuedcontract(self) -> None:
-        self.contracts.fulfill_contract(self.pursuedContractId)
+    def fulfill_pursuedcontract(self) -> dict:
+        data = self.contracts.fulfill_contract(self.pursuedContractId)
         self.reload_agent_details() #Reloading credits
+        return data
 
     #----------
-    def negotiate_contract(self) -> None:
+    def negotiate_contract(self) -> dict:
         """Wrapper to negotiate new contract (requires ship to be at a faction HQ)"""
         self.dock()
-        self.contracts.negotiate_new_contract(self.spaceshipName)
+        return self.contracts.negotiate_new_contract(self.spaceshipName)

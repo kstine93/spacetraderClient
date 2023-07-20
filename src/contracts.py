@@ -47,8 +47,8 @@ class Contracts:
         url = f"{self.base_url}/{contract}/accept"
         response = self.stc.stc_http_request(method="POST",url=url)
         if not self.stc.response_ok(response): return {}
-        data = response['http_data']['data']['contract']
-        return data
+        data = self.mold_contract_dict(response)
+        return data['contract']
 
     #----------
     def deliver_contract(self,contract:str,ship:str,item:str,quantity:int) -> dict:
@@ -60,8 +60,9 @@ class Contracts:
             ,'units':quantity
         }
         response = self.stc.stc_http_request(method="POST",url=url,json=body)
-        data = response['http_data']['data']['contract']
-        return data
+        if not self.stc.response_ok(response): return {}
+        data = self.mold_contract_dict(response)
+        return data['contract']
 
     #----------
     def fulfill_contract(self,contract:str) -> dict:
@@ -71,10 +72,13 @@ class Contracts:
         response = self.stc.stc_http_request(method="POST",url=url)
         if not self.stc.response_ok(response): return {}
         data = self.mold_contract_dict(response)
-        return data
+        return data['contract']
 
     #----------
-    def negotiate_new_contract(self,ship:str) -> None:
+    def negotiate_new_contract(self,ship:str) -> dict:
         """Get offered a new contract - provided ship must be at a faction HQ waypoint"""
         url = f"{self.stc.base_url}/my/ships/{ship}/negotiate/contract"
-        self.stc.stc_http_request(method="POST",url=url)
+        response = self.stc.stc_http_request(method="POST",url=url)
+        if not self.stc.response_ok(response): return {}
+        data = self.mold_contract_dict(response)
+        return data['contract']
