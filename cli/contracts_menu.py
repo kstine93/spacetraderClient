@@ -89,13 +89,11 @@ def pick_contract_from_menu(contract_list:list[dict]) -> str:
 
 #==========
 def request_new_contract():
-    '''
-    Functionality:
-    1. Attempt to negotiate new contract
-    2. If success, notify player (maybe with ID of new contract)
-    3. If failure, notify player of why (contract limit exceeded or not in right location)
-    '''
-    pass
+    cli_print("Attempting to get new contract...")
+    new_contract = ship_operator.negotiate_contract()
+    if new_contract:
+        cli_print("New Contract Received:")
+        cli_print(format_contract_template(new_contract),contracts_menu_color)
 
 #==========
 def deliver_for_current_contract():
