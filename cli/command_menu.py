@@ -4,6 +4,7 @@ from typing import Callable
 from src.ships import Ships
 from cli_utilities import *
 from cli.info_menu import print_hud
+from cli.contracts_menu import contracts_loop
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
 
@@ -76,7 +77,7 @@ command_menu = {
         "desc": "survey, extract and refine valuable resources."
     },
     "contracts": {
-        "func": lambda: explore_menu(ship_operator),
+        "func": lambda: contracts_loop(ship_operator,print_cmd_menu_header),
         "desc": "Request new contracts or fulfill your current ones."
     },
     "ship": {

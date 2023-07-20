@@ -6,6 +6,7 @@ from typing import Callable
 from src.utilities.custom_types import RefinableProduct
 from cli_utilities import *
 from info_menu import print_hud, info_loop
+from contracts_menu import contracts_loop
 from art.ascii_art import border_mine_menu
 from art.str_formatting import format_survey_template, format_surveyMenu_template
 
@@ -59,6 +60,10 @@ mine_menu = {
     "info": {
         "func": lambda: info_loop(ship_operator,print_mine_menu_header),
         "desc": "Show information about the ship related to mining!"
+    },
+    "contracts": {
+        "func": lambda: contracts_loop(ship_operator,print_mine_menu_header),
+        "desc": "Provide interactive menu of commands."
     },
     "menu": {
         "func": lambda: use_game_menu(mine_menu),

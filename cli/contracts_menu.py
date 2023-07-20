@@ -50,11 +50,39 @@ def print_current_contract_info() -> None:
     else:
         cli_print("(No contracts yet negotiated)",color=contracts_menu_color)
 
+#==========
+def switch_contract():
+    '''
+    Functionality:
+    1. List contracts
+    2. Player chooses contract they want to pursue
+    3. Player is asked to confirm if they want to accept the contract (IF THEY ACCEPT BUT FAIL TO FULFILL,
+        THERE ARE IN-GAME CONSEQUENCES!). Present Y/N confirmation
+    3. If accept, set this contract as 'pursuedContract' in ship_operator class
+    4. If deny, abort command.
+    '''
+    pass
+
+#==========
+def request_new_contract():
+    '''
+    Functionality:
+    1. Attempt to negotiate new contract
+    2. If success, notify player (maybe with ID of new contract)
+    3. If failure, notify player of why (contract limit exceeded or not in right location)
+    '''
+    pass
+
+#==========
+def deliver_for_current_contract():
+    #NOTE: This command should also check if the current contract is fulfilled and,
+    # if so, also attempt to 'fulfill' the contract, netting the final pay.
+    pass
 
 #==========
 contracts_menu = {
     "list all contracts": {
-        "func": lambda: print_current_contract_info(),
+        "func": lambda: print_contracts_info(),
         "desc": "Print information about your current ship's cargo and crew."
     },
     "show current contract": {
@@ -62,19 +90,15 @@ contracts_menu = {
         "desc": "Print information about your current ship's cargo and crew."
     },
     "switch current contract": {
-        "func": lambda: print_current_contract_info(),
+        "func": lambda: switch_contract(),
         "desc": "Print information about your current ship's cargo and crew."
     },
     "request new contract": {
-        "func": lambda: print_current_contract_info(),
-        "desc": "Print information about your current ship's cargo and crew."
-    },
-    "accept a contract": {
-        "func": lambda: print_current_contract_info(),
+        "func": lambda: request_new_contract(),
         "desc": "Print information about your current ship's cargo and crew."
     },
     "deliver goods for current contract": {
-        "func": lambda: print_current_contract_info(),
+        "func": lambda: deliver_for_current_contract(),
         "desc": "Print information about your current ship's cargo and crew."
     },
     "cancel": {
