@@ -1,9 +1,10 @@
 
 from src.ship_operator import *
 from src.utilities.basic_utilities import time_diff_seconds
+from src.utilities.custom_types import NavSpeed
 from cli_utilities import *
 from typing import Callable
-from art.str_formatting import format_waypoint_template
+from art.str_formatting import format_waypoint_template, format_system_template
 from art.ascii_art import border_med_dash, border_nav_menu
 from art.animations import animate_navigation
 from info_menu import print_hud, info_loop
@@ -116,20 +117,48 @@ def nav_ship() -> None:
 
 #==========
 def jump_ship():
-    """
-    Steps:
-    1. Check if ship at jump gate
-        1a. If yes, scan systems and provide list to choose from (ALPHA)
-    2. If no, check if jump drive installed on ship
-        1a. If yes, check if we have antimatter
-            1ai. If yes, ask if player wants to use antimatter + jump drive
-                1ai1. If yes, scan systems and provide list to choose from (ALPHA)
-            1aii. If no, cancel command
-        1b. If no, Inform player no antimatter present - they must nav to jump gate first (BETA)
-    3. If no jump drive, inform player they must nav to jump gate first (BETA)
+    gate_opt = "use stationary Jump Gate"
+    drive_opt = "use ship's onboard Jump Drive"
+    jump_menu = create_menu([gate_opt,drive_opt],prompt="Choose how to jump to new system:")
+    jump_opt = menu_prompt(jump_menu)
+    if jump_opt == drive_opt:
+        #Checking if player has jump drive and antimatter
+        if "JUMP_DRIVE" not in [mod['symbol'] for mod in ship_operator.shipModules]:
+            cli_print("Your ship has no 'JUMP_DRIVE' module. Aborting jump.")
+            return
+        if "ANTIMATTER" not in [item['symbol'] for item in ship_operator.cargo['inventory']]:
+            cli_print("Your ship has no antimatter for its Jump Drive. Aborting Jump.")
+            return
+    elif jump_opt == gate_opt:
+        if ship_operator.currWaypoint["type"] != "JUMP_GATE":
+            cli_print("Your ship is not located at a Jump Gate. Aborting jump.")
+            return
 
-    """
-    pass
+    chosen_sys = pick_nearbySystem_from_menu()
+    ship_operator.jump(chosen_sys['symbol'])
+    cli_print(f"Jump successful. Welcome to {chosen_sys}, Captain","red")
+
+#==========
+def pick_nearbySystem_from_menu() -> str:
+    """Pick system from 'nearbySystem' attribute"""
+    if not ship_operator.nearbySystems:
+        ship_operator.scan_systems()
+    sys_list = sorted(ship_operator.nearbySystems,key=lambda x: x['distance'])
+    menu_items = [format_system_template(num,sys) for num,sys in enumerate(sys_list)]
+    cancel_option = "Cancel navigation"
+    menu_items.append(cancel_option)
+    sys_list.append(cancel_option) #Making wp_list items & order consistent with menu_items
+
+    sys_menu = create_menu(menu_items
+                          ,prompt="Choose a system to jump to:"
+                          ,preview_command=lambda x: x #Should print traits to preview box
+                          ,preview_title="Distance to this system:"
+                          ,preview_size=0.15)
+    chosen_sys_index = menu_prompt(sys_menu,index=True)
+    chosen_sys = sys_list[chosen_sys_index]
+    if chosen_sys == cancel_option:
+        return None
+    return chosen_sys
 
 #==========
 def warp_ship():
@@ -145,7 +174,10 @@ def warp_ship():
 
 #==========
 def set_speed():
-    pass
+        options = NavSpeed._member_names_
+        menu = create_menu(options,prompt=f"Set your new speed (current: {ship_operator.flightMode}")
+        new_speed = menu_prompt(menu)
+        ship_operator.set_speed(new_speed)
 
 #==========
 def print_location() -> None:

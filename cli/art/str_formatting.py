@@ -64,6 +64,24 @@ def format_contract_template(contract: dict) -> str:
 
     return contract_template.format(**format_dict)
 
+# --------------
+# -- SYSTEMS --
+# --------------
+system_template = """{num}. {symbol} ({type}) | {distance}"""
+
+# ---------------
+def format_system_template(number: int, system: dict) -> str:
+    """Format the waypoint template with data returned from the current system
+    Designed to be part of a list of waypoints with 'number' giving index in list"""
+    format_dict = {
+        "num": number,
+        "symbol": system["symbol"],
+        "type": system["type"],
+        "distance": "",
+    }
+    if "distance" in system.keys():
+        format_dict["distance"] = str(system['distance'])
+    return system_template.format(**format_dict)
 
 # ---------------
 # -- WAYPOINTS --
