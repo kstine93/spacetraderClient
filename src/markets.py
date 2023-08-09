@@ -33,7 +33,7 @@ class Markets:
     #----------
     def __mold_market_dict(self,response:SpaceTraderResp) -> dict:
         """Transform systems data into an easier-to-use format for inserting into dictionaries"""
-        if not self.stc.response_ok(response): raise Exception(response)
+        if not self.stc.response_ok(response): return {}
         data = response['http_data']['data']
         data = self.__simplify_market_dict(data)
         return {data['symbol']:data}
