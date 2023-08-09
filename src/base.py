@@ -7,6 +7,7 @@ This file also contains a class for registering a new agent and thereby setting 
 import logging
 import json
 import yaml
+import re
 from time import sleep
 from typing import Generator
 from requests import request
@@ -187,9 +188,11 @@ class SpaceTraderConnection:
 
     #----------
     def get_system_from_waypoint(self,waypoint:str) -> str:
-        """In Alpha version of the game, the system is the first 7 characters of the waypoint.
+        """In Alpha version of the game, the system is the first part of the waypoint, before the
+        second dash (e.g., waypoint = 'X1-Z7-45360X', system = 'X1-Z7').
         Rather than pass both values around, this derives system from waypoint"""
-        return waypoint[0:7]
+        match = re.match(r"^[\w]+-[\w]+",waypoint)
+        return match.group()
 
     #----------
     def stc_http_request(self, method:str, url:str, **kwargs) -> SpaceTraderResp:
