@@ -94,6 +94,18 @@ class SpaceTraderConfigSetup:
         self.set_new_current_agent(callsign)
 
     #----------
+    def remove_agent_details(self,callsign:str) -> None:
+        '''Note: This method only removes the reference to the player in the local file.
+        Currently, there is no way to 'delete' a player from the game on the game server.'''
+        config = self.__get_config()
+        agents = config['agents']['all_agents']
+        if agents:
+            # print(config['agents']['all_agents'])
+            filtered_agents = [rec for rec in agents if rec['callsign'] != callsign]
+            config['agents']['all_agents'] = filtered_agents
+            self.write_to_file(config)
+
+    #----------
     def write_to_file(self,config:dict) -> None:
         """Write config to file"""
         with open(self.config_path, 'w') as configfile:
