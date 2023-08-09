@@ -247,10 +247,11 @@ class RegisterNewAgent:
         self.base_url = self.config_setup.get_api_url()
 
     #----------
-    def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> None:
+    def register_new_agent(self, agent_callsign:str, faction:str = "COSMIC") -> bool:
         """
         Register a new player with the game.
-        Returns dictionary with agent metadata (as well as other ship + contract information)
+        Saves agent data locally if the registration was a success. If not, prints out the error and
+        returns a 'False' value to abort
         """
         data = {
             'faction':faction
@@ -261,7 +262,13 @@ class RegisterNewAgent:
 
         http_response = request("POST",url=url,data=json.dumps(data),headers=headers)
         data = http_response.json()
-        self.save_agent_metadata_locally(data)
+
+        if "error" in data.keys():
+            print(data['error']['message'])
+            return False
+        else:
+            self.save_agent_metadata_locally(data)
+            return True
 
     #----------
     def save_agent_metadata_locally(self, new_agent_response:dict) -> None:
