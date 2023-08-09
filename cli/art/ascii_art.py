@@ -18,6 +18,7 @@ border_main_menu  =  """================{ MAIN MENU }================"""
 border_cmd_menu   =  """><><><><><><><><><><><><> COMMAND SHIP <><><><><><><><><><><><><"""
 border_nav_menu  =   """------------------------ NAVIGATE SHIP ------------------------"""
 border_mine_menu  =  """~~~~~~~~~~~~~~~~~~~~~~~~ MINE RESOURCES ~~~~~~~~~~~~~~~~~~~~~~~~"""
+border_trade_menu  =  """____________________________ TRADE ____________________________"""
 
 border_module_section =   """============= MODULES ============="""
 border_mounts_section =   """============== MOUNTS =============="""

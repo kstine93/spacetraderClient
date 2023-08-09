@@ -465,3 +465,23 @@ def format_crew_info_template(crew: dict) -> str:
         "wages": crew["wages"],
     }
     return crew_info_template.format(**format_dict)
+
+
+
+# ------------------------
+# -- MARKET INFORMATION --
+# ------------------------
+market_header = """============ CONTRACTS ============"""
+market_header = """_____________ MARKET: _____________"""
+market_info_template = """\
+- {commodity} [BUY: {buy_price} | SELL: {sell_price}]
+"""
+
+t= """
+- IRON_ORE (buy for 32 | sell for 20)
+"""
+
+
+# --------------------
+# -- PROFIT MARGINS --
+# --------------------
