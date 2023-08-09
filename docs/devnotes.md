@@ -10,11 +10,21 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### Jul 24, 2023
+TODO:
+1. Finish initial version of 'trade_menu.py'
+2. Commit changes to other components
+   1. Updated password_prompt utility to allow for double-entering password (to prevent password-setup mistakes)
+   2. Added capability to REMOVE players in startup_cli
+   3. (minor) printed confirmation of contract acceptance.
+
+---
+
 ### Jul 19, 2023
 TODO:
 1. ~~Commit changes~~
 2. ~~Remove 'list' commands - instead, use the 'preview' feature of 'menu' to show description of each command (negates need for 'list' and is easier to use).~~
-3. Finish contract to-do from July 18 below.
+3. ~~Finish contract to-do from July 18 below.~~
 4. Look at July 3rd notes for additional priorities.
 
 > **Important reflection on my commits:**
@@ -34,7 +44,24 @@ TODO:
 
 ---
 
-### Jul 18, 2023
+### Jul 20, 2023
+
+I have finished the 'contract menu' and the 'info menu' that I described on July 17 - 19.
+I now have ways to query information related to the ship and player contracts from any menu.
+Now, I'm going to clean up and move on to the next topic:
+Steps:
+1. ~~Add 'info' and 'contract' menu options to all appropriate menus (probably anything from 'command' menu onwards).~~
+2. Finish navigation endpoints:
+   1. ~~jump ship~~
+   2. warp ship
+      1. NOTE: I'm still a little fuzzy on how warping works - and it's not necessary right now since I can just use regular waypoint navigation within a system and jumping between systems. I'm going to **ignore** this functionality for now...
+   3. ~~set_speed~~
+3. Tackle the next menu (Trading?)
+4. Update Architecture.md notes ('Agents' class no longer exists; some misspellings)
+
+---
+
+### Jul 19, 2023
 **To Decide:**
 The way that I'm dealing with contracts data during gameplay is a bit inconsistent.
 The ShipOperator class stores a "current contract" that the player is (presumably) pursuing during gameplay. However, I'm not accessing this in the CLI. Instead, I'm printing out ALL contracts. There are 2 options for how to proceed:
@@ -64,9 +91,16 @@ Update: I need to have a more centralized way to manage contracts. Specifically,
 I think these actions speak to a 'contract' submenu. The two weird commands are `deliver for contract` and `negotiate new contract` because these are related to a specific ship being at a specific location and so need to be done when a player is already commanding a ship.
 > Decision: Make this 'contracts' submenu similar to info_menu and allow it to be accessed at least from the 'command menu' (possibly also from 'mine menu')
 
+**UPDATE:**
+1. I think it no longer makes sense to auto-set the pursued contract if it hasn't been accepted yet.
+   1. Pursuing a contract should have a prerequisite of ACCEPTING the contract and this must be a conscious player action. I want to instead ask the player to accept a specific contract and only then set the pursued contract.
+   2. Upon loading an existing game with an already-accepted contract, the already-accepted contract should be auto-set though, to prevent the player from having to set the pursuedContract attribute manually somehow...
+
 ---
 
-Additionally, I can see 2 ways forward with showing ship information to the player:
+### Jul 18, 2023
+
+I can see 2 ways forward with showing ship information to the player:
 1. At each menu ('navigate', 'mine', etc.), we provide an 'info' command which prints out *only information related to that action* (i.e., related to navigating, mining, etc.)
    1. This is how we're currently doing it
 2. ~~We create a new centralized menu accessible from ALL other menus which allows players to choose what information they want. For example, on any ship-related menu, when players enter 'info', they are taken to a screen with these options:~~
