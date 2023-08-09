@@ -5,6 +5,7 @@ from src.ships import Ships
 from cli_utilities import *
 from cli.info_menu import info_loop, print_hud
 from cli.contracts_menu import contracts_loop
+from command.trade_menu import trade_loop
 from command.navigate_menu import navigate_loop
 from command.mine_menu import mine_loop
 
@@ -65,7 +66,7 @@ command_menu = {
         "desc": "Navigate your ship to a new location."
     },
     "trade": {
-        "func": lambda: trade_menu(ship_operator),
+        "func": lambda: trade_loop(ship_operator,print_cmd_menu_header),
         "desc": "Purchase, sell and study profitable markets"
     },
     "explore": {
@@ -101,10 +102,6 @@ command_menu = {
         "desc": "Quit the game"
     }
 }
-
-#==========
-def trade_menu(ship_operator:ShipOperator):
-    cli_print("trade menu in development")
 
 #==========
 def explore_menu(ship_operator:ShipOperator):
