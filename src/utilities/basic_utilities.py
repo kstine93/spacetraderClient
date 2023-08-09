@@ -12,12 +12,20 @@ from os import listdir, remove, fsdecode, getenv, environ, path
 
 
 # ==========
-def get_user_password(prompt: str, password_name: str) -> str:
+def get_user_password(prompt: str, password_name: str, double_entry: bool=False) -> str:
     """Get user password from environment variables - or prompt and store if it
-    doesn't exist yet."""
+    doesn't exist yet. Double-entry requires user to provide password twice to check consistency."""
     pw = getenv(password_name)
     if pw is None:
-        pw = pwinput.pwinput(prompt=prompt,mask="*")
+        pw2 = None
+        while True:
+            pw = pwinput.pwinput(prompt=prompt,mask="*")
+            if double_entry:
+                pw2 = pwinput.pwinput(prompt="Please enter your password again: ",mask="*")
+                if pw != pw2:
+                    print("Passwords did not match - please try again.\n")
+                    continue
+            break
         environ[password_name] = pw
     return pw
 

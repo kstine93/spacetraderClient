@@ -151,7 +151,7 @@ class SpaceTraderConnection:
         """Purpose: Decrypt API key and store it locally so that we can use it
         for future API calls"""
         password = get_user_password(prompt="Please enter password to decrypt your API key: "
-                                     ,password_name="SPACETRADER_PASSWORD")
+                                     ,password_name="SPACETRADER_PASSWORD",double_entry=False)
         bytes_key = self.encrypted_key.encode("utf-8")
         decrypted_key_bytes = password_decrypt(bytes_key, password)
         self.api_key = decrypted_key_bytes.decode() #converting to string
@@ -278,7 +278,7 @@ class RegisterNewAgent:
         is playing the game.
         """
         prompt = "Please enter password to encrypt your API key: "
-        password = get_user_password(prompt=prompt,password_name="SPACETRADER_PASSWORD")
+        password = get_user_password(prompt=prompt,password_name="SPACETRADER_PASSWORD",double_entry=True)
 
         bytes_token = dict_to_bytes(new_agent_response['data']['token'])
 
