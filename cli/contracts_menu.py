@@ -69,6 +69,7 @@ def choose_contract() -> None:
 
     ship_operator.accept_contract(chosen_contract)
     ship_operator.set_pursuedContractId(chosen_contract)
+    cli_print(f"Contract {chosen_contract} accepted")
 
 #==========
 def pick_contract_from_menu(contract_list:list[dict]) -> str:

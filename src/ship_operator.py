@@ -310,7 +310,7 @@ class ShipOperator():
     def nav(self, waypoint: str) -> None:
         self.orbit()
         response = self.ships.nav_to_waypoint(self.spaceshipName, waypoint)
-        if not self.ships.stc.response_ok(response): raise Exception #If navigation fails
+        if not self.ships.stc.response_ok(response): return None
         self.reload_nav_details()
 
     #----------
