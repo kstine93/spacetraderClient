@@ -141,9 +141,10 @@ def extract_choose_survey() -> None:
 
         if chosen_survey == cancel_option:
             return None
-        if chosen_survey == no_preference_option:
+        elif chosen_survey == no_preference_option:
             rsc_yield = ship_operator.extract()
-        rsc_yield = ship_operator.extract(chosen_survey)
+        else:
+            rsc_yield = ship_operator.extract(chosen_survey)
 
     if rsc_yield is None:
         return None
