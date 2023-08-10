@@ -439,12 +439,14 @@ class ShipOperator():
 
     #----------
     def install_mount(self,mount: str) -> None:
+        self.dock()
         response = self.ships.install_ship_mount(self.spaceshipName, mount)
         if not self.ships.stc.response_ok(response): return
         self.reload_ship_details()
 
     #----------
     def remove_mount(self,mount: str) -> None:
+        self.dock()
         response = self.ships.remove_ship_mount(self.spaceshipName, mount)
         if not self.ships.stc.response_ok(response): return
         self.reload_ship_details()
