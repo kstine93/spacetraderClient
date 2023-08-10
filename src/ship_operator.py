@@ -408,22 +408,26 @@ class ShipOperator():
     #---------
     #--CARGO--
     #---------
-    def sell(self,item:str,quantity:int|None) -> None:
+    def sell(self,item:str,quantity:int|None) -> bool:
+        """Sell cargo. If sale fails (insufficient quantity, e.g.,), returns False."""
         if not quantity:
             quantity = self.get_cargo_quantity(item)
         self.dock()
         response = self.ships.sell_cargo(self.spaceshipName,item,quantity)
-        if not self.ships.stc.response_ok(response): return
+        if not self.ships.stc.response_ok(response): return False
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
+        return True
 
     #----------
     def purchase(self,item:str,quantity:int) -> None:
+        """Buy cargo. If sale fails (insufficient credits, e.g.,), returns False."""
         self.dock()
         response = self.ships.purchase_cargo(self.spaceshipName,item,quantity)
-        if not self.ships.stc.response_ok(response): return
+        if not self.ships.stc.response_ok(response): return False
         self.__set_cargo(response['http_data']['data']['cargo'])
         self.__set_credits(response['http_data']['data']['agent'])
+        return True
 
     #----------
     def jettison(self,item:str,quantity:int) -> None:
