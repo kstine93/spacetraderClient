@@ -51,15 +51,15 @@ navigate_menu = {
     },
     "jump": {
         "func": lambda: jump_ship(),
-        "desc": "Purchase, sell and study profitable markets"
+        "desc": "Jump your ship to a new star system with a jump drive or at a jump gate"
     },
     "warp": {
         "func": lambda: warp_ship(),
-        "desc": "Learn more about surrounding ships, waypoints and systems."
+        "desc": "Warp your ship to a waypoint in another system. Could take some time!"
     },
     "speed": {
         "func": lambda: set_speed(),
-        "desc": "Learn more about surrounding ships, waypoints and systems."
+        "desc": "Set the speed of your ship."
     },
     "info": {
         "func": lambda: info_loop(ship_operator,print_nav_menu_header),
