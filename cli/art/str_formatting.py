@@ -2,6 +2,7 @@
 
 from src.utilities.basic_utilities import get_time_diff_UTC, dedup_list
 from .str_utilities import *
+from src.utilities.custom_types import MarginObj
 
 # ---------------
 # -- CONTRACTS --
@@ -471,17 +472,47 @@ def format_crew_info_template(crew: dict) -> str:
 # ------------------------
 # -- MARKET INFORMATION --
 # ------------------------
-market_header = """============ CONTRACTS ============"""
 market_header = """_____________ MARKET: _____________"""
 market_info_template = """\
-- {commodity} [BUY: {buy_price} | SELL: {sell_price}]
+Available: {volume} units ({supply_grade})
+BUY for: {buy_price}
+SELL for: {sell_price}\
 """
 
-t= """
-- IRON_ORE (buy for 32 | sell for 20)
-"""
+# ---------------
+def format_market_info_template(market_item: dict) -> str:
+    """Format the market template with information from a market_item dictionary to make
+    this information more readable."""
+    format_dict = {
+        "volume": market_item['tradeVolume'],
+        "supply_grade": market_item['supply'],
+        "buy_price": market_item["purchasePrice"],
+        "sell_price": market_item["sellPrice"],
+    }
+    return market_info_template.format(**format_dict)
 
 
 # --------------------
 # -- PROFIT MARGINS --
 # --------------------
+margin_info_template = """\
+Best SELL Price: < {sell_price} > (Waypoint {sell_wp})
+Best BUY Price:  < {buy_price} > (Waypoint {buy_wp})
+Profit per Item: < {margin} >\
+"""
+
+# ---------------
+def format_margin_info_template(margin_item: MarginObj) -> str:
+    """Format the waypoint template with data returned from the current system
+    Designed to be part of a list of waypoints with 'number' giving index in list"""
+    sell_item = margin_item['sell']
+    buy_item = margin_item['buy']
+
+    format_dict = {
+        "sell_price": list(sell_item.values())[0], #Too complex to get value. Is there a better way?
+        "sell_wp": list(sell_item.keys())[0],
+        "buy_price": list(buy_item.values())[0],
+        "buy_wp": list(buy_item.keys())[0],
+        "margin": margin_item['margin']
+    }
+    return margin_info_template.format(**format_dict)
