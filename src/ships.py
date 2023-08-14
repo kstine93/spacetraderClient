@@ -4,7 +4,6 @@ Data and functions related for interacting with the 'ships' endpoint of the Spac
 #==========
 from .base import SpaceTraderConnection
 from .utilities.custom_types import RefinableProduct, SpaceTraderResp, NavSpeed
-from .utilities.cache_utilities import update_cache_dict,attempt_dict_retrieval
 
 #==========
 class Ships:
@@ -13,14 +12,10 @@ class Ships:
     """
     #----------
     stc = SpaceTraderConnection()
-    cache_path: str
-    cache_file_name: str
 
     #----------
     def __init__(self):
         self.base_url = self.stc.base_url + "/my/ships"
-        #Using callsign as file name so that ship files are associated with a particular account:
-        self.cache_path = f"{self.stc.base_cache_path}ships/{self.stc.callsign}.json"
 
     #----------
     def get_ship(self,ship:str) -> SpaceTraderResp:
@@ -29,23 +24,14 @@ class Ships:
         return self.stc.stc_http_request(method="GET",url=url)
 
     #----------
-    def reload_ships_in_cache(self,page:int=1) -> None:
-        """Force-updates all ships data in cache with data from the API"""
+    def list_all_ships(self,page:int=1) -> None:
+        """Get all ships associated with the agent"""
+        ship_dict = {}
         for ship_list in self.stc.stc_get_paginated_data("GET",self.base_url,page):
             for ship in ship_list["http_data"]["data"]:
                 transformed_con = {ship['symbol']:ship}
-                update_cache_dict(transformed_con,self.cache_path)
-
-    #----------
-    #TODO: Make this function below prettier.
-    def list_all_ships(self) -> dict:
-        """Get all ships associated with the agent"""
-        data = attempt_dict_retrieval(self.cache_path)
-        if not data:
-            self.reload_ships_in_cache()
-            #If no data is returned a 2nd time, it means no data is avaiable.
-            data = attempt_dict_retrieval(self.cache_path)
-        return data
+                ship_dict.update(transformed_con)
+        return ship_dict
 
     #--------------
     #--NAVIGATION--
@@ -111,8 +97,7 @@ class Ships:
 
     #----------
     def scan_waypoints(self,ship:str) -> SpaceTraderResp:
-        """Get detailed data on waypoints in the current system
-        NOTE: This updates the cache with the new data as well."""
+        """Get detailed data on waypoints in the current system"""
         url = f"{self.base_url}/{ship}/scan/waypoints"
         return self.stc.stc_http_request(method="POST",url=url)
 

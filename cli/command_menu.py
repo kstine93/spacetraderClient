@@ -36,6 +36,7 @@ def pick_ship(cancel_option:str) -> str:
 #==========
 def ship_command_loop(returnHeaderFunc:Callable) -> CliCommand | None:
     cancel_option = "[cancel and return to main menu]"
+    cli_print("Loading ship list...",cmd_menu_color)
     ship = pick_ship(cancel_option)
     if ship == cancel_option:
         return False
