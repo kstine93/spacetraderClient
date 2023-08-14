@@ -10,13 +10,35 @@ Notes on tricky problems, decisions, etc.
 
 ---
 
+### Aug 9, 2023
+TODO:
+1. ~~Finish 'margins' menu item in trade_menu~~
+2. ~~Commit changes~~
+3. Look through 'ship_operator' and see what other functionality I'm missing:
+   1. 'install' and 'remove' ship mounts
+      1. Have 'ship mounts' menu?
+         1. **NOTE:** What about changing the 'info' menu to be the 'ship' menu? I could change the commands to be 'manage' crew & cargo, or mounts & modules instead of just 'show'. Then there could be 'manage' submenus for 'crew & cargo' and 'mounts & modules' to either 'show' information or modify it.
+   2. 'transfer' and 'jettison' cargo
+      1. Have 'cargo' menu?
+   3. 'Refine'
+      1. Currently fails with exception + can't test without refining module.
+   4. 'Scan systems' and 'scan for ships'
+      1. I'm really not sure where to put these yet...
+4. Create "extract continually" functionality in mine menu
+   1. It's tedious to extract resources waiting for the cooldown to expire. I want to create a loop that extracts continually with a given survey (or no survey) so long as the cargo hold has space. That way, players can set the game to extract and do something else instead of waiting for the cooldown to end.
+5. Create 'game reset' functionality
+   1. The game is currently in the alpha phase of development. As such, the game RESETS every 2 weeks - including a full reset of the game world. All players and their data are erased and the game world is recreated (i.e., all game data collected becomes invalid).
+   2. This reset should empty the now-invalid gameData files and ideally clear the player list.
+
+---
+
 ### Jul 24, 2023
 TODO:
-1. Finish initial version of 'trade_menu.py'
-2. Commit changes to other components
-   1. Updated password_prompt utility to allow for double-entering password (to prevent password-setup mistakes)
-   2. Added capability to REMOVE players in startup_cli
-   3. (minor) printed confirmation of contract acceptance.
+1. ~~Finish initial version of 'trade_menu.py'~~
+2. ~~Commit changes to other components~~
+   1. ~~Updated password_prompt utility to allow for double-entering password (to prevent password-setup mistakes)~~
+   2. ~~Added capability to REMOVE players in startup_cli~~
+   3. ~~(minor) printed confirmation of contract acceptance.~~
 
 ---
 
@@ -198,10 +220,10 @@ After that is complete, here are my priorities:
       7. ~~Ship mounts HUD~~
       8. ~~Ship modules HUD~~
 3. Finish navigation endpoints:
-   1. jump ship
+   1. ~~jump ship~~
    2. warp ship
-   3. set_speed
-4. Tackle the next menu (Trading?)
+   3. ~~set_speed~~
+4. ~~Tackle the next menu (Trading?)~~
 5. Update Architecture.md notes ('Agents' class no longer exists; some misspellings)
 
 
