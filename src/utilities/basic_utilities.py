@@ -5,6 +5,7 @@ Basic functional programming utilities portable across applications
 # ==========
 import json
 import pwinput
+from re import search as regex_search
 from math import floor, ceil
 from datetime import datetime,timedelta
 from typing import Iterator
@@ -30,6 +31,15 @@ def get_user_password(prompt: str, password_name: str, double_entry: bool=False)
     return pw
 
 
+# =======================
+# = STRING MANIPULATION =
+# =======================
+def remove_any_outer_quotes(string:str) -> str:
+    """Removes up to 3 consecutive leading and/or trailing single or double quotes from a string
+    if they exist. Returns first match."""
+    regex = r"^[\'\"]{0,3}(.*?)[\'\"]{0,3}$"
+    result = regex_search(regex, string)
+    return result.groups()[0]
 
 
 # =======================
