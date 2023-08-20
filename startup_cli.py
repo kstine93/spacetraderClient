@@ -4,8 +4,9 @@ Can also be done manually (less fun) in the gameinfo.yaml file
 """
 # from PyInquirer import prompt
 from simple_term_menu import TerminalMenu
-from src.base import SpaceTraderConfigSetup, RegisterNewAgent
+from src.base import SpaceTraderConfigSetup, RegisterNewAgent, SpaceTraderConnection
 from src.utilities.custom_types import SpaceFactions
+from src.utilities.basic_utilities import remove_any_outer_quotes
 from cli.art.ascii_art import border_long_carat,bootup_image
 from rich import print as rprint
 import subprocess
@@ -23,14 +24,18 @@ def print_greeting() -> None:
 def set_player(print_msg=True) -> bool:
     """Allows user to choose an agent to use for the game - as well as remove players or cancel
     game startup"""
-    callsigns = config_setup.get_all_callsigns()
+    menu_options = config_setup.get_all_callsigns()
     setup_player_option = "[Create New Agent]"
     remove_player_option = "[Remove an Agent]"
+    add_from_api_key_option = "[Add Agent from API Key]"
     exit_option = "[Exit Game]"
-    callsigns.append(setup_player_option)
-    callsigns.append(remove_player_option)
-    callsigns.append(exit_option)
-    choice = select_from_menu(callsigns,"Please pick your player", print_greeting_msg=print_msg)
+    menu_options.append(setup_player_option)
+    menu_options.append(remove_player_option)
+    menu_options.append(add_from_api_key_option)
+    menu_options.append(exit_option)
+
+    choice = select_from_menu(menu_options,"Please pick your player", print_greeting_msg=print_msg)
+
     if choice == setup_player_option:
         setup_new_player()
         #Once new player is made, recurse to load new callsign and prompt user to pick from the list
@@ -39,9 +44,13 @@ def set_player(print_msg=True) -> bool:
     elif choice == remove_player_option:
         remove_player()
         return False
+    elif choice == add_from_api_key_option:
+        add_player_from_api_key()
+        set_player(print_msg=False)
     elif choice == exit_option:
         rprint("[yellow]== Exiting game ==[/yellow]")
         return False
+
     return True
 
 #----------
@@ -86,10 +95,24 @@ def setup_new_player() -> None:
         rprint(" ----- ")
 
 #----------
+def add_player_from_api_key() -> None:
+    api_key = input("Please paste your API key as text below:\n> ")
+    api_key = remove_any_outer_quotes(api_key)
+    print("\n")
+
+    stc = SpaceTraderConnection(api_key)
+    callsign = stc.callsign
+
+    registrant = RegisterNewAgent()
+    registrant.save_agent_metadata_locally(token=api_key,callsign=callsign)
+    subprocess.run("clear")
+    rprint(f" -- Player setup for agent '{callsign}' complete --\n")
+
+#----------
 if __name__ == "__main__":
     subprocess.run("clear")
     player_set = set_player()
-    if player_set == True:
+    if player_set:
         subprocess.run(["python3","cli/main_menu.py"])
     #Note: Implicitly exiting game if the 'player_set' action failed to set a player
     #(e.g., if the user decided to remove a player, no player is set).
