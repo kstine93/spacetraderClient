@@ -49,7 +49,7 @@ class SpaceTraderConfigSetup:
         return item['key_encrypted']
 
     #----------
-    def get_callsign(self) -> str:
+    def get_current_player(self) -> str:
         config = self.__get_config()
         return config['agents']['current']
 
@@ -123,7 +123,6 @@ class SpaceTraderConnection:
     config_setup = SpaceTraderConfigSetup()
 
     callsign:str
-    encrypted_key: str
 
     api_key: str
     default_header: dict = {"Accept": "application/json","Content-Type":"application/json"}
@@ -132,29 +131,35 @@ class SpaceTraderConnection:
     base_cache_path:str
 
     #----------
-    def __init__(self):
-        #Loading in config which has basic information on player:
-        self.callsign = self.config_setup.get_callsign()
-        self.encrypted_key = self.config_setup.get_encrypted_key(self.callsign)
+    def __init__(self,given_api_key:str=None):
         self.base_url = self.config_setup.get_api_url()
         self.base_cache_path = self.config_setup.get_cache_path()
 
-        try:
-            self.load_api_key()
-            self.default_header.update({"Authorization" : "Bearer " + self.api_key})
-        except Exception as e:
-            msg = f"Error in loading API key. Please check API key at file path {self.config_setup.config_path}"
-            raise Exception(msg) from e
+        #If an api key is provided, use that to start the game. Otherwise, find the current player
+        #in the local file and initialize the game using that information.
+        if given_api_key != None:
+            self.api_key = given_api_key
+        else:
+            player = self.config_setup.get_current_player()
+            try:
+                encrypted_key = self.config_setup.get_encrypted_key(player)
+                self.api_key = self.__decrypt_api_key(encrypted_key)
+            except Exception as e:
+                msg = f"Error in loading API key. Please check API key at file path {self.config_setup.config_path}"
+                raise Exception(msg) from e
+
+        self.default_header.update({"Authorization" : "Bearer " + self.api_key})
+        self.callsign = self.get_agent()['symbol']
 
     #----------
-    def load_api_key(self) -> None:
+    def __decrypt_api_key(self,encrypted_key:str) -> None:
         """Purpose: Decrypt API key and store it locally so that we can use it
         for future API calls"""
         password = get_user_password(prompt="Please enter password to decrypt your API key: "
                                      ,password_name="SPACETRADER_PASSWORD",double_entry=False)
-        bytes_key = self.encrypted_key.encode("utf-8")
+        bytes_key = encrypted_key.encode("utf-8")
         decrypted_key_bytes = password_decrypt(bytes_key, password)
-        self.api_key = decrypted_key_bytes.decode() #converting to string
+        return decrypted_key_bytes.decode() #converting to string
 
     #----------
     def get_agent(self) -> dict:
@@ -267,11 +272,13 @@ class RegisterNewAgent:
             print(data['error']['message'])
             return False
         else:
-            self.save_agent_metadata_locally(data)
+            token = data['data']['token']
+            callsign = data['data']['agent']['symbol']
+            self.save_agent_metadata_locally(token=token,callsign=callsign)
             return True
 
     #----------
-    def save_agent_metadata_locally(self, new_agent_response:dict) -> None:
+    def save_agent_metadata_locally(self, token:dict, callsign:str) -> None:
         """
         Receives dictionary response from registering a new agent. Saves account ID, callsign,
         and encrypted API key in a local file. This local file is the basis for which player
@@ -280,11 +287,8 @@ class RegisterNewAgent:
         prompt = "Please enter password to encrypt your API key: "
         password = get_user_password(prompt=prompt,password_name="SPACETRADER_PASSWORD",double_entry=True)
 
-        bytes_token = dict_to_bytes(new_agent_response['data']['token'])
-
+        bytes_token = dict_to_bytes(token)
         encrypted_key_bytes = password_encrypt(bytes_token,password)
-
-        callsign = new_agent_response['data']['agent']['symbol']
         encrypted_key = encrypted_key_bytes.decode()
 
         self.config_setup.add_new_agent(callsign,encrypted_key)
